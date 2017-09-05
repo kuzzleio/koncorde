@@ -10,10 +10,10 @@ This is the real-time engine used by [Kuzzle](http://kuzzle.io/), an open-source
   - [How to use](#how-to-use)
   - [API](#api)
     - [`exists(index, collection)`](#existsindex-collection)
-    - [`getFilterIds(index, collection)`](#getfilteridsindex-collection)
+    - [`getRoomIds(index, collection)`](#getroomidsindex-collection)
     - [`normalize(index, collection, filters)`](#normalizeindex-collection-filters)
     - [`register(index, collection, filters)`](#registerindex-collection-filters)
-    - [`remove(filterId)`](#removefilterid)
+    - [`remove(roomId)`](#removeroomid)
     - [`store(normalized)`](#storenormalized)
     - [`test(index, collection, data, [documentId])`](#testindex-collection-data-documentid)
     - [`validate(filters)`](#validatefilters)
@@ -47,9 +47,9 @@ Returns a boolean indicating if filters exist for an index-collection pair
 Returns `true` if at least one filter exists on the provided index-collection pair, returns `false` otherwise
 
 
-### `getFilterIds(index, collection)`
+### `getRoomIds(index, collection)`
 
-Retrieves filter IDs registered on an index-collection pair
+Returns the identifiers of rooms registered on an index-collection pair
 
 
 ##### Arguments
@@ -61,7 +61,7 @@ Retrieves filter IDs registered on an index-collection pair
 
 ##### Returns
 
-An `array` of `filterId` corresponding to filters registered on an index-collection pair.
+An `array` of room unique identifiers corresponding to filters registered on the provided index-collection pair.
 
 ### `normalize(index, collection, filters)`
 
@@ -107,7 +107,7 @@ A `promise` resolving to an object containing the following attributes:
 * `id`: the filter unique identifier
 * `diff`: `false` if the filter already existed in the engine. Otherwise, contains an object with the canonical version of the provided filters
 
-### `remove(filterId)`
+### `remove(roomId)`
 
 Removes all references to a given filter from the engine.
 
@@ -115,7 +115,7 @@ Removes all references to a given filter from the engine.
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`filterId`|`string`| Filter unique ID. Obtained by using `register`|
+|`roomId`|`string`| Room unique ID. Obtained by using `register`|
 
 ##### Returns
 
@@ -155,7 +155,7 @@ Test data against filters registered in the engine, returning matching room IDs,
 
 ##### Returns
 
-An array of `filterId` matching the provided data (and/or documentId, if any).
+An array of room identifiers matching the provided data (and/or documentId, if any).
 
 ### `validate(filters)`
 
