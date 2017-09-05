@@ -1,0 +1,43 @@
+{
+  "name": "quickmatch",
+  "version": "1.0.0",
+  "description": "Fast and powerful real-time matching engine",
+  "main": "lib/index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kuzzleio/quickmatch.git"
+  },
+  "keywords": [
+    "real-time",
+    "realtime",
+    "match",
+    "matching",
+    "geofencing"
+  ],
+  "author": "Kuzzle",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kuzzleio/quickmatch/issues"
+  },
+  "homepage": "https://github.com/kuzzleio/quickmatch#readme",
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "boost-geospatial-index": "^1.0.3",
+    "espresso-logic-minimizer": "^2.0.1",
+    "highwayhash": "^2.1.1",
+    "js-combinatorics": "^0.5.2",
+    "json-stable-stringify": "^1.0.1",
+    "kuzzle-common-objects": "^3.0.6",
+    "ngeohash": "^0.6.0",
+    "node-interval-tree": "^1.2.0",
+    "node-units": "^0.1.7",
+    "reify": "^0.12.0",
+    "sorted-array": "^2.0.1"
+  }
+}
