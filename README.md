@@ -68,7 +68,7 @@ engine.register('index', 'collection', filters)
     .then(result => {
         // The room identifier depends on a random seed (see below)
         // For now, let's pretend its value is 5db7052792b18cb2
-        console.log(`Bob's room identifier: ${result.id}`);
+        console.log(`Room identifier: ${result.id}`);
 
         // *** Now, let's test data with our engine ***
 
