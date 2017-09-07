@@ -7,16 +7,18 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
 **Table of contents:**
 
   - [Introduction](#introduction)
-  - [How to use](#how-to-use)
+  - [Index and collection parameters](#index-and-collection-parameters)
+  - [Filter unique identifier](#filter-unique-identifier)
   - [API](#api)
-    - [`exists(index, collection)`](#existsindex-collection)
-    - [`getRoomIds(index, collection)`](#getroomidsindex-collection)
-    - [`normalize(index, collection, filters)`](#normalizeindex-collection-filters)
-    - [`register(index, collection, filters)`](#registerindex-collection-filters)
-    - [`remove(roomId)`](#removeroomid)
-    - [`store(normalized)`](#storenormalized)
-    - [`test(index, collection, data, [documentId])`](#testindex-collection-data-documentid)
-    - [`validate(filters)`](#validatefilters)
+    - [`constructor`](#constructor)
+    - [`exists`](#exists)
+    - [`getFilterIds`](#getfilterids)
+    - [`normalize`](#normalize)
+    - [`register`](#register)
+    - [`remove`](#remove)
+    - [`store`](#store)
+    - [`test`](#test)
+    - [`validate`](#validate)
 
 
 ## Introduction
@@ -66,9 +68,9 @@ const filters = {
 // More on index/collection parameters later
 engine.register('index', 'collection', filters)
     .then(result => {
-        // The room identifier depends on a random seed (see below)
+        // The filter identifier depends on a random seed (see below)
         // For now, let's pretend its value is 5db7052792b18cb2
-        console.log(`Room identifier: ${result.id}`);
+        console.log(`Filter identifier: ${result.id}`);
 
         // *** Now, let's test data with our engine ***
 
@@ -99,16 +101,90 @@ engine.register('index', 'collection', filters)
     });
 ```
 
+## Index and collection parameters
 
-## How to use
+Though it can be used in a variety of ways, most use cases for a data percolation engine imply to put it on top of some kind of storage database, dealing with large quantities of data.  
+And the most common way to store data in a database (relational, NoSQL or whatnot), is in some kind of collection of data, regrouped in data indexes.
 
-[TODO]
+Even though this engine can be instantiated multiple times just fine, each instance has a constant overhead cost which may quickly adds up.
+
+To allow using this engine on top of databases, with dozens or even hundreds of collections and/or indexes, Quickmatch emulates that kind of structure, making it able to handle large numbers of indexed filters, dispatched across a complex storage system.
+
+Using different `index` and `collection` parameters will make Quickmatch effectively act as if it was looking for data in a database.
+
+If you do not need different indexes and/or collections, just use constants, as in the above example.
+
+## Filter unique identifier
+
+Filter identifiers are unique hashes, dependant on the following:
+
+* filters in their [canonicalized form](https://en.wikipedia.org/wiki/Canonicalization)
+* the index and collection parameters (see [above](#index-and-collection-parameters))
+* a random seed (see the engine's [constructor](#constructor) documentation)
+
+This means that:
+
+* filter identifiers are predictable, given that the same random seed is supplied to each new Quickmatch instance
+* since filters are transformed into a canonical form before a filter identifier is calculated, equivalent yet differently written filters will produce the same identifier
+
+**Example:**
+
+In the following example, we provide a fixed random seed. Replaying this example will always generate the same result:
+
+```js
+const Quickmatch = require('quickmatch');
+
+const 
+    seed = Buffer.from('ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 'hex'),
+    engine = new Quickmatch({seed});
+
+// filter1 and filter2 are equivalent
+const
+    filter1 = {
+        and:[
+            {equals: {firstname: 'Grace'}},
+            {exists: {field: 'hobby'}}
+        ]
+    },
+    filter2 = {
+        not: {
+            bool: {
+                should_not: [
+                    {in: {firstname: ['Grace']}},
+                    {exists: {field: 'hobby'}}
+                ]
+            }
+        }
+    };
+
+let filterId1;
+
+engine.register('index', 'collection', filter1)
+    .then(result => {
+        filterId1 = result.id;
+        return engine.register('index', 'collection', filter2);
+    })
+    .then(result => {
+        console.log(`Filter ID 1: ${filterId1}, Filter ID 2: ${result.id}, Equals: ${filterId1 === result.id}`);
+    });
+
+// Prints:
+// Filter ID 1: b4ee9ece4d7b1398, Filter ID 2: b4ee9ece4d7b1398, Equals: true
+```
 
 ## API
 
-### `exists(index, collection)`
+### `constructor`
+
+**constructor([options])**
+
+[TODO]
+
+### `exists`
 
 Returns a boolean indicating if filters exist for an index-collection pair
+
+**exists(index, collection)**
 
 ##### Arguments
 
@@ -123,10 +199,11 @@ Returns a boolean indicating if filters exist for an index-collection pair
 Returns `true` if at least one filter exists on the provided index-collection pair, returns `false` otherwise
 
 
-### `getRoomIds(index, collection)`
+### `getFilterIds`
 
-Returns the identifiers of rooms registered on an index-collection pair
+Returns the identifiers of filters registered on an index-collection pair
 
+**getFilterIds(index, collection)**
 
 ##### Arguments
 
@@ -137,15 +214,17 @@ Returns the identifiers of rooms registered on an index-collection pair
 
 ##### Returns
 
-An `array` of room unique identifiers corresponding to filters registered on the provided index-collection pair.
+An `array` of filter unique identifiers corresponding to filters registered on the provided index-collection pair.
 
-### `normalize(index, collection, filters)`
+### `normalize`
 
 Returns a promise resolved if the provided filters are well-formed.  
-The resolved object is a normalized and optimized version of the supplied filters, along with its corresponding Room unique identifier.
+The resolved object is a normalized and optimized version of the supplied filters, along with its corresponding filter unique identifier.
 
 This method does not modify the internal storage. To register the filters, the [store](#storenormalized) method must be called afterwards.  
-If you do not need the Room unique identifier prior to register the filters, then consider using the all-in-one [register](#registerindex-collection-filters) method instead.
+If you do not need the filter unique identifier prior to register the filters, then consider using the all-in-one [register](#registerindex-collection-filters) method instead.
+
+**normalize(index, collection, filters)**
 
 ##### Arguments
 
@@ -162,11 +241,13 @@ A `promise` resolving to an object containing the following attributes:
 * `index`: data index name
 * `collection`: data collection name
 * `normalized`: an object containing the optimized version of the supplied filters
-* `id`: the room unique identifier
+* `id`: the filter unique identifier
 
-### `register(index, collection, filters)`
+### `register`
 
 Registers a filter to the engine instance. This method is equivalent to executing [normalize](#normalizeindex-collection-filters) + [store](#storenormalized).
+
+**register(index, collection, filters)**
 
 ##### Arguments
 
@@ -183,24 +264,28 @@ A `promise` resolving to an object containing the following attributes:
 * `id`: the filter unique identifier
 * `diff`: `false` if the filter already existed in the engine. Otherwise, contains an object with the canonical version of the provided filters
 
-### `remove(roomId)`
+### `remove`
 
 Removes all references to a given filter from the engine.
+
+**remove(filterId)**
 
 ##### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`roomId`|`string`| Room unique ID. Obtained by using `register`|
+|`filterId`|`string`| Filter unique ID. Obtained by using `register`|
 
 ##### Returns
 
 A `promise` resolved once the filter has been completely removed from the engine.
 
 
-### `store(normalized)`
+### `store`
 
 Registers normalized filters (obtained with [normalize](#normalizeindex-collection-filters)).
+
+**store(normalized)**
 
 ##### Arguments
 
@@ -215,9 +300,11 @@ An `Object` containing the following attributes:
 * `id`: the filter unique identifier
 * `diff`: `false` if the filter already existed in the engine. Otherwise, contains an object with the canonical version of the provided filters
 
-### `test(index, collection, data, [id])`
+### `test`
 
-Test data against filters registered in the engine, returning matching room IDs, if any.
+Test data against filters registered in the engine, returning matching filter IDs, if any.
+
+**test(index, collection, data, [id])**
 
 ##### Arguments
 
@@ -231,11 +318,13 @@ Test data against filters registered in the engine, returning matching room IDs,
 
 ##### Returns
 
-An array of room identifiers matching the provided data (and/or documentId, if any).
+An array of filter identifiers matching the provided data (and/or documentId, if any).
 
-### `validate(filters)`
+### `validate`
 
 Tests the provided filters without storing them in the system, to check whether they are well-formed or not.
+
+**validate(filters)**
 
 ##### Arguments
 
