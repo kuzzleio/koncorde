@@ -176,9 +176,23 @@ engine.register('index', 'collection', filter1)
 
 ### `constructor`
 
+Instantiates a new Quickmatch engine.
+
 **constructor([options])**
 
-[TODO]
+##### Arguments
+
+| Name | Type | Description                      |
+|------|------|----------------------------------|
+|`options`|`Object`| Optional parameters |
+
+##### Options
+
+| Name | Type | Default |Description                      |
+|------|------|---------|---------------------------------|
+|`maxConditions`| `Number` | `8` | The maximum conditions filters can hold. It is not advised to use a value greater than `15` without testing |
+|`seed`|`Buffer`| Randomly generated seed | 32 bytes buffer containing a fixed random seed |
+
 
 ### `exists`
 
