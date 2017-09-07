@@ -1,8 +1,8 @@
 # Quickmatch
 
-Lightning fast real-time matching engine, featuring a full-fledged [DSL](http://docs.kuzzle.io/kuzzle-dsl/), including geofencing capabilities.
+Lightning fast real-time data percolation engine, featuring a full-fledged [DSL](http://docs.kuzzle.io/kuzzle-dsl/), including geofencing capabilities.
 
-This is the real-time engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-hostable backend.
+This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-hostable backend, to handle real-time notifications.
 
 **Table of contents:**
 
@@ -21,7 +21,83 @@ This is the real-time engine used by [Kuzzle](http://kuzzle.io/), an open-source
 
 ## Introduction
 
-[TODO]
+This library is a real-time data percolation engine: 
+
+* an arbitrary number of filters can be registered and indexed
+* whenever data are submitted to this engine, it returns the list of registered filters matching them
+
+In other words, this is the reverse of a search engine, where data are indexed, and filters are used to retrieved the matching data.
+
+**Example:**
+
+In the following example, we'll listen to objects containing a `position` property, describing a geopoint. We want that geopoint to be 500 meters around a pre-defined starting position.
+
+This can be described by the following Kuzzle DSL filters: 
+
+```json
+{
+    "geoDistance": {
+        "position": {
+            "lat": 43.6073913, 
+            "lon": 3.9109057
+        },
+        "distance": "500m"
+    }
+}
+```
+
+All there is to do is now to register this filter to the engine, and use it to test data:
+
+```js
+const Quickmatch = require('quickmatch');
+
+const engine = new Quickmatch();
+
+const filters = {
+    geoDistance: {
+        position: {
+            lat: 43.6073913, 
+            lon: 3.9109057
+        },
+        distance: "500m"
+    }
+};
+
+// More on index/collection parameters later
+engine.register('index', 'collection', filters)
+    .then(result => {
+        // The room identifier depends on a random seed (see below)
+        // For now, let's pretend its value is 5db7052792b18cb2
+        console.log(`Bob's room identifier: ${result.id}`);
+
+        // *** Now, let's test data with our engine ***
+
+        // Returns: [] (distance is greater than 500m)
+        console.log(engine.test('index', 'collection', {
+            position: {
+                lat: 43.6073913, 
+                lon: 5.7
+            }
+        }));
+
+        // Returns: ['5db7052792b18cb2']
+        console.log(engine.test('index', 'collection', {
+            position: {
+                lat: 43.608, 
+                lon: 3.905
+            }
+        }));
+
+
+        // Returns: [] (the geopoint is not stored in a "position" field)
+        console.log(engine.test('index', 'collection', {
+            point: {
+                lat: 43.608, 
+                lon: 3.905
+            }
+        }));
+    });
+```
 
 
 ## How to use
