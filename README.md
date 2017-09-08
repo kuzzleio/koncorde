@@ -7,6 +7,7 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
 **Table of contents:**
 
   - [Introduction](#introduction)
+  - [Install](#install)
   - [Index and collection parameters](#index-and-collection-parameters)
   - [Filter unique identifier](#filter-unique-identifier)
   - [API](#api)
@@ -100,6 +101,18 @@ engine.register('index', 'collection', filter)
         }));
     });
 ```
+
+## Install
+
+This library can only be used with NodeJS version 6.9 or higher.  
+Both a C and a C++ compilers are needed to install the following dependencies: [Espresso Logic Minimizer](https://www.npmjs.com/package/espresso-logic-minimizer) and [Boost Geospatial Index](https://www.npmjs.com/package/boost-geospatial-index)
+
+To install:
+
+```
+npm install --save quickmatch
+```
+
 
 ## Index and collection parameters
 
