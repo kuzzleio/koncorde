@@ -252,8 +252,8 @@ engine.register('index', 'collection', filter)
     // Prints: [] (searched field not at the right place)
     console.log(engine.test('index', 'collection', {
       identification: {
-        first: 'Ada',
-        last: 'Lovelace'
+        first: 'Grace',
+        last: 'Hopper'
       }
     }));
   });
