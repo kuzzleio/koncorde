@@ -1,14 +1,15 @@
 {
   "name": "quickmatch",
   "version": "1.0.0",
-  "description": "Fast and powerful real-time matching engine",
+  "description": "Fast and powerful real-time data percolation engine",
   "main": "lib/index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "npm run --silent lint",
-    "lint": "eslint --max-warnings=0 ./lib"
+    "test": "npm run --silent lint && npm run unit-test",
+    "lint": "eslint --max-warnings=0 ./lib ./test",
+    "unit-test": "nyc --reporter=text-summary --reporter=lcov mocha"
   },
   "repository": {
     "type": "git",
@@ -39,10 +40,16 @@
     "ngeohash": "^0.6.0",
     "node-interval-tree": "^1.2.0",
     "node-units": "^0.1.7",
+    "nyc": "^11.2.1",
     "reify": "^0.12.0",
     "sorted-array": "^2.0.1"
   },
   "devDependencies": {
-    "eslint": "^4.6.1"
+    "codecov": "^2.3.0",
+    "eslint": "^4.6.1",
+    "mocha": "^3.5.0",
+    "should": "^13.0.1",
+    "should-sinon": "0.0.6",
+    "sinon": "^3.2.1"
   }
 }
