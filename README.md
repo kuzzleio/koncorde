@@ -34,7 +34,7 @@ In other words, this is the reverse of a search engine, where data are indexed, 
 
 In the following example, we'll listen to objects containing a `position` property, describing a geopoint. We want that geopoint to be 500 meters around a pre-defined starting position.
 
-This can be described by the following Kuzzle DSL filters: 
+This can be described by the following Kuzzle DSL filter: 
 
 ```json
 {
@@ -55,7 +55,7 @@ const Quickmatch = require('quickmatch');
 
 const engine = new Quickmatch();
 
-const filters = {
+const filter = {
     geoDistance: {
         position: {
             lat: 43.6073913, 
@@ -66,7 +66,7 @@ const filters = {
 };
 
 // More on index/collection parameters later
-engine.register('index', 'collection', filters)
+engine.register('index', 'collection', filter)
     .then(result => {
         // The filter identifier depends on a random seed (see below)
         // For now, let's pretend its value is 5db7052792b18cb2
@@ -190,13 +190,15 @@ Instantiates a new Quickmatch engine.
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxConditions`| `Number` | `8` | The maximum conditions filters can hold. It is not advised to use a value greater than `15` without testing |
+|`maxConditions`| `Number` | `8` | The maximum conditions a filter can hold. It is not advised to use a value greater than `15` without testing filter registration and matching performances |
 |`seed`|`Buffer`| Randomly generated seed | 32 bytes buffer containing a fixed random seed |
 
 
+---
+
 ### `exists`
 
-Returns a boolean indicating if filters exist for an index-collection pair
+Returns a boolean indicating if filters exist for a given index-collection pair
 
 **exists(index, collection)**
 
@@ -212,10 +214,11 @@ Returns a boolean indicating if filters exist for an index-collection pair
 
 Returns `true` if at least one filter exists on the provided index-collection pair, returns `false` otherwise
 
+---
 
 ### `getFilterIds`
 
-Returns the identifiers of filters registered on an index-collection pair
+Returns the list of filter identifiers registered on a given index-collection pair
 
 **getFilterIds(index, collection)**
 
@@ -230,15 +233,17 @@ Returns the identifiers of filters registered on an index-collection pair
 
 An `array` of filter unique identifiers corresponding to filters registered on the provided index-collection pair.
 
+---
+
 ### `normalize`
 
-Returns a promise resolved if the provided filters are well-formed.  
-The resolved object is a normalized and optimized version of the supplied filters, along with its corresponding filter unique identifier.
+Returns a promise resolved if the provided filter are well-formed.  
+The resolved object contains the provided filter in its canonical form, along with the corresponding filter unique identifier.
 
-This method does not modify the internal storage. To register the filters, the [store](#storenormalized) method must be called afterwards.  
-If you do not need the filter unique identifier prior to register the filters, then consider using the all-in-one [register](#registerindex-collection-filters) method instead.
+This method does not modify the internal storage. To save a filter, the [store](#store) method must be called afterward.  
+If you do not need the filter unique identifier prior to save a filter in the engine, then consider using the all-in-one [register](#register) method instead.
 
-**normalize(index, collection, filters)**
+**normalize(index, collection, filter)**
 
 ##### Arguments
 
@@ -246,7 +251,7 @@ If you do not need the filter unique identifier prior to register the filters, t
 |------|------|----------------------------------|
 |`index`|`string`| Data index name |
 |`collection`|`string`| Data collection name |
-|`filters`|`object`| Filters in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
+|`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
 
 ##### Returns
 
@@ -254,14 +259,16 @@ A `promise` resolving to an object containing the following attributes:
 
 * `index`: data index name
 * `collection`: data collection name
-* `normalized`: an object containing the optimized version of the supplied filters
+* `normalized`: an object containing the canonical form of the supplied filter
 * `id`: the filter unique identifier
+
+---
 
 ### `register`
 
-Registers a filter to the engine instance. This method is equivalent to executing [normalize](#normalizeindex-collection-filters) + [store](#storenormalized).
+Registers a filter to the engine instance. This method is equivalent to executing [normalize](#normalize) + [store](#store).
 
-**register(index, collection, filters)**
+**register(index, collection, filter)**
 
 ##### Arguments
 
@@ -269,14 +276,16 @@ Registers a filter to the engine instance. This method is equivalent to executin
 |------|------|----------------------------------|
 |`index`|`string`| Data index name |
 |`collection`|`string`| Data collection name |
-|`filters`|`object`| Filters in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
+|`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
 
 ##### Returns
 
 A `promise` resolving to an object containing the following attributes:
 
 * `id`: the filter unique identifier
-* `diff`: `false` if the filter already existed in the engine. Otherwise, contains an object with the canonical version of the provided filters
+* `diff`: `false` if the filter already exists in the engine. Otherwise, contains an object with the canonical version of the provided filter
+
+---
 
 ### `remove`
 
@@ -294,10 +303,11 @@ Removes all references to a given filter from the engine.
 
 A `promise` resolved once the filter has been completely removed from the engine.
 
+---
 
 ### `store`
 
-Registers normalized filters (obtained with [normalize](#normalizeindex-collection-filters)).
+Stores a normalized filter (obtained with [normalize](#normalize)).
 
 **store(normalized)**
 
@@ -305,18 +315,20 @@ Registers normalized filters (obtained with [normalize](#normalizeindex-collecti
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`normalized`|`Object`| Normalized filters |
+|`normalized`|`Object`| Normalized filter |
 
 ##### Returns
 
 An `Object` containing the following attributes:
 
 * `id`: the filter unique identifier
-* `diff`: `false` if the filter already existed in the engine. Otherwise, contains an object with the canonical version of the provided filters
+* `diff`: `false` if the filter already exists in the engine. Otherwise, contains an object with the canonical version of the provided filter
+
+---
 
 ### `test`
 
-Test data against filters registered in the engine, returning matching filter IDs, if any.
+Test data against filters registered in the engine, returning matching filter identifiers, if any.
 
 **test(index, collection, data, [id])**
 
@@ -334,18 +346,20 @@ Test data against filters registered in the engine, returning matching filter ID
 
 An array of filter identifiers matching the provided data (and/or documentId, if any).
 
+---
+
 ### `validate`
 
-Tests the provided filters without storing them in the system, to check whether they are well-formed or not.
+Tests the provided filter without storing it in the engine, to check whether it is well-formed or not.
 
-**validate(filters)**
+**validate(filter)**
 
 ##### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`filters`|`object`| Filters in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
+|`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
 
 ##### Returns
 
-A resolved promise if the provided filters are valid, or a rejected one with the appropriate error object otherwise.
+A resolved promise if the provided filter is valid, or a rejected one with the appropriate error object otherwise.
