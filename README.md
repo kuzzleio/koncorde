@@ -10,6 +10,7 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
   - [Install](#install)
   - [Index and collection parameters](#index-and-collection-parameters)
   - [Filter unique identifier](#filter-unique-identifier)
+  - [Testing nested properties](#testing-nested-properties)
   - [API](#api)
     - [`constructor`](#constructor)
     - [`exists`](#exists)
@@ -184,6 +185,78 @@ engine.register('index', 'collection', filter1)
 // Prints:
 // Filter ID 1: b4ee9ece4d7b1398, Filter ID 2: b4ee9ece4d7b1398, Equals: true
 ```
+
+## Testing nested properties
+
+The examples so far show how to test for fields at the root of provided data, but it is also possible to add filters on nested properties.
+
+To do that, instead of giving the name of the property to test, its path must be supplied, in the following manner: `path.to.property`
+
+**Example:**
+
+Given the following document:
+
+```json
+{
+    "name": {
+        "first": "Grace",
+        "last": "Hopper"
+    }
+}
+```
+
+Here is a filter, testing equality on the field `last` in the `name` sub-object:
+
+```json
+{
+    "equals": {
+        "name.last": "Hopper"
+    }
+}
+```
+
+Full code:
+
+```js
+const
+  engine = new Quickmatch(),
+  filter = {
+    equals: {
+      'name.last': 'Hopper'
+    }
+  };
+
+engine.register('index', 'collection', filter)
+  .then(result => {
+    // Prints: 'a_filter_id'
+    console.log(`Filter ID: ${result.id}`);
+
+    // Prints: []
+    console.log(engine.test('index', 'collection', {
+      name: {
+        first: 'Ada',
+        last: 'Lovelace'
+      }
+    }));
+
+    // Prints: ['a_filter_id']
+    console.log(engine.test('index', 'collection', {
+      name: {
+        first: 'Grace',
+        last: 'Hopper'
+      }
+    }));
+
+    // Prints: [] (searched field not at the right place)
+    console.log(engine.test('index', 'collection', {
+      identification: {
+        first: 'Ada',
+        last: 'Lovelace'
+      }
+    }));
+  });
+```
+
 
 ## API
 
