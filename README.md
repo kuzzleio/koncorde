@@ -120,7 +120,7 @@ npm install --save quickmatch
 Though it can be used in a variety of ways, most use cases for a data percolation engine imply to put it on top of some kind of storage database, dealing with large quantities of data.  
 And the most common way to store data in a database (relational, NoSQL or whatnot), is in some kind of collection of data, regrouped in data indexes.
 
-Even though this engine can be instantiated multiple times just fine, each instance has a constant overhead cost which may quickly adds up.
+Even though this engine can be instantiated multiple times just fine, each instance has a constant overhead cost which may quickly add up.
 
 To allow using this engine on top of databases, with dozens or even hundreds of collections and/or indexes, Quickmatch emulates that kind of structure, making it able to handle large numbers of indexed filters, dispatched across a complex storage system.
 
