@@ -218,6 +218,8 @@ Here is a filter, testing equality on the field `last` in the `name` sub-object:
 Full code:
 
 ```js
+const Quickmarch = require('quickmatch');
+
 const
   engine = new Quickmatch(),
   filter = {
