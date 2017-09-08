@@ -7,7 +7,8 @@
     "lib": "lib"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run --silent lint",
+    "lint": "eslint --max-warnings=0 ./lib"
   },
   "repository": {
     "type": "git",
@@ -40,5 +41,8 @@
     "node-units": "^0.1.7",
     "reify": "^0.12.0",
     "sorted-array": "^2.0.1"
+  },
+  "devDependencies": {
+    "eslint": "^4.6.1"
   }
 }
