@@ -13,6 +13,8 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
   - [Testing nested properties](#testing-nested-properties)
   - [API](#api)
     - [`constructor`](#constructor)
+    - [`convertDistance`](#convertdistance)
+    - [`convertGeopoint`](#convertgeopoint)
     - [`exists`](#exists)
     - [`getFilterIds`](#getfilterids)
     - [`normalize`](#normalize)
@@ -281,6 +283,94 @@ Instantiates a new Koncorde engine.
 |`maxConditions`| `Number` | `8` | The maximum conditions a filter can hold. It is not advised to use a value greater than `15` without testing filter registration and matching performances |
 |`seed`|`Buffer`| Randomly generated seed | 32 bytes buffer containing a fixed random seed |
 
+---
+
+### `convertDistance`
+
+**(static method)**
+
+Utility method converting a distance value to meters.
+
+Accepted units:
+
+* `m`, `meter`, `meters`
+* `ft`, `feet`, `feets`
+* `in`, `inch`, `inches`
+* `yd`, `yard`, `yards`
+* `mi`, `mile`, `miles`
+
+Accepted unit modifiers: from `yocto-` (10e-21) to `yotta-` (10e24), and their corresponding short forms (e.g. `kilometers` or `km`)
+
+Accepted formats: `<int (spaces accepted)>[.|,]<decimal><spaces><unit>`.  
+
+Examples:
+
+```js
+const Koncorde = require('koncorde');
+
+// Prints: 4.88442
+console.log(Koncorde.convertDistance('192.3in'));
+
+// Prints: 3456580
+console.log(Koncorde.convertDistance('3 456,58 kilometers'));
+```
+
+**convertDistance(str)**
+
+##### Arguments
+
+| Name | Type | Description                      |
+|------|------|----------------------------------|
+|`str`|`string`| Distance to convert |
+
+##### Returns
+
+The distance converted in meters (type: number)
+
+---
+
+### `convertGeopoint`
+
+**(static method)**
+
+Converts one of the accepted geopoint format into the following standardized version:
+
+```json
+{
+    "lat": 12.345,
+    "lon": 67.890
+}
+```
+
+Accepted input formats:
+
+* `{ lat: -74.1, lon: 40.73 }`
+* `{ latLon: [ -74.1, 40.73 ] }`
+* `{ latLon: { lat: 40.73, lon: -74.1 } }`
+* `{ latLon: "40.73, -74.1" }`
+* `{ latLon: "dr5r9ydj2y73"}` ([geohash](https://en.wikipedia.org/wiki/Geohash))
+
+
+Example:
+
+```js
+const Koncorde = require('koncorde');
+
+// Prints: Coordinate { lat: 40.72999987984076, lon: -74.09999997122213 }
+console.log(Koncorde.convertGeopoint({latLon: 'dr5r9ydj2y734'}))
+```
+
+**convertGeopoint(point)**
+
+##### Arguments
+
+| Name | Type | Description                      |
+|------|------|----------------------------------|
+|`point`|`object`| Geopoint to convert |
+
+##### Returns
+
+A `Coordinate` object containing the following properties: `lat` (latitude, type: number), `lon` (longitude, type: number)
 
 ---
 
