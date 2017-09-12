@@ -1,5 +1,5 @@
 {
-  "name": "quickmatch",
+  "name": "koncorde",
   "version": "1.0.0",
   "description": "Fast and powerful real-time data percolation engine",
   "main": "lib/index.js",
@@ -13,7 +13,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/kuzzleio/quickmatch.git"
+    "url": "git://github.com/kuzzleio/koncorde.git"
   },
   "keywords": [
     "real-time",
@@ -26,9 +26,9 @@
   "author": "Kuzzle",
   "license": "Apache-2.0",
   "bugs": {
-    "url": "https://github.com/kuzzleio/quickmatch/issues"
+    "url": "https://github.com/kuzzleio/koncorde/issues"
   },
-  "homepage": "https://github.com/kuzzleio/quickmatch#readme",
+  "homepage": "https://github.com/kuzzleio/koncorde#readme",
   "dependencies": {
     "bluebird": "^3.5.0",
     "boost-geospatial-index": "^1.0.3",

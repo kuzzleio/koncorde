@@ -1,4 +1,4 @@
-# Quickmatch
+# Koncorde
 
 Lightning fast real-time data percolation engine, featuring a full-fledged [DSL](http://docs.kuzzle.io/kuzzle-dsl/), including geofencing capabilities.
 
@@ -53,9 +53,9 @@ This can be described by the following Kuzzle DSL filter:
 All there is to do is now to register this filter to the engine, and use it to test data:
 
 ```js
-const Quickmatch = require('quickmatch');
+const Koncorde = require('koncorde');
 
-const engine = new Quickmatch();
+const engine = new Koncorde();
 
 const filter = {
     geoDistance: {
@@ -111,7 +111,7 @@ Both a C and a C++ compilers are needed to install the following dependencies: [
 To install:
 
 ```
-npm install --save quickmatch
+npm install --save koncorde
 ```
 
 
@@ -122,9 +122,9 @@ And the most common way to store data in a database (relational, NoSQL or whatno
 
 Even though this engine can be instantiated multiple times just fine, each instance has a constant overhead cost which may quickly add up.
 
-To allow using this engine on top of databases, with dozens or even hundreds of collections and/or indexes, Quickmatch emulates that kind of structure, making it able to handle large numbers of indexed filters, dispatched across a complex storage system.
+To allow using this engine on top of databases, with dozens or even hundreds of collections and/or indexes, Koncorde emulates that kind of structure, making it able to handle large numbers of indexed filters, dispatched across a complex storage system.
 
-Using different `index` and `collection` parameters will make Quickmatch effectively act as if it was looking for data in a database.
+Using different `index` and `collection` parameters will make Koncorde effectively act as if it was looking for data in a database.
 
 If you do not need different indexes and/or collections, just use constants, as in the above example.
 
@@ -138,7 +138,7 @@ Filter identifiers are unique hashes, dependant on the following:
 
 This means that:
 
-* filter identifiers are predictable, given that the same random seed is supplied to each new Quickmatch instance
+* filter identifiers are predictable, given that the same random seed is supplied to each new Koncorde instance
 * since filters are transformed into a canonical form before a filter identifier is calculated, equivalent yet differently written filters will produce the same identifier
 
 **Example:**
@@ -146,11 +146,11 @@ This means that:
 In the following example, we provide a fixed random seed. Replaying this example will always generate the same result:
 
 ```js
-const Quickmatch = require('quickmatch');
+const Koncorde = require('koncorde');
 
 const 
     seed = Buffer.from('ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 'hex'),
-    engine = new Quickmatch({seed});
+    engine = new Koncorde({seed});
 
 // filter1 and filter2 are equivalent
 const
@@ -218,10 +218,10 @@ Here is a filter, testing equality on the field `last` in the `name` sub-object:
 Full code:
 
 ```js
-const Quickmatch = require('quickmatch');
+const Koncorde = require('koncorde');
 
 const
-  engine = new Quickmatch(),
+  engine = new Koncorde(),
   filter = {
     equals: {
       'name.last': 'Hopper'
@@ -264,7 +264,7 @@ engine.register('index', 'collection', filter)
 
 ### `constructor`
 
-Instantiates a new Quickmatch engine.
+Instantiates a new Koncorde engine.
 
 **constructor([options])**
 
