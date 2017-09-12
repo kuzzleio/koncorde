@@ -52,7 +52,7 @@ This can be described by the following Kuzzle DSL filter:
 }
 ```
 
-All there is to do is now to register this filter to the engine, and use it to test data:
+All you need to do now is to register this filter to the engine, and use it to test data:
 
 ```js
 const Koncorde = require('koncorde');
@@ -140,7 +140,7 @@ Filter identifiers are unique hashes, dependant on the following:
 
 This means that:
 
-* filter identifiers are predictable, given that the same random seed is supplied to each new Koncorde instance
+* filter identifiers are predictable, as long that the same random seed is supplied to each new Koncorde instance
 * since filters are transformed into a canonical form before a filter identifier is calculated, equivalent yet differently written filters will produce the same identifier
 
 **Example:**
