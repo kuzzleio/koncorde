@@ -280,7 +280,7 @@ Instantiates a new Koncorde engine.
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxConditions`| `Number` | `8` | The maximum conditions a filter can hold. It is not advised to use a value greater than `15` without testing filter registration and matching performances |
+|`maxConditions`| `Number` | `8` | The maximum number of conditions a filter can hold. It is not advised to use a value greater than `15` without testing filter registration and matching performances |
 |`seed`|`Buffer`| Randomly generated seed | 32 bytes buffer containing a fixed random seed |
 
 ---
