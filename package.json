@@ -1,6 +1,6 @@
 {
   "name": "koncorde",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Supersonic real-time data percolation engine",
   "main": "lib/index.js",
   "directories": {
@@ -41,7 +41,6 @@
     "ngeohash": "^0.6.0",
     "node-interval-tree": "^1.2.0",
     "node-units": "^0.1.7",
-    "nyc": "^11.2.1",
     "reify": "^0.12.0",
     "sorted-array": "^2.0.1"
   },
@@ -49,6 +48,7 @@
     "codecov": "^2.3.0",
     "eslint": "^4.6.1",
     "mocha": "^3.5.0",
+    "nyc": "^11.2.1",
     "should": "^13.0.1",
     "should-sinon": "0.0.6",
     "sinon": "^3.2.1"
