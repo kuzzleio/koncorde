@@ -107,7 +107,7 @@ engine.register('index', 'collection', filter)
 
 ## Install
 
-This library can only be used with NodeJS version 6.9 or higher.  
+This library can only be used with NodeJS version 6.x or higher.  
 Both a C and a C++ compilers are needed to install the following dependencies: [Espresso Logic Minimizer](https://www.npmjs.com/package/espresso-logic-minimizer) and [Boost Geospatial Index](https://www.npmjs.com/package/boost-geospatial-index)
 
 To install:
