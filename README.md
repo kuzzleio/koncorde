@@ -1,3 +1,5 @@
+![Travis Badge](https://travis-ci.org/kuzzleio/koncorde.svg?branch=master)
+
 # Koncorde
 
 Supersonic real-time data percolation engine, featuring a full-fledged [DSL](http://docs.kuzzle.io/kuzzle-dsl/), including geofencing capabilities.
