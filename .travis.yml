@@ -2,9 +2,9 @@ sudo: false
 dist: trusty
 language: node_js
 node_js:
-  - "6"
-  - "7"
-  - "8"
+- '6'
+- '7'
+- '8'
 addons:
   apt:
     sources:
@@ -18,3 +18,11 @@ before_install:
 - export CC="gcc-4.9" CXX="g++-4.9"
 install:
 - npm install
+deploy:
+  provider: npm
+  email: support@kuzzle.io
+  api_key:
+    secure: zgqVhug6ehMAA4C2jtG8cRbm7fbnyNNhDX2kz38KsM88eTDF2u32X9EkHE52QktbvoVHsVYd5t5dkn1uXfbzYrQQt+YXGmyboBdddDAEfEfGwh6+6BjJiAh7neVXQYHS6cinaLL/VvfebIr8u6ALIH9IJ+nTbSBhJ4sw/F1cTxsWt3apVe2dQkQ2Gz4VnD1g9PzRu3fJ/zMvXFyEp5jZFzw0MSSntaH+OxACSH9qpfHiYukeH36xJfyQwmMPJcuEW7mrSWJp9N0XkKnquoybP13tO20sem4op/c3nKzuGNtSPMYeHPha4KbFExTMxgBiIimRxtUCDeQ3i5MTJbMUlLW/nKUjzSaIGb6afO385yfOGd2aySugAER2/PNwTf1Gxs4XfNUOTVDBmW0yN5IOlqTgNAoRGG0kbFPzsMQnX6NGC0NGfvVJvSos+/h4AuBQT0r+dcGFKeWgkZtSfk3Ko8zueyQtOwo01PWH4ROa3MKjnMuygVPZNzMFhpwQ6T+IVqM1hnK3Avs8boWMQN9jyMJPsuZU+MTFHrhwBHw50NE61BTWMjjotF9Glu6b3rJyDGGtR9tdW+nbTvxWyHYa1u3yyArpPpqnmA4V1t2OKKU69zwHVtBTORnYBbbPXlg3rRGHF6TI6HxN9+Q8Lbpz7L5C0GxbI/JI0WaEsyTNAu8=
+  on:
+    repo: kuzzleio/koncorde
+    branch: master
