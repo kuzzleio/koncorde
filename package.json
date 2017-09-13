@@ -9,7 +9,8 @@
   "scripts": {
     "test": "npm run --silent lint && npm run unit-test",
     "lint": "eslint --max-warnings=0 ./lib ./test",
-    "unit-test": "nyc --reporter=text-summary --reporter=lcov mocha"
+    "unit-test": "nyc --reporter=text-summary --reporter=lcov mocha",
+    "codecov": "codecov"
   },
   "repository": {
     "type": "git",

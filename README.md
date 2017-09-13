@@ -1,4 +1,5 @@
-![Travis Badge](https://travis-ci.org/kuzzleio/koncorde.svg?branch=master)
+[![Build Status](https://travis-ci.org/kuzzleio/koncorde.svg?branch=master)](https://travis-ci.org/kuzzleio/koncorde)
+[![Codecov](http://codecov.io/github/kuzzleio/koncorde/coverage.svg?branch=master)](http://codecov.io/github/kuzzleio/koncorde?branch=master)
 
 # Koncorde
 

@@ -13,7 +13,7 @@ addons:
     - gcc-4.9
     - g++-4.9
 script:
-- npm test
+- npm test && npm run codecov
 before_install:
 - export CC="gcc-4.9" CXX="g++-4.9"
 install:
