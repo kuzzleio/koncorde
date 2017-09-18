@@ -73,7 +73,7 @@ describe('DSL.keyword.geoPolygon', () => {
 
     it('should reject a polygon containing an invalid point format', () => {
       var p = polygon.points.slice();
-      p.push('foobar');
+      p.push(42);
       return should(standardize({geoPolygon: {foo: {points: p}}})).be.rejectedWith(BadRequestError);
     });
 

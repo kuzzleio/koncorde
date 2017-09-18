@@ -345,13 +345,26 @@ Converts one of the accepted geopoint format into the following standardized ver
 }
 ```
 
-Accepted input formats:
+Accepted input formats (with latitude = `43.6021299` and longitude = `3.8989713`):
 
-* `{ lat: -74.1, lon: 40.73 }`
-* `{ latLon: [ -74.1, 40.73 ] }`
-* `{ latLon: { lat: 40.73, lon: -74.1 } }`
-* `{ latLon: "40.73, -74.1" }`
-* `{ latLon: "dr5r9ydj2y73"}` ([geohash](https://en.wikipedia.org/wiki/Geohash))
+* `[ 43.6021299, 3.8989713 ]`
+* `"43.6021299, 3.8989713"`
+* `"spfb09x0ud5s"` ([geohash](https://en.wikipedia.org/wiki/Geohash))
+* `{ lat: 43.6021299, lon: 3.8989713 }`
+
+Alternative:
+
+* `{ latLon: [ 43.6021299, 3.8989713 ] }`
+* `{ latLon: { lat: 43.6021299, lon: 3.8989713 } }`
+* `{ latLon: "43.6021299, 3.8989713" }`
+* `{ latLon: "spfb09x0ud5s"}` ([geohash](https://en.wikipedia.org/wiki/Geohash))
+
+Also accepted:
+
+* `{ lat_lon: [ 43.6021299, 3.8989713 ] }`
+* `{ lat_lon: { lat: 43.6021299, lon: 3.8989713 } }`
+* `{ lat_lon: "43.6021299, 3.8989713" }`
+* `{ lat_lon: "spfb09x0ud5s"}` ([geohash](https://en.wikipedia.org/wiki/Geohash))
 
 
 Example:
@@ -359,8 +372,8 @@ Example:
 ```js
 const Koncorde = require('koncorde');
 
-// Prints: Coordinate { lat: 40.72999987984076, lon: -74.09999997122213 }
-console.log(Koncorde.convertGeopoint({latLon: 'dr5r9ydj2y734'}))
+// Prints: Coordinate { lat: 43.6021299, lon: 3.8989713 }
+console.log(Koncorde.convertGeopoint('spfb09x0ud5s'));
 ```
 
 **convertGeopoint(point)**
