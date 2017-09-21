@@ -26,6 +26,7 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
     - [`store`](#store)
     - [`test`](#test)
     - [`validate`](#validate)
+  - [Benchmarks](#benchmarks)
 
 
 ## Introduction
@@ -557,3 +558,47 @@ Tests the provided filter without storing it in the engine, to check whether it 
 ##### Returns
 
 A resolved promise if the provided filter is valid, or a rejected one with the appropriate error object otherwise.
+
+---
+
+## Benchmarks
+
+The following results are obtained running `node benchmark.js` at the root of the projet.
+
+```
+Filter count per tested keyword: 10000
+
+> Benchmarking keyword: equals
+    Registration: time = 0.647s, mem = +42MB
+    Matching x 92,270 ops/sec ±5.91% (50 runs sampled)
+
+> Benchmarking keyword: exists
+    Registration: time = 2.223s, mem = +15MB
+    Matching x 3,169 ops/sec ±1.50% (56 runs sampled)
+
+> Benchmarking keyword: geoBoundingBox
+    Registration: time = 1.572s, mem = +50MB
+    Matching x 57,731 ops/sec ±3.36% (38 runs sampled)
+
+> Benchmarking keyword: geoDistance
+    Registration: time = 2.145s, mem = +16MB
+    Matching x 41,764 ops/sec ±0.50% (33 runs sampled)
+
+> Benchmarking keyword: geoDistanceRange
+    Registration: time = 2.744s, mem = +27MB
+    Matching x 39,031 ops/sec ±0.90% (28 runs sampled)
+
+> Benchmarking keyword: geoPolygon (10 vertices)
+    Registration: time = 2.657s, mem = +26MB
+    Matching x 15,847 ops/sec ±9.65% (48 runs sampled)
+
+> Benchmarking keyword: in (5 random values)
+    Registration: time = 3.238s, mem = +164MB
+    Matching x 7,654 ops/sec ±7.76% (12 runs sampled)
+
+> Benchmarking keyword: range (random bounds)
+    Registration: time = 1.074s, mem = +3MB
+    Matching x 18,291 ops/sec ±0.46% (93 runs sampled)
+```
+
+_(results obtained with node v6.10)_
