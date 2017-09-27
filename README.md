@@ -140,7 +140,7 @@ Filter identifiers are unique hashes, dependant on the following:
 
 * filters in their [canonicalized form](https://en.wikipedia.org/wiki/Canonicalization)
 * the index and collection parameters (see [above](#index-and-collection-parameters))
-* a random seed (see the engine's [constructor](#constructor) documentation)
+* a seed (see the engine's [constructor](#constructor) documentation)
 
 This means that:
 
@@ -284,8 +284,8 @@ Instantiates a new Koncorde engine.
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxConditions`| `Number` | `8` | The maximum number of conditions a filter can hold. It is not advised to use a value greater than `15` without testing filter registration and matching performances |
-|`seed`|`Buffer`| Randomly generated seed | 32 bytes buffer containing a fixed random seed |
+|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied.
+|`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed. 
 
 ---
 
