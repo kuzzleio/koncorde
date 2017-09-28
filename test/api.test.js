@@ -32,6 +32,33 @@ describe('DSL API', () => {
     it('should throw if an invalid argument is supplied', () => {
       should(() => new Dsl('foobar')).throw(/Invalid argument: expected an object/);
       should(() => new Dsl(['foo', 'bar'])).throw(/Invalid argument: expected an object/);
+
+      should(() => new Dsl({
+        seed: 'not a buffer'
+      }))
+        .throw({message: 'Invalid seed: expected a 32 bytes long Buffer'});
+
+      should(() => new Dsl({
+        seed: require('crypto').randomBytes(24)
+      }))
+        .throw({message: 'Invalid seed: expected a 32 bytes long Buffer'});
+
+      {
+        // valid params
+        const
+          seed = Buffer.from('01234567890123456789012345678901'),
+          engine = new Dsl({
+            seed,
+            maxMinTerms: 3
+          });
+
+        should(engine.config)
+          .eql({
+            seed,
+            maxMinTerms: 3
+          });
+      }
+
     });
   });
 
