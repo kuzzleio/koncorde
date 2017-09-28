@@ -284,7 +284,7 @@ Instantiates a new Koncorde engine.
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied.
+|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied.
 |`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed. 
 
 ---
