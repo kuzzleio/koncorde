@@ -209,6 +209,51 @@ describe('DSL API', () => {
     it('should return an empty array if there is no filter registered on an index or collection', () => {
       should(dsl.test('i', 'c', {foo: 'bar'})).be.an.Array().and.be.empty();
     });
+
+    it('should flatten submitted documents', () => {
+      const stub = sinon.stub(dsl.matcher, 'match');
+
+      return dsl.register('i', 'c', {})
+        .then(() => {
+          dsl.test('i', 'c', {
+            bar: 'bar',
+            qux: 'qux',
+            obj: {
+              hello: 'world',
+              nested: {
+                another: 'one',
+                bites: 'the dust'
+              },
+              bottlesOfBeer: 99
+            },
+            arr: ['foo', 'bar'],
+            foo: 'bar'
+          });
+
+          should(stub).calledWith('i', 'c', {
+            bar: 'bar',
+            qux: 'qux',
+            obj: {
+              hello: 'world',
+              nested: {
+                another: 'one',
+                bites: 'the dust'
+              },
+              bottlesOfBeer: 99
+            },
+            'obj.hello': 'world',
+            'obj.nested': {
+              another: 'one',
+              bites: 'the dust'
+            },
+            'obj.nested.another': 'one',
+            'obj.nested.bites': 'the dust',
+            'obj.bottlesOfBeer': 99,
+            arr: ['foo', 'bar'], 
+            foo: 'bar'
+          });
+        });
+    });
   });
 
   describe('#remove', () => {
