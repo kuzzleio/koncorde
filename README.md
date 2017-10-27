@@ -35,7 +35,7 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
     - [`constructor`](#constructor)
     - [`convertDistance`](#convertdistance)
     - [`convertGeopoint`](#convertgeopoint)
-    - [`exists`](#exists)
+    - [`exists`](#exists-1)
     - [`getFilterIds`](#getfilterids)
     - [`normalize`](#normalize)
     - [`register`](#register)
