@@ -14,11 +14,28 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
   - [Index and collection parameters](#index-and-collection-parameters)
   - [Filter unique identifier](#filter-unique-identifier)
   - [Testing nested properties](#testing-nested-properties)
+  - [Filter operands](#filter-operands)
+    - [`and`](#and)
+    - [`bool`](#bool)
+    - [`not`](#not)
+    - [`or`](#or)
+  - [Filter terms](#filter-terms)
+    - [`equals`](#equals)
+    - [`exists`](#exists)
+    - [`geoBoundingBox`](#geoBoundingBox)
+    - [`geoDistance`](#geoDistance)
+    - [`geoDistanceRange`](#geoDistanceRange)
+    - [`geoPolygon`](#geoPolygon)
+    - [`ids`](#ids)
+    - [`in`](#in)
+    - [`missing`](#missing)
+    - [`range`](#range)
+    - [`regexp`](#regexp)
   - [API](#api)
     - [`constructor`](#constructor)
     - [`convertDistance`](#convertdistance)
     - [`convertGeopoint`](#convertgeopoint)
-    - [`exists`](#exists)
+    - [`exists`](#exists-1)
     - [`getFilterIds`](#getfilterids)
     - [`normalize`](#normalize)
     - [`register`](#register)
@@ -31,7 +48,7 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
 
 ## Introduction
 
-This library is a real-time data percolation engine: 
+This library is a real-time data percolation engine:
 
 * an arbitrary number of filters can be registered and indexed
 * whenever data are submitted to this engine, it returns the list of registered filters matching them
@@ -42,13 +59,13 @@ In other words, this is the reverse of a search engine, where data are indexed, 
 
 In the following example, we'll listen to objects containing a `position` property, describing a geopoint. We want that geopoint to be 500 meters around a pre-defined starting position.
 
-This can be described by the following Kuzzle DSL filter: 
+This can be described by the following Kuzzle DSL filter:
 
 ```json
 {
     "geoDistance": {
         "position": {
-            "lat": 43.6073913, 
+            "lat": 43.6073913,
             "lon": 3.9109057
         },
         "distance": "500m"
@@ -66,7 +83,7 @@ const engine = new Koncorde();
 const filter = {
     geoDistance: {
         position: {
-            lat: 43.6073913, 
+            lat: 43.6073913,
             lon: 3.9109057
         },
         distance: "500m"
@@ -85,7 +102,7 @@ engine.register('index', 'collection', filter)
         // Returns: [] (distance is greater than 500m)
         console.log(engine.test('index', 'collection', {
             position: {
-                lat: 43.6073913, 
+                lat: 43.6073913,
                 lon: 5.7
             }
         }));
@@ -93,7 +110,7 @@ engine.register('index', 'collection', filter)
         // Returns: ['5db7052792b18cb2']
         console.log(engine.test('index', 'collection', {
             position: {
-                lat: 43.608, 
+                lat: 43.608,
                 lon: 3.905
             }
         }));
@@ -102,7 +119,7 @@ engine.register('index', 'collection', filter)
         // Returns: [] (the geopoint is not stored in a "position" field)
         console.log(engine.test('index', 'collection', {
             point: {
-                lat: 43.608, 
+                lat: 43.608,
                 lon: 3.905
             }
         }));
@@ -154,7 +171,7 @@ In the following example, we provide a fixed random seed. Replaying this example
 ```js
 const Koncorde = require('koncorde');
 
-const 
+const
     seed = Buffer.from('ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 'hex'),
     engine = new Koncorde({seed});
 
@@ -265,6 +282,718 @@ engine.register('index', 'collection', filter)
   });
 ```
 
+## Filter operands
+
+### and
+The `and` filter takes an array of filter objects, combining them with AND operands.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: 'computer'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: 'computer'
+}
+```
+
+The following filter validates the first document:
+
+```javascript
+{
+  and: [
+    {
+      equals: {
+        city: 'NYC'
+      }
+    },
+    {
+      equals: {
+        hobby: 'computer'
+      }
+    }
+  ]
+}
+```
+
+### bool
+
+A filter matching documents matching boolean combinations of other queries.
+
+This operand accepts the following attributes:
+
+* `must` all listed conditions must be `true`
+* `must_not` all listed conditions must be `false`
+* `should` one of the listed condition must be `true`
+* `should_not` one of the listed condition must be `false`
+
+Each one of these attributes are an array of filter objects.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  age: 85,
+  city: 'NYC',
+  hobby: 'computer'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  age: 36
+  city: 'London',
+  hobby: 'computer'
+},
+{
+  firstName: 'Marie',
+  lastName: 'Curie',
+  age: 55,
+  city: 'Paris',
+  hobby: 'radium'
+}
+```
+
+The following filter validates the second document:
+
+```javascript
+{
+  bool: {
+    must : [
+      {
+        in : {
+          firstName : ['Grace', 'Ada']
+        }
+      },
+      {
+        range: {
+          age: {
+            gte: 36,
+            lt: 85
+          }
+        }
+      }
+    ],
+    'must_not' : [
+      {
+        equals: {
+          city: 'NYC'
+        }
+      }
+    ],
+    should : [
+      {
+        equals : {
+          hobby : 'computer'
+        }
+      },
+      {
+        exists : {
+          field : 'lastName'
+        }
+      }
+    ]
+  }
+}
+```
+
+### not
+
+The `not` filter reverts a filter result.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: 'computer'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: 'computer'
+}
+```
+
+The following filter validates the first document:
+
+```javascript
+{
+  not: {
+    equals: {
+      city: 'London'
+    }
+  }
+}
+```
+
+### or
+
+The `or` filter takes an array containing filter objects, combining them using OR operands.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: 'computer'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: 'computer'
+},
+{
+  firstName: 'Marie',
+  lastName: 'Curie',
+  city: 'Paris',
+  hobby: 'radium'
+}
+```
+
+The following filter validates the first two documents:
+
+```javascript
+{
+  or: [
+    {
+      equals: {
+        city: 'NYC'
+      }
+    },
+    {
+      equals: {
+        city: 'London'
+      }
+    }
+  ]
+}
+```
+
+## Filter terms
+
+### equals
+The `equals` filter matches documents or messages attributes using string equality.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace'
+}
+```
+
+The following filter validates the first document:
+
+```javascript
+{
+  equals: {
+    firstName: 'Grace'
+  }
+}
+```
+### exists
+The `exists` filter matches documents containing non-null fields.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: 'computer',
+  alive: false
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: 'computer'
+}
+```
+
+The following filter validates the first document:
+
+```javascript
+{
+  exists: {
+    field: 'alive'
+  }
+}
+```
+
+### geoBoundingBox
+Filter documents containing a geographical point confined within a bounding box:
+
+![Illustration of geoBoundingBox](http://docs.kuzzle.io/assets/images/geolocation/geoBoundingBox.png)
+
+A bounding box is a 2D box that can be defined using either of the following formats:
+
+* 2 geopoints, defining the top left (`topLeft` or `top_left`) and bottom right (`bottomRight` or `bottom_right`) corners of the box
+* 4 distinct values defining the 4 box corners: `top` and `bottom` are latitudes, `left` and `right` are longitudes
+
+The bounding box description must be stored in an attribute, named after the geographical point to be tested in future documents.
+
+**Format examples:**
+
+All of the following filter examples test for a geographical point named `point`, whose coordinates should be in a bounding box with the following properties:
+
+* top-left corner of latitude `43.5810609` and longitude `3.8433703`
+* bottom-right corner of latitude `43.6331979` and longitude `3.9282093`
+
+
+```javascript
+{
+  point: {
+    top: 43.5810609,
+    left: 3.8433703,
+    bottom: 43.6331979,
+    right: 3.9282093
+  }
+}
+```
+
+```javascript
+{
+  point: {
+    topLeft: { lat: 43.5810609, lon: 3.8433703 },
+    bottomRight: { lat: 43.6331979, lon: 3.9282093 }
+  }
+}
+```
+
+```javascript
+{
+  point: {
+    top_left: "43.5810609, 3.8433703",
+    bottom_right: "43.6331979, 3.9282093"
+  }
+}
+```
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  location: {
+    lat: 32.692742,
+    lon: -97.114127
+  }
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  location: {
+    lat: 51.519291,
+    lon: -0.149817
+  }
+}
+```
+
+The following filter will match the second document only:
+
+```javascript
+{
+  geoBoundingBox: {
+    location: {
+      top: -2.939744,
+      left: 52.394484,
+      bottom: 1.180129,
+      right: 51.143628
+    }
+  }
+}
+```
+
+### geoDistance
+
+Filter documents containing a geographical point, whose position is within a distance radius centered around a provided point of origin:
+
+![Illustration of geoDistance](http://docs.kuzzle.io/assets/images/geolocation/geoDistance.png)
+
+A `geoDistance` filter contains the following properties:
+
+* a geopoint defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
+* a `distance` parameter in [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
+
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  location: {
+    lat: 32.692742,
+    lon: -97.114127
+  }
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  location: {
+    lat: 51.519291,
+    lon: -0.149817
+  }
+}
+```
+
+The following filter will match the second document only:
+
+```javascript
+{
+  geoDistance: {
+    location: {
+      lat: 51.5029017,
+      lon: -0.1606903
+    },
+    distance: '10km'
+  }
+}
+```
+
+### geoDistanceRange
+
+Filter documents containing a geographical point, whose position is within a distance range from a given point of origin:
+
+![Illustration of geoDistanceRange](http://docs.kuzzle.io/assets/images/geolocation/geoDistanceRange.png)
+
+A `geoDistanceRange` filter contains the following properties:
+
+* a geopoint defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
+* a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
+* a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  location: {
+    lat: 32.692742,
+    lon: -97.114127
+  }
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  location: {
+    lat: 51.519291,
+    lon: -0.149817
+  }
+}
+```
+
+The following filter will match the second document only:
+
+```javascript
+{
+  geoDistanceRange: {
+    location: [51.5029017, -0.1606903],
+    from: '1km',
+    to: '10 kilometers'
+  }
+}
+```
+
+### geoPolygon
+Filter documents containing a geographical point, confined within a polygon of an arbitrary number of sides:
+
+![Illustration of geoPolygon](http://docs.kuzzle.io/assets/images/geolocation/geoPolygon.png)
+
+A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of geopoints (at least 3).  
+Koncorde automatically closes geopolygons.
+
+Different geopoint formats can be used to describe different corners of a polygon.
+
+The `points` object must be stored in an attribute named after the geographical point to test in future documents.
+
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  location: {
+    lat: 32.692742,
+    lon: -97.114127
+  }
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  location: {
+    lat: 51.519291,
+    lon: -0.149817
+  }
+}
+```
+
+The following filter will match the second document only:
+
+```javascript
+{
+  geoPolygon: {
+    location: {
+      points: [
+        { lat: 51.523029, lon: -0.160793 },
+        [51.522842, -0.145043],
+        '51.518303, -0.146116',
+        { latLon: {lat: 51.516487, lon: -0.162295 }},
+        'gcpvh6uxh60x1'
+      ]
+    }
+  }
+}
+```
+
+### ids
+
+This filter returns only documents having their unique document ID listed in the provided list.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  _id: 'a',
+  firstName: 'Grace',
+  lastName: 'Hopper'
+},
+{
+  _id: 'b',
+  firstName: 'Ada',
+  lastName: 'Lovelace'
+},
+{
+  _id: 'c',
+  firstName: 'Marie',
+  lastName: 'Curie'
+}
+```
+
+The following filter validates first document:
+
+```javascript
+{
+  ids: {
+    values: ['a']
+  }
+}
+```
+
+### in
+
+This filter allows testing a string field against multiple values.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace'
+},
+{
+  firstName: 'Marie',
+  lastName: 'Curie'
+}
+```
+
+The following filter validates the first two documents:
+
+```javascript
+{
+  in: {
+    firstName: ['Grace', 'Ada']
+  }
+}
+```
+
+### missing
+
+A filter matching documents with a missing field.
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: 'computer',
+  alive: false
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: 'computer',
+}
+```
+
+The following filter validates the second document:
+
+```javascript
+{
+  missing: {
+    field: 'alive'
+  }
+}
+```
+
+### range
+
+Filters documents with fields having number attributes within a certain range.
+
+The range filter accepts the following parameters:
+
+`gte` Greater-than or equal to
+
+`gt` Greater-than
+
+`lte` Less-than or equal to
+
+`lt` Less-than
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  age: 85,
+  city: 'NYC',
+  hobby: 'computer'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  age: 36
+  city: 'London',
+  hobby: 'computer'
+},
+{
+  firstName: 'Marie',
+  lastName: 'Curie',
+  age: 55,
+  city: 'Paris',
+  hobby: 'radium'
+}
+```
+
+The following filter validates the last two documents:
+
+```javascript
+{
+  range: {
+    age: {
+      gte: 36,
+      lt: 85
+    }
+  }
+}
+```
+
+### regexp
+
+The `regexp` filter matches documents or messages attributes using perl-compatible regular expressions ([PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)).  
+You can test only 1 attribute per `regexp` filter.
+
+A `regexp` filter has the following structure, splitting the usual `/pattern/flags` into two parts:
+
+```javascript
+{
+  regexp: {
+    attributeToTest: {
+      value: 'search pattern',
+      flags: 'modifier flags'
+    }
+  }
+}
+```
+
+**Example:**
+
+Given the following documents:
+
+```javascript
+{
+  firstName: 'Grace',
+  lastName: 'Hopper'
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace'
+}
+```
+
+The following filter validates the first document:
+
+```javascript
+{
+  regexp: {
+    firstName: {
+      value: '^g\w+',
+      flags: 'i'
+    }
+  }
+}
+```
 
 ## API
 
@@ -285,7 +1014,7 @@ Instantiates a new Koncorde engine.
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
 |`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied.
-|`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed. 
+|`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed.
 
 ---
 
