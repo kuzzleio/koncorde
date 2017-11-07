@@ -967,7 +967,7 @@ A `regexp` filter has the following structure, splitting the usual `/pattern/fla
 }
 ```
 
-If you don't need any modifier flag, then you can also the following simplified form:
+If you don't need any modifier flag, then you may also use the following simplified form:
 
 ```javascript
 {
