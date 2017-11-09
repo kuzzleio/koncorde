@@ -56,19 +56,23 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should validate a well-formed regular expression filter w/ flags', () => {
-      return should(dsl.validate({regexp: {foo: {value: 'foo', flags: 'i'}}})).be.fulfilledWith(true);
+      return dsl.normalize('foo', 'bar', {regexp: {foo: {value: 'foo', flags: 'i'}}})
+        .then(res => {
+          should(res.normalized).match([[{regexp:{foo:{flags:'i',value:'foo'}}}]]);
+        });
     });
 
     it('should validate a well-formed regular expression filter without flags', () => {
-      return should(dsl.validate({regexp: {foo: {value: 'foo'}}})).be.fulfilledWith(true);
+      return dsl.normalize('foo', 'bar', {regexp: {foo: {value: 'foo'}}})
+        .then(res => {
+          should(res.normalized).match([[{regexp:{foo:{flags:undefined,value:'foo'}}}]]);
+        });
     });
 
     it('should accept a simplified form', () => {
-      return dsl.validate({regexp: {
-        foo: '^bar'
-      }})
-        .then(response => {
-          should(response).be.true();
+      return dsl.normalize('foo', 'bar', {regexp: {foo: '^bar'}})
+        .then(res => {
+          should(res.normalized).match([[{regexp:{foo:{flags:undefined,value:'^bar'}}}]]);
         });
     });
 
