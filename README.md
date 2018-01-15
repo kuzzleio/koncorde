@@ -53,7 +53,7 @@ This library is a real-time data percolation engine:
 * an arbitrary number of filters can be registered and indexed
 * whenever data are submitted to this engine, it returns the list of registered filters matching them
 
-In other words, this is the reverse of a search engine, where data are indexed, and filters are used to retrieved the matching data.
+In other words, this is the reverse of a search engine, where data are indexed, and filters are used to retrieve the matching data.
 
 **Example:**
 
