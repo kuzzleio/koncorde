@@ -52,6 +52,17 @@ describe('DSL.keyword.geoBoundingBox', () => {
       return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
     });
 
+    it('should validate a {"top", "left", "bottom", "right"} bbox', () => {
+      let box = {
+        bottom: '43.5810609',
+        left: '3.8433703',
+        top: '43.6331979',
+        right: '3.9282093'
+      };
+
+      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+    });
+
     it('should validate a {topLeft: {lat, lon}, bottomRight: {lat, lon}} bbox', () => {
       return should(standardize({geoBoundingBox: {foo: bbox}})).be.fulfilledWith(bboxStandardized);
     });
@@ -145,6 +156,17 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
       return should(standardize({geoBoundingBox: {foo: box}})).be.rejectedWith(BadRequestError);
     });
+
+    it('should reject a non-convertible bbox point string', () => {
+      let box = {
+        bottom: '43.5810609',
+        left: '3.8433703',
+        top: '43.6331979',
+        right: 'foobar'
+      };
+
+      return should(standardize({geoBoundingBox: {foo: box}})).be.rejectedWith(BadRequestError, {message: `Invalid geoBoundingBox format: ${JSON.stringify(box)}`});
+    });
   });
 
   describe('#storage', () => {
@@ -200,6 +222,16 @@ describe('DSL.keyword.geoBoundingBox', () => {
       return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
         .then(subscription => {
           var result = dsl.test('index', 'collection', {foo: {latLon: [43.6073913, 3.9109057]}});
+
+          should(result).be.an.Array().and.not.empty();
+          should(result[0]).be.eql(subscription.id);
+        });
+    });
+
+    it('should convert points to float before trying to match them', () => {
+      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
+        .then(subscription => {
+          var result = dsl.test('index', 'collection', {foo: {latLon: ['43.6073913', '3.9109057']}});
 
           should(result).be.an.Array().and.not.empty();
           should(result[0]).be.eql(subscription.id);
