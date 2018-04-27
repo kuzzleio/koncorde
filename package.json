@@ -1,6 +1,6 @@
 {
   "name": "koncorde",
-  "version": "1.1.5",
+  "version": "1.1.6",
   "description": "Supersonic real-time data percolation engine",
   "main": "lib/index.js",
   "directories": {
