@@ -128,7 +128,7 @@ engine.register('index', 'collection', filter)
 
 ## Install
 
-This library can only be used with NodeJS version 6.x or higher.  
+This library can only be used with NodeJS version 6.x or higher.
 Both a C and a C++ compilers are needed to install the following dependencies: [Espresso Logic Minimizer](https://www.npmjs.com/package/espresso-logic-minimizer) and [Boost Geospatial Index](https://www.npmjs.com/package/boost-geospatial-index)
 
 To install:
@@ -140,7 +140,7 @@ npm install --save koncorde
 
 ## Index and collection parameters
 
-Though it can be used in a variety of ways, most use cases for a data percolation engine imply to put it on top of some kind of storage database, dealing with large quantities of data.  
+Though it can be used in a variety of ways, most use cases for a data percolation engine imply to put it on top of some kind of storage database, dealing with large quantities of data.
 And the most common way to store data in a database (relational, NoSQL or whatnot), is in some kind of collection of data, regrouped in data indexes.
 
 Even though this engine can be instantiated multiple times just fine, each instance has a constant overhead cost which may quickly add up.
@@ -742,7 +742,7 @@ Filter documents containing a geographical point, confined within a polygon of a
 
 ![Illustration of geoPolygon](http://docs.kuzzle.io/assets/images/geolocation/geoPolygon.png)
 
-A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of geopoints (at least 3).  
+A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of geopoints (at least 3).
 Koncorde automatically closes geopolygons.
 
 Different geopoint formats can be used to describe different corners of a polygon.
@@ -951,7 +951,7 @@ The following filter validates the last two documents:
 
 ### regexp
 
-The `regexp` filter matches documents or messages attributes using perl-compatible regular expressions ([PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)).  
+The `regexp` filter matches documents or messages attributes using perl-compatible regular expressions ([PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)).
 You can test only 1 attribute per `regexp` filter.
 
 A `regexp` filter has the following structure, splitting the usual `/pattern/flags` into two parts:
@@ -1044,7 +1044,7 @@ Accepted units:
 
 Accepted unit modifiers: from `yocto-` (10e-21) to `yotta-` (10e24), and their corresponding short forms (e.g. `kilometers` or `km`)
 
-Accepted formats: `<int (spaces accepted)>[.|,]<decimal><spaces><unit>`.  
+Accepted formats: `<int (spaces accepted)>[.|,]<decimal><spaces><unit>`.
 
 Examples:
 
@@ -1171,10 +1171,10 @@ An `array` of filter unique identifiers corresponding to filters registered on t
 
 ### `normalize`
 
-Returns a promise resolved if the provided filter are well-formed.  
+Returns a promise resolved if the provided filter are well-formed.
 The resolved object contains the provided filter in its canonical form, along with the corresponding filter unique identifier.
 
-This method does not modify the internal storage. To save a filter, the [store](#store) method must be called afterward.  
+This method does not modify the internal storage. To save a filter, the [store](#store) method must be called afterward.
 If you do not need the filter unique identifier prior to save a filter in the engine, then consider using the all-in-one [register](#register) method instead.
 
 **normalize(index, collection, filter)**
@@ -1308,36 +1308,36 @@ The following results are obtained running `node benchmark.js` at the root of th
 Filter count per tested keyword: 10000
 
 > Benchmarking keyword: equals
-    Registration: time = 0.647s, mem = +42MB
-    Matching x 92,270 ops/sec ±5.91% (50 runs sampled)
+  Registration: time = 0.484s, mem = +41MB
+  Matching x 106,992 ops/sec ±2.46% (70 runs sampled)
 
 > Benchmarking keyword: exists
-    Registration: time = 2.223s, mem = +15MB
-    Matching x 3,169 ops/sec ±1.50% (56 runs sampled)
+  Registration: time = 2.144s, mem = +18MB
+  Matching x 42,239 ops/sec ±4.31% (59 runs sampled)
 
 > Benchmarking keyword: geoBoundingBox
-    Registration: time = 1.572s, mem = +50MB
-    Matching x 57,731 ops/sec ±3.36% (38 runs sampled)
+  Registration: time = 0.842s, mem = +16MB
+  Matching x 51,096 ops/sec ±4.96% (42 runs sampled)
 
 > Benchmarking keyword: geoDistance
-    Registration: time = 2.145s, mem = +16MB
-    Matching x 41,764 ops/sec ±0.50% (33 runs sampled)
+  Registration: time = 1.392s, mem = +15MB
+  Matching x 40,320 ops/sec ±4.79% (24 runs sampled)
 
 > Benchmarking keyword: geoDistanceRange
-    Registration: time = 2.744s, mem = +27MB
-    Matching x 39,031 ops/sec ±0.90% (28 runs sampled)
+  Registration: time = 2.056s, mem = +30MB
+  Matching x 33,740 ops/sec ±4.36% (18 runs sampled)
 
 > Benchmarking keyword: geoPolygon (10 vertices)
-    Registration: time = 2.657s, mem = +26MB
-    Matching x 15,847 ops/sec ±9.65% (48 runs sampled)
+  Registration: time = 1.446s, mem = +23MB
+  Matching x 16,302 ops/sec ±10.17% (45 runs sampled)
 
 > Benchmarking keyword: in (5 random values)
-    Registration: time = 3.238s, mem = +164MB
-    Matching x 7,654 ops/sec ±7.76% (12 runs sampled)
+  Registration: time = 1.849s, mem = +94MB
+  Matching x 8,112 ops/sec ±1.32% (20 runs sampled)
 
 > Benchmarking keyword: range (random bounds)
-    Registration: time = 1.074s, mem = +3MB
-    Matching x 18,291 ops/sec ±0.46% (93 runs sampled)
+  Registration: time = 0.631s, mem = +6MB
+  Matching x 28,539 ops/sec ±7.26% (87 runs sampled)
 ```
 
-_(results obtained with node v6.10)_
+_(results obtained with node v10.2.1)_
