@@ -246,13 +246,13 @@ A few keywords, like [exists](#exists) or [missing](#missing), allow searching f
 These values can be accessed with the following syntax: `arrayName['value']`  
 Only one array value can be provided in this manner.
 
-Array values must be scalars (strings, numbers, booleans or `null`):
+Array values must be scalars (strings, numbers, booleans or `null`), following JSON format:
 
-* Strings: the value must be enclosed in either single or double quotes. Examples: `"value"` or `'value'`
-* Numbers, booleans and the null value must be used as is. Examples: `3.14`, `false`, `null`
+* Strings: the value must be enclosed in double quotes. Example: `foo["string value"]`
+* Numbers, booleans and the null value must be used as is. Examples: `foo[3.14]`, `foo[false]`, `foo[null]`
 
 
-Array values can be combined with [nested properties](#nested-properties): `nested.array['value']`
+Array values can be combined with [nested properties](#nested-properties): `nested.array["value"]`
 
 **Example:**
 
@@ -272,7 +272,7 @@ Here is a filter, testing whether the value `compiler` is listed in the array `h
 
 ```json
 {
-    "exists": "name.hobbies['compiler']"
+    "exists": "name.hobbies[\"compiler\"]"
 }
 ```
 
@@ -1378,36 +1378,36 @@ The following results are obtained running `node benchmark.js` at the root of th
 Filter count per tested keyword: 10000
 
 > Benchmarking keyword: equals
-  Registration: time = 0.484s, mem = +41MB
-  Matching x 106,992 ops/sec ±2.46% (70 runs sampled)
+  Registration: time = 0.457s, mem = +40MB
+  Matching x 2,914,603 ops/sec ±0.22% (98 runs sampled)
 
 > Benchmarking keyword: exists
-  Registration: time = 2.144s, mem = +18MB
-  Matching x 42,239 ops/sec ±4.31% (59 runs sampled)
+  Registration: time = 0.458s, mem = +10MB
+  Matching x 1,814,377 ops/sec ±0.30% (95 runs sampled)
 
 > Benchmarking keyword: geoBoundingBox
-  Registration: time = 0.842s, mem = +16MB
-  Matching x 51,096 ops/sec ±4.96% (42 runs sampled)
+  Registration: time = 0.733s, mem = +17MB
+  Matching x 1,124,283 ops/sec ±1.99% (94 runs sampled)
 
 > Benchmarking keyword: geoDistance
-  Registration: time = 1.392s, mem = +15MB
-  Matching x 40,320 ops/sec ±4.79% (24 runs sampled)
+  Registration: time = 1.383s, mem = +10MB
+  Matching x 1,055,469 ops/sec ±0.20% (97 runs sampled)
 
 > Benchmarking keyword: geoDistanceRange
-  Registration: time = 2.056s, mem = +30MB
-  Matching x 33,740 ops/sec ±4.36% (18 runs sampled)
+  Registration: time = 1.747s, mem = +23MB
+  Matching x 1,164,162 ops/sec ±0.30% (97 runs sampled)
 
 > Benchmarking keyword: geoPolygon (10 vertices)
-  Registration: time = 1.446s, mem = +23MB
-  Matching x 16,302 ops/sec ±10.17% (45 runs sampled)
+  Registration: time = 1.324s, mem = +5MB
+  Matching x 50,353 ops/sec ±0.95% (96 runs sampled)
 
 > Benchmarking keyword: in (5 random values)
-  Registration: time = 1.849s, mem = +94MB
-  Matching x 8,112 ops/sec ±1.32% (20 runs sampled)
+  Registration: time = 1.539s, mem = +63MB
+  Matching x 1,694,947 ops/sec ±0.67% (94 runs sampled)
 
 > Benchmarking keyword: range (random bounds)
-  Registration: time = 0.631s, mem = +6MB
-  Matching x 28,539 ops/sec ±7.26% (87 runs sampled)
+  Registration: time = 0.427s, mem = +16MB
+  Matching x 35,441 ops/sec ±0.38% (94 runs sampled)
 ```
 
 _(results obtained with node v10.2.1)_

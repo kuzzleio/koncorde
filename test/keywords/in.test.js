@@ -1,12 +1,12 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   DSL = require('../../');
 
 describe('DSL.keyword.in', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();

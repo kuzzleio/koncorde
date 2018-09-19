@@ -3,6 +3,7 @@ node_modules
 npm-debug.log*
 .node_history
 .reify-cache
+*.log
 
 # Exclude coverage report
 coverage

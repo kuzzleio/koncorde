@@ -1,6 +1,6 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../lib/storage/objects/fieldOperand'),
@@ -151,7 +151,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
           let subfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).match(['foo']);
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[subfilter.conditions[0].id]).match([subfilter]);
         });
     });
@@ -167,7 +167,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
           let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).match(['foo']);
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf1.conditions[0].id]).match([sf1, sf2]);
         });
     });
@@ -185,7 +185,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
           let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).match(['foo']);
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond1]).match([sf1]);
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf2.conditions[0].id]).match([sf2]);
         });
