@@ -150,6 +150,15 @@ describe('DSL.keyword.equals', () => {
         });
     });
 
+    // see https://github.com/kuzzleio/koncorde/issues/13
+    it('should skip the matching if the document tested property is not of the same type than the known values', () => {
+      return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.test('index', 'collection', {foo: ['bar']})).be.an.Array().and.empty();
+          should(dsl.test('index', 'collection', {foo: {bar: true}})).be.an.Array().and.empty();
+        });
+    });
+
     it('should match a document with the subscribed nested keyword', () => {
       return dsl.register('index', 'collection', {equals: {'foo.bar.baz': 'qux'}})
         .then(subscription => {
