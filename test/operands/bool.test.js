@@ -3,10 +3,11 @@
 const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../');
+  DSL = require('../../'),
+  NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('DSL.operands.bool', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -24,7 +25,7 @@ describe('DSL.operands.bool', () => {
 
   describe('#standardization', () => {
     it('should standardize bool attributes with AND/OR/NOT operands', () => {
-      let bool = {
+      const bool = {
         bool: {
           must : [
             {
@@ -55,9 +56,7 @@ describe('DSL.operands.bool', () => {
               }
             },
             {
-              exists : {
-                field : 'lastName'
-              }
+              exists : 'lastName'
             }
           ],
           should_not: [
@@ -83,7 +82,7 @@ describe('DSL.operands.bool', () => {
               ]},
               {or: [
                 {equals: {hobby: 'computer'}},
-                {exists: {field: 'lastName'}}
+                {exists: new NormalizedExists('lastName', false, null)}
               ]},
               {and: [
                 {range: {age: {gte: 36, lt: 85}}},

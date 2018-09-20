@@ -141,7 +141,7 @@ describe('DSL.keyword.notequals', () => {
           should(storage.keys).match(['foo']);
           should(storage.fields.foo).instanceOf(Map);
           should(storage.fields.foo.size).eql(2);
-          should(storage.fields.foo.get('bar')).eql([quxSubfilter]);
+          should(storage.fields.foo.get('bar')).eql([barSubfilter]);
           should(storage.fields.foo.get('qux')).eql([quxSubfilter]);
         });
     });
@@ -175,11 +175,11 @@ describe('DSL.keyword.notequals', () => {
           return dsl.register('index', 'collection', {not: {equals: {baz: 'qux'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.notequals.keys).match(['baz', 'foo']);
+          should(dsl.storage.foPairs.index.collection.notequals.keys).match(['foo', 'baz']);
           return dsl.remove(subscription.id);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.notequals.keys;
+          const storage = dsl.storage.foPairs.index.collection.notequals;
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).match(['foo']);
           should(storage.fields.foo.get('bar')).match([barSubfilter]);

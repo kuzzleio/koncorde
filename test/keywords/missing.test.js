@@ -38,11 +38,7 @@ describe('DSL.keyword.missing', () => {
     it('should match a document without the subscribed field', () => {
       return dsl.register('index', 'collection', {not: {exists: 'foo'}})
         .then(subscription => {
-          ['bar', 'fo', 'fooo', 'qux'].forEach(field => {
-            const result = dsl.test('index', 'collection', {[field]: field});
-
-            should(result).eql([subscription.id]);
-          });
+          should(dsl.test('index', 'collection', {bar: 'qux'})).eql([subscription.id]);
         });
     });
 
@@ -53,10 +49,10 @@ describe('DSL.keyword.missing', () => {
         });
     });
 
-    it('should not match if the document contains an explicitly undefined field', () => {
+    it('should match if the document contains an explicitly undefined field', () => {
       return dsl.register('index', 'collection', {not: {exists: 'foo'}})
-        .then(() => {
-          should(dsl.test('index', 'collection', {foo: undefined})).be.an.Array().and.empty();
+        .then(subscription => {
+          should(dsl.test('index', 'collection', {foo: undefined})).eql([subscription.id]);
         });
     });
 
@@ -81,10 +77,20 @@ describe('DSL.keyword.missing', () => {
         });
     });
 
+    it('should match if a field is entirely missing, while looking for an array value only', () => {
+      return dsl.register('i', 'c', {missing: 'foo.bar["baz"'})
+        .then(subscription => should(dsl.test('i', 'c', {bar: 'foo'})).eql([subscription.id]));
+    });
+
+    it('should match if looking for an array value, and the field is not an array', () => {
+      return dsl.register('i', 'c', {missing: 'foo.bar["baz"'})
+        .then(subscription => should(dsl.test('i', 'c', {foo: {bar: 42}})).eql([subscription.id]));
+    });
+
     it('should match if there is a type mismatch', () => {
       return dsl.register('i', 'c', {not: {exists: 'foo.bar["true"]'}})
-        .then(() => {
-          should(dsl.test('i', 'c', {foo: {bar: [true]}})).Array().empty();
+        .then(subscription => {
+          should(dsl.test('i', 'c', {foo: {bar: [true]}})).eql([subscription.id]);
         });
     });
 

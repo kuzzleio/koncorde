@@ -4,7 +4,8 @@ const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+  DSL = require('../../'),
+  NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('DSL.keyword.exists', () => {
   let dsl;
@@ -63,12 +64,12 @@ describe('DSL.keyword.exists', () => {
   describe('#standardization', () => {
     it('should return the normalized filter (from old syntax)', () => {
       return should(dsl.transformer.standardizer.standardize({exists: {field: 'bar'}}))
-        .be.fulfilledWith({exists: {path: 'bar', array: false, value: null}});
+        .be.fulfilledWith({exists: new NormalizedExists('bar', false, null)});
     });
 
     it('should return the normalized filter (from simplified syntax)', () => {
       return should(dsl.transformer.standardizer.standardize({exists: 'bar'}))
-        .be.fulfilledWith({exists: {path: 'bar', array: false, value: null}});
+        .be.fulfilledWith({exists: new NormalizedExists('bar', false, null)});
     });
 
     it('should parse and normalize array values', () => {
@@ -79,9 +80,11 @@ describe('DSL.keyword.exists', () => {
       return Promise.all(promises)
         .then(results => {
           for (let i = 0; i < values.length; i++) {
+            const expected = typeof values[i] === 'string' ? values[i].replace(/"/g, '') : values[i];
+            should(results[i].exists).instanceOf(NormalizedExists);
             should(results[i].exists.array).be.true();
             should(results[i].exists.path).eql('foo.bar');
-            should(results[i].exists.value).eql(values[i]);
+            should(results[i].exists.value).eql(expected);
             should(typeof results[i].exists.value).eql(typeof values[i]);
           }
         });
@@ -89,12 +92,12 @@ describe('DSL.keyword.exists', () => {
 
     it('should not interpret unclosed brackets as an array value', () => {
       return should(dsl.transformer.standardizer.standardize({exists: 'foo[bar'}))
-        .be.fulfilledWith({exists: {path: 'foo[bar', array: false, value: null}});
+        .be.fulfilledWith({exists: new NormalizedExists('foo[bar', false, null)});
     });
 
     it('should properly interpret escaped brackets as an object field name', () => {
       return should(dsl.transformer.standardizer.standardize({exists: 'foo.ba\\[true\\]'}))
-        .be.fulfilledWith({exists: {path: 'foo.ba[true]', array: false, value: null}});
+        .be.fulfilledWith({exists: new NormalizedExists('foo.ba[true]', false, null)});
     });
   });
 
@@ -107,7 +110,7 @@ describe('DSL.keyword.exists', () => {
             storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(['foo']);
           should(storage.fields.foo.subfilters).eql([subfilter]);
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -123,7 +126,7 @@ describe('DSL.keyword.exists', () => {
 
           return dsl.register('index', 'collection', {
             and: [
-              {equals: 'qux'},
+              {equals: {bar: 'qux'}},
               {exists: 'foo'}
             ]
           });
@@ -153,7 +156,7 @@ describe('DSL.keyword.exists', () => {
           should(storage.fields.foo.subfilters).Array().and.empty();
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('foo')).eql([subfilter]);
+          should(storage.fields.foo.values.get('bar')).eql([subfilter]);
         });
     });
 
@@ -179,8 +182,8 @@ describe('DSL.keyword.exists', () => {
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(['foo', 'qux']);
           should(storage.fields.foo.subfilters).Array().and.empty();
-          should(storage.fields.values).instanceOf(Map);
-          should(storage.fields.values.size).eql(2);
+          should(storage.fields.foo.values).instanceOf(Map);
+          should(storage.fields.foo.values.size).eql(1);
           should(storage.fields.foo.values.get('bar')).eql([barSubfilter, quxSubfilter]);
           should(storage.fields.qux.values.get('bar')).eql([quxSubfilter]);
         });
@@ -235,8 +238,10 @@ describe('DSL.keyword.exists', () => {
       return Promise.all(promises)
         .then(subscriptions => {
           for (let i = 0; i < subscriptions.length; i++) {
-            should(dsl.test('i', 'c', {foo: ['hello', values[i], 'world']}))
-              .eql([subscriptions[i]]);
+            const expected = typeof values[i] === 'string' ? values[i].replace(/"/g, '') : values[i];
+
+            should(dsl.test('i', 'c', {foo: ['hello', expected, 'world']}))
+              .eql([subscriptions[i].id]);
           }
         });
     });
@@ -282,7 +287,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(['foo']);
           should(storage.fields.foo.subfilters).match([multiSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -299,12 +304,15 @@ describe('DSL.keyword.exists', () => {
 
           return dsl.register('index', 'collection', {exists: 'bar'});
         })
-        .then(subscription => dsl.remove(subscription.id))
+        .then(subscription => {
+          should(dsl.storage.foPairs.index.collection.exists.keys).eql(['foo', 'bar']);
+          return dsl.remove(subscription.id);
+        })
         .then(() => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(['foo']);
           should(storage.fields.foo.subfilters).match([fooSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -327,7 +335,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(['foo']);
           should(storage.fields.foo.subfilters).match([fooSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -350,11 +358,10 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(['foo']);
           should(storage.fields.foo.subfilters).match([fooSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
-          should(storage.fields.bar).be.undefined();
         });
     });
 
@@ -373,7 +380,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(['foo']);
           should(storage.fields.foo.subfilters).Array().empty();
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);

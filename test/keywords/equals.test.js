@@ -108,7 +108,7 @@ describe('DSL.keyword.equals', () => {
           const equals = dsl.storage.foPairs.index.collection.equals;
 
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(['baz', 'foo']);
+          should(equals.keys).eql(['foo', 'baz']);
           should(equals.fields.foo.get('bar')).eql([barSubfilter, multiSubfilter]);
           should(equals.fields.baz.get('qux')).eql([multiSubfilter]);
         });
@@ -236,7 +236,7 @@ describe('DSL.keyword.equals', () => {
           const equals = dsl.storage.foPairs.index.collection.equals;
 
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(['baz', 'foo']);
+          should(equals.keys).eql(['foo', 'baz']);
           should(equals.fields.foo.get('bar')).eql([multiSubfilter]);
           should(equals.fields.baz.get('qux')).eql([multiSubfilter]);
         });
@@ -287,7 +287,7 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           equals = dsl.storage.foPairs.index.collection.equals;
 
-          should(equals.keys).eql(['baz', 'foo']);
+          should(equals.keys).eql(['foo', 'baz']);
           should(equals.fields.baz.get('qux')).be.an.Array().and.not.empty();
           idToRemove = subscription.id;
           return dsl.remove(idToRemove);

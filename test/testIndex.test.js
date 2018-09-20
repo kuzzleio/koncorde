@@ -27,9 +27,9 @@ describe('#TestTables (== DSL filter indexes)', () => {
 
   describe('#indexing', () => {
     it('should index new filters properly', () => {
-      return dsl.register('i', 'c', {exists: {field: 'foo'}})
+      return dsl.register('i', 'c', {exists: 'foo'})
         .then(subscription => {
-          let filter = dsl.storage.filters[subscription.id];
+          const filter = dsl.storage.filters[subscription.id];
 
           should(filter.fidx).be.eql(0);
           should(filter.subfilters[0].cidx).be.eql(0);
@@ -39,7 +39,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
           return dsl.register('i', 'c', {exists: {field: 'bar'}});
         })
         .then(subscription => {
-          let filter = dsl.storage.filters[subscription.id];
+          const filter = dsl.storage.filters[subscription.id];
           should(filter.fidx).be.eql(1);
           should(filter.subfilters[0].cidx).be.eql(1);
           should(dsl.storage.testTables.i.c.conditions[1]).be.eql(1);
@@ -48,7 +48,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
           return dsl.register('i', 'c', {and: [{exists: {field: 'baz'}}, {exists: {field: 'qux'}}]});
         })
         .then(subscription => {
-          let filter = dsl.storage.filters[subscription.id];
+          const filter = dsl.storage.filters[subscription.id];
           should(filter.fidx).be.eql(2);
           should(filter.subfilters[0].cidx).be.eql(2);
           should(dsl.storage.testTables.i.c.conditions[2]).be.eql(2);
@@ -57,27 +57,27 @@ describe('#TestTables (== DSL filter indexes)', () => {
     });
 
     it('should reallocate the condition index table when full', () => {
-      return dsl.register('i', 'c', {exists: {field: 'foo'}})
+      return dsl.register('i', 'c', {exists: 'foo'})
         .then(() => {
-          let promises = [];
+          const promises = [];
 
           should(dsl.storage.testTables.i.c.clength).be.eql(1);
           should(dsl.storage.testTables.i.c.conditions.length).be.eql(10);
 
           for(let i = 0; i < 10; ++i) {
-            promises.push(dsl.register('i', 'c', {exists: {field: `${i}`}}));
+            promises.push(dsl.register('i', 'c', {exists: `${i}`}));
           }
 
           return Bluebird.all(promises);
         })
         .then(() => {
-          let promises = [];
+          const promises = [];
 
           should(dsl.storage.testTables.i.c.clength).be.eql(11);
           should(dsl.storage.testTables.i.c.conditions.length).be.eql(15);
 
           for(let i = 0; i < 20; ++i) {
-            promises.push(dsl.register('i', 'c', {exists: {field: `secondPass_${i}`}}));
+            promises.push(dsl.register('i', 'c', {exists: `secondPass_${i}`}));
           }
 
           return Bluebird.all(promises);
@@ -116,29 +116,29 @@ describe('#TestTables (== DSL filter indexes)', () => {
     });
 
     it('should track removed filters and re-index', () => {
+      const clock = sinon.useFakeTimers();
       let
-        clock = sinon.useFakeTimers(),
         id1,
         id2;
 
-      return dsl.register('i', 'c', {exists: {field: 'foo'}})
+      return dsl.register('i', 'c', {exists: 'foo'})
         .then(subscription => {
           id1 = subscription.id;
-          return dsl.register('i', 'c', {exists: {field: 'bar'}});
+          return dsl.register('i', 'c', {exists: 'bar'});
         })
         .then(subscription => {
           id2 = subscription.id;
           return dsl.remove(id1);
         })
         .then(() => {
-          let filter = dsl.storage.filters[id2];
+          const filter = dsl.storage.filters[id2];
 
           should(filter.fidx).be.eql(1);
           should(filter.subfilters[0].cidx).be.eql(1);
           should(dsl.storage.testTables.i.c.clength).be.eql(2);
           should(dsl.storage.testTables.i.c.removedFilters.has(id1)).be.true();
           should(dsl.storage.testTables.i.c.removedFilters.size).be.eql(1);
-          should(dsl.storage.testTables.i.c.removedConditions.array.length).be.eql(1);
+          should(dsl.storage.testTables.i.c.removedConditions.size).be.eql(1);
           should(dsl.storage.testTables.i.c.reindexing).be.true();
 
           clock.tick(5000);
@@ -147,7 +147,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
           should(filter.subfilters[0].cidx).be.eql(0);
           should(dsl.storage.testTables.i.c.clength).be.eql(1);
           should(dsl.storage.testTables.i.c.removedFilters).be.empty();
-          should(dsl.storage.testTables.i.c.removedConditions.array).be.empty();
+          should(dsl.storage.testTables.i.c.removedConditions).be.empty();
           should(dsl.storage.testTables.i.c.reindexing).be.false();
 
           clock.restore();
@@ -155,17 +155,15 @@ describe('#TestTables (== DSL filter indexes)', () => {
     });
 
     it('should not trigger a re-index if less than 10% of registered filters are removed', () => {
-      let promises = [];
+      const promises = [];
 
       for(let i = 0; i < 10; i++) {
-        promises.push(dsl.register('i', 'c', {exists: {field: `${i}`}}));
+        promises.push(dsl.register('i', 'c', {exists: `${i}`}));
       }
 
       return Bluebird.all(promises)
         .then(() => dsl.remove(Object.keys(dsl.storage.filters)[0]))
-        .then(() => {
-          should(dsl.storage.testTables.i.c.reindexing).be.false();
-        });
+        .then(() => should(dsl.storage.testTables.i.c.reindexing).be.false());
     });
 
     // https://github.com/kuzzleio/kuzzle/issues/740
@@ -177,7 +175,7 @@ describe('#TestTables (== DSL filter indexes)', () => {
       return dsl.register('index', 'collection', {
         or: [
           {equals: {foo: 'bar'}},
-          {exists: {field: 'foo'}}
+          {exists: 'foo'}
         ]
       })
         .then(response => {
@@ -188,48 +186,21 @@ describe('#TestTables (== DSL filter indexes)', () => {
           room2 = response.id;
           return dsl.remove(room1);
         })
-        .then(() => {
-          return dsl.remove(room2);
-        });
+        .then(() => dsl.remove(room2));
     });
 
     // https://github.com/kuzzleio/kuzzle/issues/824
     it('should remove a filter on which several conditions are set for the same field', () => {
       const filter = {
         and: [
-          {
-            not: {
-              range: {
-                foo: {lt: 42}
-              }
-            }
-          },
-          {
-            not: {
-              range: {
-                foo: {lt: 50}
-              }
-            }
-          },
-          {
-            not: {
-              range: {
-                foo: {lt: 2}
-              }
-            }
-          }
+          { not: { range: { foo: {lt: 42} } } },
+          { not: { range: { foo: {lt: 50} } } },
+          { not: { range: { foo: {lt: 2} } } }
         ]
       };
 
-      let roomId;
-
       return dsl.register('i', 'c', filter)
-        .then(response => {
-          roomId = response.id;
-
-          return dsl.remove(roomId);
-        });
+        .then(response => dsl.remove(response.id));
     });
-
   });
 });

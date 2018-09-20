@@ -152,7 +152,7 @@ describe('DSL.keyword.geoDistance', () => {
           let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).match(['foo']);
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf1.conditions[0].id]).match([sf1, sf2]);
         });
     });
