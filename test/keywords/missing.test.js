@@ -83,7 +83,7 @@ describe('DSL.keyword.missing', () => {
     });
 
     it('should match if looking for an array value, and the field is not an array', () => {
-      return dsl.register('i', 'c', {missing: 'foo.bar["baz"'})
+      return dsl.register('i', 'c', {missing: 'foo.bar["baz"]'})
         .then(subscription => should(dsl.test('i', 'c', {foo: {bar: 42}})).eql([subscription.id]));
     });
 
