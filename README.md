@@ -1379,36 +1379,36 @@ The following results are obtained running `node benchmark.js` at the root of th
 Filter count per tested keyword: 10000
 
 > Benchmarking keyword: equals
-  Registration: time = 0.457s, mem = +40MB
-  Matching x 2,914,603 ops/sec ±0.22% (98 runs sampled)
+  Registration: time = 0.453s, mem = +40MB
+  Matching x 3,444,291 ops/sec ±0.83% (94 runs sampled)
 
 > Benchmarking keyword: exists
-  Registration: time = 0.458s, mem = +10MB
-  Matching x 1,814,377 ops/sec ±0.30% (95 runs sampled)
+  Registration: time = 0.518s, mem = +12MB
+  Matching x 1,953,425 ops/sec ±0.68% (94 runs sampled)
 
 > Benchmarking keyword: geoBoundingBox
-  Registration: time = 0.733s, mem = +17MB
-  Matching x 1,124,283 ops/sec ±1.99% (94 runs sampled)
+  Registration: time = 0.936s, mem = +17MB
+  Matching x 1,234,466 ops/sec ±0.50% (94 runs sampled)
 
 > Benchmarking keyword: geoDistance
-  Registration: time = 1.383s, mem = +10MB
-  Matching x 1,055,469 ops/sec ±0.20% (97 runs sampled)
+  Registration: time = 1.25s, mem = +16MB
+  Matching x 1,255,571 ops/sec ±0.84% (97 runs sampled)
 
 > Benchmarking keyword: geoDistanceRange
-  Registration: time = 1.747s, mem = +23MB
-  Matching x 1,164,162 ops/sec ±0.30% (97 runs sampled)
+  Registration: time = 1.857s, mem = +12MB
+  Matching x 1,338,788 ops/sec ±0.77% (93 runs sampled)
 
 > Benchmarking keyword: geoPolygon (10 vertices)
-  Registration: time = 1.324s, mem = +5MB
-  Matching x 50,353 ops/sec ±0.95% (96 runs sampled)
+  Registration: time = 1.148s, mem = +21MB
+  Matching x 52,636 ops/sec ±0.16% (97 runs sampled)
 
 > Benchmarking keyword: in (5 random values)
-  Registration: time = 1.539s, mem = +63MB
-  Matching x 1,694,947 ops/sec ±0.67% (94 runs sampled)
+  Registration: time = 1.554s, mem = +61MB
+  Matching x 1,782,624 ops/sec ±0.25% (96 runs sampled)
 
 > Benchmarking keyword: range (random bounds)
-  Registration: time = 0.427s, mem = +16MB
-  Matching x 35,441 ops/sec ±0.38% (94 runs sampled)
+  Registration: time = 0.41s, mem = +17MB
+  Matching x 31,933 ops/sec ±13.76% (92 runs sampled)
 ```
 
 _(results obtained with node v10.2.1)_
