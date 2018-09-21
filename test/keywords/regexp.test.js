@@ -102,7 +102,7 @@ describe('DSL.keyword.regexp', () => {
             regexp = new RegexpCondition('foo', dsl.storage.filters[subscription.id].subfilters[0], 'i');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.get(regexp.stringValue)).eql(regexp);
         });
     });
@@ -122,7 +122,7 @@ describe('DSL.keyword.regexp', () => {
             cond2 = new RegexpCondition('bar', dsl.storage.filters[subscription.id].subfilters[0]);
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.size).eql(2);
           should(storage.fields.foo.get(cond1.stringValue)).eql(cond1);
           should(storage.fields.foo.get(cond2.stringValue)).eql(cond2);
@@ -144,7 +144,7 @@ describe('DSL.keyword.regexp', () => {
           cond.subfilters.push(dsl.storage.filters[subscription.id].subfilters[0]);
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.size).eql(1);
           should(storage.fields.foo.get(cond.stringValue)).eql(cond);
         });
@@ -225,7 +225,7 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.regexp.fields.foo.get(cond.stringValue)).match(cond);
         });
     });
@@ -247,7 +247,7 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.regexp.fields.foo.get(cond.stringValue)).match(cond);
           should(dsl.storage.foPairs.index.collection.regexp.fields.foo.size).eql(1);
         });
@@ -265,13 +265,13 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {regexp: {bar: {value: '^\\w{2}oba\\w$', flags: 'i'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.regexp.keys).match(['foo', 'bar']);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo', 'bar']));
           idToRemove = subscription.id;
           return dsl.remove(idToRemove);
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.regexp.fields.foo.get(cond.stringValue)).match(cond);
           should(dsl.storage.foPairs.index.collection.regexp.fields.bar).be.undefined();
         });

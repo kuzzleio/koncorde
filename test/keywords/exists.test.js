@@ -110,7 +110,7 @@ describe('DSL.keyword.exists', () => {
             storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).eql([subfilter]);
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -137,7 +137,7 @@ describe('DSL.keyword.exists', () => {
             storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).eql([barSubfilter, quxSubfilter]);
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -152,7 +152,7 @@ describe('DSL.keyword.exists', () => {
             storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).Array().and.empty();
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);
@@ -180,7 +180,7 @@ describe('DSL.keyword.exists', () => {
             storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo', 'qux']);
+          should(storage.keys).eql(new Set(['foo', 'qux']));
           should(storage.fields.foo.subfilters).Array().and.empty();
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);
@@ -287,7 +287,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).match([multiSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -305,14 +305,14 @@ describe('DSL.keyword.exists', () => {
           return dsl.register('index', 'collection', {exists: 'bar'});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.exists.keys).eql(['foo', 'bar']);
+          should(dsl.storage.foPairs.index.collection.exists.keys).eql(new Set(['foo', 'bar']));
           return dsl.remove(subscription.id);
         })
         .then(() => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).match([fooSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -335,7 +335,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).match([fooSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -358,7 +358,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).match([fooSubfilter]);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
@@ -380,7 +380,7 @@ describe('DSL.keyword.exists', () => {
           const storage = dsl.storage.foPairs.index.collection.exists;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.subfilters).Array().empty();
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);

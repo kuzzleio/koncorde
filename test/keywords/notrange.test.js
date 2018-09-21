@@ -21,7 +21,7 @@ describe('DSL.keyword.notrange', () => {
             store = dsl.storage.foPairs.index.collection.notrange;
 
           should(store).be.instanceOf(FieldOperand);
-          should(store.keys).match(['foo']);
+          should(store.keys).eql(new Set(['foo']));
           should(store.fields.foo.count).be.eql(1);
           should(store.fields.foo.subfilters)
             .be.an.Object()
@@ -55,7 +55,7 @@ describe('DSL.keyword.notrange', () => {
             store = dsl.storage.foPairs.index.collection.notrange;
 
           should(store).be.instanceOf(FieldOperand);
-          should(store.keys).match(['foo']);
+          should(store.keys).eql(new Set(['foo']));
           should(store.fields.foo.count).be.eql(3);
 
           let conditionId = Object.keys(store.fields.foo.subfilters[sf1.id])[0];
@@ -187,7 +187,7 @@ describe('DSL.keyword.notrange', () => {
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.notrange).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notrange.keys).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.notrange.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.notrange.fields.foo.count).eql(1);
 
           const conditionId = Object.keys(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id])[0];
@@ -211,12 +211,12 @@ describe('DSL.keyword.notrange', () => {
         })
         .then(subscription => {
           multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
-          should(dsl.storage.foPairs.index.collection.notrange.keys).match(['bar', 'foo']);
+          should(dsl.storage.foPairs.index.collection.notrange.keys).eql(new Set(['bar', 'foo']));
           return dsl.remove(idToRemove);
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.notrange).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notrange.keys).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.notrange.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.notrange.fields.foo.count).eql(1);
 
           const conditionId = Object.keys(dsl.storage.foPairs.index.collection.notrange.fields.foo.subfilters[multiSubfilter.id])[0];

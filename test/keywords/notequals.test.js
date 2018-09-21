@@ -138,7 +138,7 @@ describe('DSL.keyword.notequals', () => {
           const storage = dsl.storage.foPairs.index.collection.notequals;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo).instanceOf(Map);
           should(storage.fields.foo.size).eql(2);
           should(storage.fields.foo.get('bar')).eql([barSubfilter]);
@@ -159,7 +159,7 @@ describe('DSL.keyword.notequals', () => {
         .then(() => {
           const storage = dsl.storage.foPairs.index.collection.notequals;
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.get('bar')).match([barSubfilter]);
           should(storage.fields.foo.get('qux')).undefined();
         });
@@ -175,13 +175,13 @@ describe('DSL.keyword.notequals', () => {
           return dsl.register('index', 'collection', {not: {equals: {baz: 'qux'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.notequals.keys).match(['foo', 'baz']);
+          should(dsl.storage.foPairs.index.collection.notequals.keys).eql(new Set(['foo', 'baz']));
           return dsl.remove(subscription.id);
         })
         .then(() => {
           const storage = dsl.storage.foPairs.index.collection.notequals;
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).match(['foo']);
+          should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.get('bar')).match([barSubfilter]);
           should(storage.fields.baz).be.undefined();
         });
