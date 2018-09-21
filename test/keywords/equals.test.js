@@ -13,6 +13,10 @@ describe('DSL.keyword.equals', () => {
     dsl = new DSL();
   });
 
+  function getSubfilter(id) {
+    return Array.from(dsl.storage.filters.get(id).subfilters)[0];
+  }
+
   describe('#validation', () => {
     it('should reject empty filters', () => {
       return should(dsl.validate({equals: ['foo', 'bar']})).be.rejectedWith(BadRequestError);
@@ -65,12 +69,14 @@ describe('DSL.keyword.equals', () => {
     it('should store a single condition correctly', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          let subfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          const
+            subfilter = getSubfilter(subscription.id),
+            storage = dsl.storage.foPairs.index.collection.get('equals');
 
-          should(dsl.storage.foPairs.index.collection.equals).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.equals.keys).eql(new Set(['foo']));
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo).instanceOf(Map);
-          should(dsl.storage.foPairs.index.collection.equals.fields.foo.get('bar')).eql([subfilter]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo).instanceOf(Map);
+          should(storage.fields.foo.get('bar')).eql([subfilter]);
         });
     });
 
@@ -79,13 +85,13 @@ describe('DSL.keyword.equals', () => {
 
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          barSubfilter = getSubfilter(subscription.id);
 
           return dsl.register('index', 'collection', {equals: {foo: 'qux'}});
         })
         .then(subscription => {
-          const quxSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
-          const equals = dsl.storage.foPairs.index.collection.equals;
+          const quxSubfilter = getSubfilter(subscription.id);
+          const equals = dsl.storage.foPairs.index.collection.get('equals');
 
           should(equals).be.an.instanceof(FieldOperand);
           should(equals.keys).eql(new Set(['foo']));
@@ -99,13 +105,13 @@ describe('DSL.keyword.equals', () => {
 
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          barSubfilter = getSubfilter(subscription.id);
 
           return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
-          const multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
-          const equals = dsl.storage.foPairs.index.collection.equals;
+          const multiSubfilter = getSubfilter(subscription.id);
+          const equals = dsl.storage.foPairs.index.collection.get('equals');
 
           should(equals).be.an.instanceof(FieldOperand);
           should(equals.keys).eql(new Set(['foo', 'baz']));
@@ -237,7 +243,7 @@ describe('DSL.keyword.equals', () => {
           });
         })
         .then(subscription => {
-          multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          multiSubfilter = getSubfilter(subscription.id);
 
           return dsl.remove(idToRemove);
         })
@@ -258,7 +264,7 @@ describe('DSL.keyword.equals', () => {
 
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          barSubfilter = getSubfilter(subscription.id);
 
           return dsl.register('index', 'collection', {
             and: [
@@ -289,7 +295,7 @@ describe('DSL.keyword.equals', () => {
 
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          barSubfilter = getSubfilter(subscription.id);
 
           return dsl.register('index', 'collection', {equals: {baz: 'qux'}});
         })

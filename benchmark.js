@@ -18,6 +18,7 @@ const
     int: Random.integer(-10000, 10000)
   };
 
+let filters = [];
 const koncorde = new Koncorde();
 
 const matching = (name, document) => {
@@ -29,9 +30,21 @@ const matching = (name, document) => {
     })
     .on('cycle', event => {
       console.log(String(event.target));
+      removeFilters();
     })
     .run({async: false});
 };
+
+function removeFilters() {
+  const removalStart = Date.now();
+
+  for (const filter of filters) {
+    koncorde.remove(filter);
+  }
+
+  filters = [];
+  console.log(`\tFilters removal: time = ${(Date.now() - removalStart)/1000}s`);
+}
 
 const test = Bluebird.coroutine(function *_register(name, generator, document) {
   let i,
@@ -43,14 +56,15 @@ const test = Bluebird.coroutine(function *_register(name, generator, document) {
   console.log(`\n> Benchmarking keyword: ${name}`);
   filterStartTime = Date.now();
 
+
   for (i = 0;i < max; i++) {
     // Using the filter name as a collection to isolate
     // benchmark calculation per keyword
-    yield koncorde.register('i', name, generator());
+    filters.push((yield koncorde.register('i', name, generator())).id);
   }
 
   filterEndTime = (Date.now() - filterStartTime) / 1000;
-  console.log(`\tRegistration: time = ${filterEndTime}s, mem = +${Math.round((v8.getHeapStatistics().total_heap_size - baseHeap) / 1024 / 1024)}MB`);
+  console.log(`\tIndexation: time = ${filterEndTime}s, mem = +${Math.round((v8.getHeapStatistics().total_heap_size - baseHeap) / 1024 / 1024)}MB`);
 
   matching(name, document);
 });
