@@ -243,8 +243,9 @@ Here is a filter, testing equality on the field `last` in the `name` sub-object:
 ### Array values
 
 A few keywords, like [exists](#exists) or [missing](#missing), allow searching for array values.  
-These values can be accessed with the following syntax: `arrayName['value']`  
-Only one array value can be provided in this manner.
+
+These values can be accessed with the following syntax: `<array path>[<value>]`  
+Only one array value per `exists`/`missing` keyword can be searched in this manner.
 
 Array values must be scalars (strings, numbers, booleans or `null`), following JSON format:
 
