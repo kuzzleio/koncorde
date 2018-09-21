@@ -68,7 +68,7 @@ describe('DSL API', () => {
     });
 
     it('should resolve to a BadRequestError if a filter is not valid', () => {
-      return should(dsl.validate({foo: 'bar'})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: {foo: 'bar'}, exists: 'qux'})).be.rejectedWith(BadRequestError);
     });
   });
 

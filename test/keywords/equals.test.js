@@ -15,7 +15,7 @@ describe('DSL.keyword.equals', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({equals: {}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: ['foo', 'bar']})).be.rejectedWith(BadRequestError);
     });
 
     it('should reject filters with more than 1 field', () => {

@@ -59,6 +59,16 @@ describe('DSL.keyword.exists', () => {
     it('should validate filters written in simplified form', () => {
       return should(dsl.validate({exists: 'bar'})).fulfilledWith(true);
     });
+
+    it('should reject a filter in simplified form with an empty value', () => {
+      return should(dsl.validate({exists: ''}))
+        .rejectedWith(BadRequestError, {message: 'exists: cannot test empty field name'});
+    });
+
+    it('should reject incorrectly formatted array search filters', () => {
+      return should(dsl.validate({exists: 'foo[\'bar\']'}))
+        .rejectedWith(BadRequestError, {message: '[exists] Invalid array value "\'bar\'"'});
+    });
   });
 
   describe('#standardization', () => {
