@@ -16,13 +16,17 @@ describe('DSL.keyword.notregexp', () => {
 
   describe('#storage', () => {
     it('should invoke regexp storage function', () => {
-      let spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
+      const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
 
       return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
         .then(subscription => {
           const
-            storage = dsl.storage.foPairs.index.collection.notregexp,
-            condition = new RegexpCondition('^\\w{2}oba\\w$', dsl.storage.filters[subscription.id].subfilters[0], 'i');
+            storage = dsl.storage.foPairs.index.collection.get('notregexp'),
+            condition = new RegexpCondition(
+              '^\\w{2}oba\\w$',
+              Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+              'i'
+            );
 
           should(spy.called).be.true();
 

@@ -9,7 +9,8 @@ const
 describe('DSL.keyword.geoDistanceRange', () => {
   let
     dsl,
-    standardize,
+    standardize;
+  const
     point = { lat: 43.6331979, lon: 3.8433703 },
     distanceStandardized = {
       geospatial: {
@@ -43,39 +44,39 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should validate a {latLon: [lat, lon]} point', () => {
-      let p = {latLon: [point.lat, point.lon]};
+      const p = {latLon: [point.lat, point.lon]};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
     });
 
     it('should validate a {lat_lon: [lat, lon]} point', () => {
-      let p = {lat_lon: [point.lat, point.lon]};
+      const p = {lat_lon: [point.lat, point.lon]};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
     });
 
     it('should validate a {latLon: {lat: lat, lon: lon}} point', () => {
-      let p = {latLon: {lat: point.lat, lon: point.lon}};
+      const p = {latLon: {lat: point.lat, lon: point.lon}};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
     });
 
     it('should validate a {lat_lon: {lat: lat, lon: lon}} point', () => {
-      let p = {lat_lon: {lat: point.lat, lon: point.lon}};
+      const p = {lat_lon: {lat: point.lat, lon: point.lon}};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
     });
 
     it('should validate a {latLon: "lat, lon"} point', () => {
-      let p = {latLon: `${point.lat}, ${point.lon}`};
+      const p = {latLon: `${point.lat}, ${point.lon}`};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
     });
 
     it('should validate a {lat_lon: "lat, lon"} point', () => {
-      let p = {lat_lon: `${point.lat}, ${point.lon}`};
+      const p = {lat_lon: `${point.lat}, ${point.lon}`};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
     });
 
-    it('should validate a {latLon: "geohash"} point', (done) => {
-      let p = {latLon: 'spf8prntv18e'};
+    it('should validate a {latLon: "geohash"} point', () => {
+      const p = {latLon: 'spf8prntv18e'};
 
-      standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})
+      return standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})
         .then(result => {
           should(result).be.an.Object();
           should(result.geospatial).be.an.Object();
@@ -85,15 +86,13 @@ describe('DSL.keyword.geoDistanceRange', () => {
           should(result.geospatial.geoDistanceRange.foo.to).be.eql(10000);
           should(result.geospatial.geoDistanceRange.foo.lat).be.approximately(point.lat, 10e-7);
           should(result.geospatial.geoDistanceRange.foo.lon).be.approximately(point.lon, 10e-7);
-          done();
-        })
-        .catch(e => done(e));
+        });
     });
 
-    it('should validate a {lat_lon: "geohash"} point', (done) => {
-      let p = {lat_lon: 'spf8prntv18e'};
+    it('should validate a {lat_lon: "geohash"} point', () => {
+      const p = {lat_lon: 'spf8prntv18e'};
 
-      standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})
+      return standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})
         .then(result => {
           should(result).be.an.Object();
           should(result.geospatial).be.an.Object();
@@ -103,23 +102,21 @@ describe('DSL.keyword.geoDistanceRange', () => {
           should(result.geospatial.geoDistanceRange.foo.to).be.eql(10000);
           should(result.geospatial.geoDistanceRange.foo.lat).be.approximately(point.lat, 10e-7);
           should(result.geospatial.geoDistanceRange.foo.lon).be.approximately(point.lon, 10e-7);
-          done();
-        })
-        .catch(e => done(e));
+        });
     });
 
     it('should reject an unrecognized point format', () => {
-      let p = {foo: 'bar'};
+      const p = {foo: 'bar'};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
     });
 
     it('should reject an invalid latLon argument type', () => {
-      let p = {latLon: 42};
+      const p = {latLon: 42};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
     });
 
     it('should reject an invalid latLon argument string', () => {
-      let p = {latLon: '[10, 10]'};
+      const p = {latLon: '[10, 10]'};
       return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
     });
 
@@ -148,11 +145,13 @@ describe('DSL.keyword.geoDistanceRange', () => {
     it('should store a single geoDistanceRange correctly', () => {
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(subscription => {
-          let subfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          const
+            subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            storage = dsl.storage.foPairs.index.collection.get('geospatial');
 
-          should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[subfilter.conditions[0].id]).match([subfilter]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(Array.from(subfilter.conditions)[0].id)).match(new Set([subfilter]));
         });
     });
 
@@ -160,15 +159,17 @@ describe('DSL.keyword.geoDistanceRange', () => {
       let sf1;
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(subscription => {
-          sf1 = dsl.storage.filters[subscription.id].subfilters[0];
+          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
           return dsl.register('index', 'collection', {and: [{geoDistanceRange: {foo: point, from: '1km', to: '10km'}}, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
-          let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
+          const
+            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            storage = dsl.storage.foPairs.index.collection.get('geospatial');
 
-          should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf1.conditions[0].id]).match([sf1, sf2]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(Array.from(sf1.conditions)[0].id)).match(new Set([sf1, sf2]));
         });
     });
 
@@ -177,17 +178,19 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(subscription => {
-          sf1 = dsl.storage.filters[subscription.id].subfilters[0];
-          cond1 = sf1.conditions[0].id;
+          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          cond1 = Array.from(sf1.conditions)[0].id;
           return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '10km', to: '100km'}});
         })
         .then(subscription => {
-          let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
+          const
+            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            storage = dsl.storage.foPairs.index.collection.get('geospatial');
 
-          should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond1]).match([sf1]);
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf2.conditions[0].id]).match([sf2]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(cond1)).match(new Set([sf1]));
+          should(storage.fields.foo.get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
         });
     });
   });
@@ -196,17 +199,16 @@ describe('DSL.keyword.geoDistanceRange', () => {
     it('should match a point inside the circle', () => {
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: {lat: 43.634, lon: 3.9 }});
+          const result = dsl.test('index', 'collection', {foo: {lat: 43.634, lon: 3.9 }});
 
-          should(result).be.an.Array().and.not.empty();
-          should(result[0]).be.eql(subscription.id);
+          should(result).eql([subscription.id]);
         });
     });
 
     it('should not match if a point is outside the outer radius', () => {
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(() => {
-          var result = dsl.test('index', 'collection', {foo: {lat: point.lat, lon: 5}});
+          const result = dsl.test('index', 'collection', {foo: {lat: point.lat, lon: 5}});
 
           should(result).be.an.Array().and.be.empty();
         });
@@ -215,7 +217,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     it('should not match if a point is inside the inner radius', () => {
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(() => {
-          var result = dsl.test('index', 'collection', {foo: point});
+          const result = dsl.test('index', 'collection', {foo: point});
 
           should(result).be.an.Array().and.be.empty();
         });
@@ -224,7 +226,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     it('should return an empty array if the document does not contain the searched geopoint', () => {
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(() => {
-          var result = dsl.test('index', 'collection', {bar: point});
+          const result = dsl.test('index', 'collection', {bar: point});
 
           should(result).be.an.Array().and.be.empty();
         });
@@ -233,7 +235,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     it('should return an empty array if the document contain an invalid geopoint', () => {
       return dsl.register('index', 'collection', {geoDistanceRange: {foo: point, from: '1km', to: '10km'}})
         .then(() => {
-          var result = dsl.test('index', 'collection', {foo: '43.6331979 / 3.8433703'});
+          const result = dsl.test('index', 'collection', {foo: '43.6331979 / 3.8433703'});
 
           should(result).be.an.Array().and.be.empty();
         });
