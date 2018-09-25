@@ -116,12 +116,12 @@ describe('DSL.keyword.exists', () => {
       return dsl.register('index', 'collection', {exists: 'foo'})
         .then(subscription => {
           const
-            subfilter = dsl.storage.filters[subscription.id].subfilters[0],
-            storage = dsl.storage.foPairs.index.collection.exists;
+            subfilter = dsl.storage.filters.get(subscription.id).subfilters,
+            storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).eql([subfilter]);
+          should(storage.fields.foo.subfilters).eql(subfilter);
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
         });
@@ -132,7 +132,7 @@ describe('DSL.keyword.exists', () => {
 
       return dsl.register('index', 'collection', {exists: 'foo'})
         .then(subscription => {
-          barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          barSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {
             and: [
@@ -143,12 +143,12 @@ describe('DSL.keyword.exists', () => {
         })
         .then(subscription => {
           const
-            quxSubfilter = dsl.storage.filters[subscription.id].subfilters[0],
-            storage = dsl.storage.foPairs.index.collection.exists;
+            quxSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).eql([barSubfilter, quxSubfilter]);
+          should(storage.fields.foo.subfilters).eql(new Set([barSubfilter, quxSubfilter]));
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
         });
@@ -158,15 +158,15 @@ describe('DSL.keyword.exists', () => {
       return dsl.register('index', 'collection', {exists: 'foo["bar"]'})
         .then(subscription => {
           const
-            subfilter = dsl.storage.filters[subscription.id].subfilters[0],
-            storage = dsl.storage.foPairs.index.collection.exists;
+            subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).Array().and.empty();
+          should(storage.fields.foo.subfilters.size).eql(0);
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('bar')).eql([subfilter]);
+          should(storage.fields.foo.values.get('bar')).eql(new Set([subfilter]));
         });
     });
 
@@ -175,7 +175,7 @@ describe('DSL.keyword.exists', () => {
 
       return dsl.register('index', 'collection', {exists: 'foo["bar"]'})
         .then(subscription => {
-          barSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          barSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {
             and: [
@@ -186,16 +186,16 @@ describe('DSL.keyword.exists', () => {
         })
         .then(subscription => {
           const
-            quxSubfilter = dsl.storage.filters[subscription.id].subfilters[0],
-            storage = dsl.storage.foPairs.index.collection.exists;
+            quxSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo', 'qux']));
-          should(storage.fields.foo.subfilters).Array().and.empty();
+          should(storage.fields.foo.subfilters.size).eql(0);
           should(storage.fields.foo.values).instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('bar')).eql([barSubfilter, quxSubfilter]);
-          should(storage.fields.qux.values.get('bar')).eql([quxSubfilter]);
+          should(storage.fields.foo.values.get('bar')).eql(new Set([barSubfilter, quxSubfilter]));
+          should(storage.fields.qux.values.get('bar')).eql(new Set([quxSubfilter]));
         });
     });
   });
@@ -289,18 +289,52 @@ describe('DSL.keyword.exists', () => {
           });
         })
         .then(subscription => {
-          multiSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.exists;
+          const storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match([multiSubfilter]);
+          should(storage.fields.foo.subfilters).match(new Set([multiSubfilter]));
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
+        });
+    });
+
+    it('should remove a single subfilter from a multi-filter array condition', () => {
+      let
+        storage,
+        idToRemove,
+        singleSubfilter,
+        multiSubfilter;
+
+      return dsl.register('index', 'collection', {exists: 'foo["bar"]'})
+        .then(subscription => {
+          idToRemove = subscription.id;
+          storage = dsl.storage.foPairs.index.collection.get('exists');
+          singleSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+
+          return dsl.register('index', 'collection', {
+            and: [
+              {equals: {foo: 'qux'}},
+              {exists: {field: 'foo["bar"]'}}
+            ]
+          });
+        })
+        .then(subscription => {
+          multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          should(storage.fields.foo.values.get('bar')).match(new Set([singleSubfilter, multiSubfilter]));
+          should(storage.fields.foo.subfilters.size).eql(0);
+          return dsl.remove(idToRemove);
+        })
+        .then(() => {
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.subfilters.size).eql(0);
+          should(storage.fields.foo.values.get('bar')).match(new Set([multiSubfilter]));
         });
     });
 
@@ -310,20 +344,20 @@ describe('DSL.keyword.exists', () => {
 
       return dsl.register('index', 'collection', {exists: 'foo'})
         .then(subscription => {
-          fooSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          fooSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {exists: 'bar'});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.exists.keys).eql(new Set(['foo', 'bar']));
+          should(dsl.storage.foPairs.index.collection.get('exists').keys).eql(new Set(['foo', 'bar']));
           return dsl.remove(subscription.id);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.exists;
+          const storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match([fooSubfilter]);
+          should(storage.fields.foo.subfilters).match(new Set([fooSubfilter]));
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
           should(storage.fields.bar).be.undefined();
@@ -336,17 +370,17 @@ describe('DSL.keyword.exists', () => {
 
       return dsl.register('index', 'collection', {exists: 'foo'})
         .then(subscription => {
-          fooSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          fooSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {exists: 'bar["foo"]'});
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.exists;
+          const storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match([fooSubfilter]);
+          should(storage.fields.foo.subfilters).match(new Set([fooSubfilter]));
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
           should(storage.fields.bar).be.undefined();
@@ -359,17 +393,17 @@ describe('DSL.keyword.exists', () => {
 
       return dsl.register('index', 'collection', {exists: 'foo'})
         .then(subscription => {
-          fooSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          fooSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {exists: 'foo["bar"]'});
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.exists;
+          const storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match([fooSubfilter]);
+          should(storage.fields.foo.subfilters).match(new Set([fooSubfilter]));
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(0);
         });
@@ -381,20 +415,20 @@ describe('DSL.keyword.exists', () => {
 
       return dsl.register('index', 'collection', {exists: 'foo["bar"]'})
         .then(subscription => {
-          fooSubfilter = dsl.storage.filters[subscription.id].subfilters[0];
+          fooSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {exists: 'foo'});
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.exists;
+          const storage = dsl.storage.foPairs.index.collection.get('exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).Array().empty();
+          should(storage.fields.foo.subfilters.size).eql(0);
           should(storage.fields.foo.values).be.instanceOf(Map);
           should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('bar')).eql([fooSubfilter]);
+          should(storage.fields.foo.values.get('bar')).eql(new Set([fooSubfilter]));
         });
     });
   });

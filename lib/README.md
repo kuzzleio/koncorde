@@ -24,10 +24,8 @@ The canonicalized filter is split and its parts are stored in different structur
 - `storage.subfilters` provides a bidirectional link between a subfilter, its associated filters, and its associated conditions
 - `storage.conditions` provides a link between a condition and its associated subfilters. It also contains the condition's value
 
-Once stored, filters are indexed:
-
-- `storage.foPairs` regroups all conditions associated to a field-operand pair. It means that, for instance, all "equals" condition on a field "field" are regrouped and stored together. The way these values are stored closely depends on the corresponding operand (for instance, "range" operands use a specific augmented AVL tree, while geospatial operands use a R\* tree)
-- `storage.testTables` is the index allowing to efficiently track how many conditions a given subfilter has validated. This structure is the most important part of the matching mechanism (performance-wise) as it allows to very quickly check if a subfilter is completely matched and what filters should be returned for a given document.
+Once stored, filters are indexed in the `storage.foPairs` structure, regrouping all conditions associated to a field-operand pair.  
+It means that, for instance, all "equals" condition on a field "field" are regrouped and stored together. The way these values are stored closely depends on the corresponding operand (for instance, "range" operands use a specific augmented AVL tree, while geospatial operands use a R\* tree)
 
 ## Matching
 
@@ -41,4 +39,3 @@ The way each field-operand pair performs its match depends closely on the keywor
 ## Deleting a filter
 
 When a filter gets deleted, the filters, subfilters, conditions and field-operand structures are cleaned up.
-The indexes are left alone, unless more than 10% of the referenced subfilters have been deleted. If so, an index rebuild is triggered. This allow mutualizing the cost of rebuilding the indexes.

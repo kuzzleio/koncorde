@@ -8,8 +8,8 @@ const
  * Mutualizes filter removal for all 4 geospatial keywords
  */
 describe('DSL.keyword.geospatial', () => {
-  let
-    dsl,
+  let dsl;
+  const
     geoFilter = {
       geoBoundingBox: {
         foo: {
@@ -39,9 +39,11 @@ describe('DSL.keyword.geospatial', () => {
         .then(() => dsl.register('index', 'collection', geoFilter))
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['bar']));
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.bar).be.an.Object();
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo).be.undefined();
+          const storage = dsl.storage.foPairs.index.collection.get('geospatial');
+
+          should(storage.keys).eql(new Set(['bar']));
+          should(storage.fields.bar).be.an.Object();
+          should(storage.fields.foo).be.undefined();
         });
     });
 
@@ -50,14 +52,16 @@ describe('DSL.keyword.geospatial', () => {
 
       return dsl.register('index', 'collection', {geoDistance: {foo: {lat: 13, lon: 42}, distance: '1km'}})
         .then(subscription => {
-          sf = dsl.storage.filters[subscription.id].subfilters[0];
-          cond = sf.conditions[0].id;
+          sf = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          cond = Array.from(sf.conditions)[0].id;
           return dsl.register('index', 'collection', geoFilter);
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond]).match([sf]);
+          const storage = dsl.storage.foPairs.index.collection.get('geospatial');
+
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(cond)).match(new Set([sf]));
         });
     });
 
@@ -66,15 +70,17 @@ describe('DSL.keyword.geospatial', () => {
 
       return dsl.register('index', 'collection', geoFilter)
         .then(subscription => {
-          sf = dsl.storage.filters[subscription.id].subfilters[0];
-          cond = sf.conditions[0].id;
+          sf = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          cond = Array.from(sf.conditions)[0].id;
 
           return dsl.register('index', 'collection', {and: [geoFilter, {exists: {field: 'bar'}}]});
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
-          should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond]).match([sf]);
+          const storage = dsl.storage.foPairs.index.collection.get('geospatial');
+
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(cond)).match(new Set([sf]));
         });
     });
   });

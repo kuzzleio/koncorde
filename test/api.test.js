@@ -144,12 +144,19 @@ describe('DSL API', () => {
           return dsl.register('i', 'c', {equals: {foo: 'bar'}});
         })
         .then(subscription => {
-          let sfs = dsl.storage.filters[subscription.id].subfilters;
+          const sfs = dsl.storage.filters.get(subscription.id).subfilters;
 
           ids.push(subscription.id);
-          should(sfs).be.an.Array();
-          should(sfs.length).be.eql(1);
-          should(dsl.storage.subfilters.i.c[sfs[0].id].filters.map(f => f.id).sort()).match(ids.sort());
+          should(sfs).instanceOf(Set);
+          should(sfs.size).be.eql(1);
+
+          const filterIds = [];
+
+          for (const sf of sfs.values()) {
+            sf.filters.forEach(f => filterIds.push(f.id));
+          }
+
+          should(filterIds.sort()).match(ids.sort());
         });
     });
   });
@@ -275,20 +282,24 @@ describe('DSL API', () => {
           return dsl.register('i', 'c', {equals: {foo: 'bar'}});
         })
         .then(subscription => {
-          const sfs = dsl.storage.filters[subscription.id].subfilters;
+          const sfs = dsl.storage.filters.get(subscription.id).subfilters;
 
           ids.push(subscription.id);
-          should(sfs).be.an.Array();
-          should(sfs.length).be.eql(1);
-          should(sfs[0].filters.length).be.eql(2);
-          should(sfs[0].filters.map(f => f.id).sort()).match(Array.from(ids).sort());
+          should(sfs).instanceOf(Set);
+          should(sfs.size).be.eql(1);
 
-          sf = sfs[0];
+          sf = Array.from(sfs.values())[0];
+          should(sf.filters.size).be.eql(2);
+
+          const filterIds = Array.from(sf.filters).map(f => f.id);
+          should(filterIds.sort()).match(Array.from(ids).sort());
+
           return dsl.remove(subscription.id);
         })
         .then(() => {
-          should(sf.filters.length).be.eql(1);
-          should(dsl.storage.subfilters.i.c[sf.id].filters.map(f => f.id)).match([ids[0]]);
+          should(sf.filters.size).be.eql(1);
+          const fid = Array.from(sf.filters)[0].id;
+          should(fid).match(ids[0]);
         });
     });
   });
