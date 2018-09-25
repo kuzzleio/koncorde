@@ -68,7 +68,7 @@ describe('DSL API', () => {
     });
 
     it('should resolve to a BadRequestError if a filter is not valid', () => {
-      return should(dsl.validate({foo: 'bar'})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: {foo: 'bar'}, exists: 'qux'})).be.rejectedWith(BadRequestError);
     });
   });
 
@@ -78,14 +78,14 @@ describe('DSL API', () => {
     });
 
     it('should resolve to a cluster diff object if the registration succeeds', () => {
-      return dsl.register('i', 'c', {not: {and: [{exists: {field: 'bar'}}, {equals: {foo: 'bar'}}]}})
+      return dsl.register('i', 'c', {not: {and: [{exists: 'bar'}, {equals: {foo: 'bar'}}]}})
         .then(result => {
           should(result).be.an.Object();
           should(result.diff).be.an.Object().and.match({
             index: 'i',
             collection: 'c',
             filters: [
-              [ { exists: { field: 'bar' }, not: true } ],
+              [ { exists: { path: 'bar', array: false, value: null }, not: true } ],
               [ { equals: { foo: 'bar' }, not: true } ]
             ]
           });
@@ -97,19 +97,18 @@ describe('DSL API', () => {
     it('should resolve to a "no diff" object if the room already exists', () => {
       let id;
 
-      return dsl.register('i', 'c', {not: {and: [{exists: {field: 'bar'}}, {equals: {foo: 'bar'}}]}})
+      return dsl.register('i', 'c', {not: {and: [{exists: 'bar'}, {equals: {foo: 'bar'}}]}})
         .then(result => {
           id = result.id;
-
           return dsl.register('i', 'c', {
             or: [
-              {not: { exists: { field: 'bar' }}},
+              {not: { exists: 'bar'}},
               {not: { equals: { foo: 'bar' }}}
             ]
           });
         })
         .then(result => {
-          let bool = {
+          const bool = {
             bool: {
               should_not: [
                 {exists: { field: 'bar' }},
@@ -123,7 +122,7 @@ describe('DSL API', () => {
               index: 'i',
               collection: 'c',
               filters: [
-                [ {exists: {field: 'bar'}, not: true}],
+                [ {exists: {path: 'bar', array: false, value: null}, not: true}],
                 [ {equals: {foo: 'bar'}, not: true}]
               ]
             });
@@ -139,24 +138,32 @@ describe('DSL API', () => {
     it('should not recreate an already existing subfilter', () => {
       let ids = [];
 
-      return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})
+      return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: 'bar'}]})
         .then(subscription => {
           ids.push(subscription.id);
           return dsl.register('i', 'c', {equals: {foo: 'bar'}});
         })
         .then(subscription => {
-          let sfs = dsl.storage.filters[subscription.id].subfilters;
+          const sfs = dsl.storage.filters.get(subscription.id).subfilters;
 
           ids.push(subscription.id);
-          should(sfs).be.an.Array();
-          should(sfs.length).be.eql(1);
-          should(dsl.storage.subfilters.i.c[sfs[0].id].filters.map(f => f.id).sort()).match(ids.sort());
+          should(sfs).instanceOf(Set);
+          should(sfs.size).be.eql(1);
+
+          const filterIds = [];
+
+          for (const sf of sfs.values()) {
+            sf.filters.forEach(f => filterIds.push(f.id));
+          }
+
+          should(filterIds.sort()).match(ids.sort());
         });
     });
   });
 
   describe('#exists', () => {
     it('should return true if a filter exists on the provided index and collection', () => {
+      should(dsl.exists('i', 'c')).be.false();
       return dsl.register('i', 'c', {equals: {foo: 'bar'}})
         .then(() => {
           should(dsl.exists('i', 'c')).be.true();
@@ -191,7 +198,7 @@ describe('DSL API', () => {
       return dsl.register('i', 'c', {equals: {foo: 'bar'}})
         .then(result => {
           ids.push(result.id);
-          return dsl.register('i', 'c', {exists: {field: 'foo'}});
+          return dsl.register('i', 'c', {exists: 'foo'});
         })
         .then(result => {
           ids.push(result.id);
@@ -249,7 +256,7 @@ describe('DSL API', () => {
             'obj.nested.another': 'one',
             'obj.nested.bites': 'the dust',
             'obj.bottlesOfBeer': 99,
-            arr: ['foo', 'bar'], 
+            arr: ['foo', 'bar'],
             foo: 'bar'
           });
         });
@@ -266,9 +273,8 @@ describe('DSL API', () => {
     });
 
     it('should unsubscribe a filter from a multi-filter subfilter', () => {
-      let
-        ids = [],
-        sf;
+      let sf;
+      const ids = [];
 
       return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})
         .then(subscription => {
@@ -276,27 +282,31 @@ describe('DSL API', () => {
           return dsl.register('i', 'c', {equals: {foo: 'bar'}});
         })
         .then(subscription => {
-          let sfs = dsl.storage.filters[subscription.id].subfilters;
+          const sfs = dsl.storage.filters.get(subscription.id).subfilters;
 
           ids.push(subscription.id);
-          should(sfs).be.an.Array();
-          should(sfs.length).be.eql(1);
-          should(sfs[0].filters.length).be.eql(2);
-          should(sfs[0].filters.map(f => f.id).sort()).match(Array.from(ids).sort());
+          should(sfs).instanceOf(Set);
+          should(sfs.size).be.eql(1);
 
-          sf = sfs[0];
+          sf = Array.from(sfs.values())[0];
+          should(sf.filters.size).be.eql(2);
+
+          const filterIds = Array.from(sf.filters).map(f => f.id);
+          should(filterIds.sort()).match(Array.from(ids).sort());
+
           return dsl.remove(subscription.id);
         })
         .then(() => {
-          should(sf.filters.length).be.eql(1);
-          should(dsl.storage.subfilters.i.c[sf.id].filters.map(f => f.id)).match([ids[0]]);
+          should(sf.filters.size).be.eql(1);
+          const fid = Array.from(sf.filters)[0].id;
+          should(fid).match(ids[0]);
         });
     });
   });
 
   describe('#normalize', () => {
     it('should invoke the normalizer', () => {
-      const 
+      const
         f = {not: {and: [{exists: {field: 'bar'}}, {equals: {foo: 'bar'}}]}},
         n = {};
 

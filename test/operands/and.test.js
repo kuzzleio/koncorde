@@ -1,12 +1,12 @@
 'use strict';
 
-var
+const
   should = require('should'),
   BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
   DSL = require('../../');
 
 describe('DSL.operands.and', () => {
-  var dsl;
+  let dsl;
 
   beforeEach(() => {
     dsl = new DSL();
@@ -42,10 +42,9 @@ describe('DSL.operands.and', () => {
     it('should match a document with multiple AND conditions', () => {
       return dsl.register('index', 'collection', {and: [{equals: {foo: 'bar'}}, {missing: {field: 'bar'}}, {range: {baz: {lt: 42}}}]})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: 'bar', baz: 13});
+          const result = dsl.test('index', 'collection', {foo: 'bar', baz: 13});
 
-          should(result).be.an.Array().and.not.empty();
-          should(result[0]).be.eql(subscription.id);
+          should(result).eql([subscription.id]);
         });
     });
 
@@ -68,10 +67,10 @@ describe('DSL.operands.and', () => {
         })
         .then(() => dsl.remove(id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.exists).be.an.Object();
-          should(dsl.storage.foPairs.index.collection.equals).be.undefined();
-          should(dsl.storage.foPairs.index.collection.notexists).be.undefined();
-          should(dsl.storage.foPairs.index.collection.range).be.undefined();
+          should(dsl.storage.foPairs.index.collection.get('exists')).be.an.Object();
+          should(dsl.storage.foPairs.index.collection.get('equals')).be.undefined();
+          should(dsl.storage.foPairs.index.collection.get('notexists')).be.undefined();
+          should(dsl.storage.foPairs.index.collection.get('range')).be.undefined();
         });
     });
   });

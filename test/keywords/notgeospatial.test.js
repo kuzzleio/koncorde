@@ -2,9 +2,7 @@
 
 const
   should = require('should'),
-  SortedArray = require('sorted-array'),
   FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  NotGeospatialCondition = require('../../lib/storage/objects/notGeospatialCondition'),
   DSL = require('../../');
 
 /**
@@ -26,80 +24,71 @@ describe('DSL.keyword.notgeospatial', () => {
     it('should store a single geospatial keyword correctly', () => {
       return dsl.register('index', 'collection', {not: {geoDistance: {foo: {lat: 13, lon: 42}, distance: '1000m'}}})
         .then(subscription => {
-          let condition = new NotGeospatialCondition(
-            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
-            dsl.storage.filters[subscription.id].subfilters[0]
-          );
+          const
+            storage = dsl.storage.foPairs.index.collection.get('notgeospatial'),
+            subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            id = Array.from(subfilter.conditions)[0].id;
 
-          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.custom.index).be.an.Object();
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids).be.instanceOf(SortedArray);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array.length).be.eql(1);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0]).instanceOf(NotGeospatialCondition);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0]).match(condition);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.custom.index).be.an.Object();
+          should(storage.fields.foo).be.instanceOf(Map);
+          should(storage.fields.foo.size).be.eql(1);
+          should(storage.fields.foo.get(id)).eql(new Set([subfilter]));
         });
     });
 
     it('should add another condition to an already tested field', () => {
-      let cond1, cond2;
+      let id1, subfilter1;
 
       return dsl.register('index', 'collection', {not: {geoDistance: {foo: {lat: 13, lon: 42}, distance: '1000m'}}})
         .then(subscription => {
-          cond1 = new NotGeospatialCondition(
-            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
-            dsl.storage.filters[subscription.id].subfilters[0]
-          );
+          subfilter1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          id1 = Array.from(subfilter1.conditions)[0].id;
 
           return dsl.register('index', 'collection', {not: {geoBoundingBox: {foo: {top: 13, left: 0, right: 42, bottom: -14}}}});
         })
         .then(subscription => {
-          let conditions;
+          const
+            subfilter2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+            id2 = Array.from(subfilter2.conditions)[0].id,
+            storage = dsl.storage.foPairs.index.collection.get('notgeospatial');
 
-          cond2 = new NotGeospatialCondition(
-            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
-            dsl.storage.filters[subscription.id].subfilters[0]
-          );
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.custom.index).be.an.Object();
+          should(storage.fields.foo).be.instanceOf(Map);
+          should(storage.fields.foo.size).be.eql(2);
 
-          conditions = cond1.id < cond2.id ? [cond1, cond2] : [cond2, cond1];
-
-          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.custom.index).be.an.Object();
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids).be.instanceOf(SortedArray);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array.length).be.eql(2);
-
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0]).instanceOf(NotGeospatialCondition);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[1]).instanceOf(NotGeospatialCondition);
-
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array).match(conditions);
+          should(storage.fields.foo.get(id1)).eql(new Set([subfilter1]));
+          should(storage.fields.foo.get(id2)).eql(new Set([subfilter2]));
         });
     });
 
     it('should add another subfilter to an already tested shape', () => {
       let
         filter = {not: {geoDistance: {foo: {lat: 13, lon: 42}, distance: '1000m'}}},
-        condition;
+        id,
+        subfilter;
 
       return dsl.register('index', 'collection', filter)
         .then(subscription => {
-          condition = new NotGeospatialCondition(
-            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
-            dsl.storage.filters[subscription.id].subfilters[0]
-          );
+          subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          id = Array.from(subfilter.conditions)[0].id;
 
           return dsl.register('index', 'collection', {and: [{equals: {bar: 'baz'}}, filter]});
         })
         .then(subscription => {
-          condition.subfilters.push(dsl.storage.filters[subscription.id].subfilters[0]);
+          const
+            storage = dsl.storage.foPairs.index.collection.get('notgeospatial'),
+            subfilter2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
-          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.custom.index).be.an.Object();
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids).be.instanceOf(SortedArray);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array.length).be.eql(1);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0]).instanceOf(NotGeospatialCondition);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0]).match(condition);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.custom.index).be.an.Object();
+          should(storage.fields.foo).be.instanceOf(Map);
+          should(storage.fields.foo.size).be.eql(1);
+          should(storage.fields.foo.get(id)).eql(new Set([subfilter, subfilter2]));
         });
     });
   });
@@ -189,13 +178,14 @@ describe('DSL.keyword.notgeospatial', () => {
   });
 
   describe('#removal', () => {
-    let filter, filterId;
+    let filter, filterId, storage;
 
     beforeEach(() => {
       filter = {not: {geoBoundingBox: {foo: {bottom: 43.5810609, left: 3.8433703, top: 43.6331979, right: 3.9282093}}}};
       return dsl.register('index', 'collection', filter)
         .then(subscription => {
           filterId = subscription.id;
+          storage = dsl.storage.foPairs.index.collection.get('notgeospatial');
         });
     });
 
@@ -209,22 +199,19 @@ describe('DSL.keyword.notgeospatial', () => {
 
       return dsl.register('index', 'collection', {and: [filter, {equals: {foo: 'bar'}}]})
         .then(subscription => {
-          sf = dsl.storage.filters[subscription.id].subfilters[0];
+          sf = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
           return dsl.remove(filterId);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array[0].subfilters).match([sf]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+
+          should(storage.fields.foo.get(Array.from(sf.conditions)[1].id)).match(new Set([sf]));
         });
     });
 
     it('should remove a value from the list if its last subfilter is removed', () => {
-      let
-        promise,
-        cond;
-
-      promise = dsl.register('index', 'collection', {
+      const geofilter = {
         not: {
           geoDistance: {
             foo: {
@@ -234,29 +221,24 @@ describe('DSL.keyword.notgeospatial', () => {
             distance: '2000m'
           }
         }
-      });
+      };
 
-      return promise
+      let id, subfilter;
+      return dsl.register('index', 'collection', geofilter)
         .then(subscription => {
-          cond = new NotGeospatialCondition(
-            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
-            dsl.storage.filters[subscription.id].subfilters[0]
-          );
+          subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          id = Array.from(subfilter.conditions)[0].id;
           return dsl.remove(filterId);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.foo.ids.array).match([cond]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(id)).match(new Set([subfilter]));
         });
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
-      let
-        promise,
-        cond;
-
-      promise = dsl.register('index', 'collection', {
+      const geofilter = {
         not: {
           geoDistance: {
             bar: {
@@ -266,22 +248,21 @@ describe('DSL.keyword.notgeospatial', () => {
             distance: '2000m'
           }
         }
-      });
+      };
 
-      return promise
+      let id, subfilter;
+      return dsl.register('index', 'collection', geofilter)
         .then(subscription => {
-          cond = new NotGeospatialCondition(
-            dsl.storage.filters[subscription.id].subfilters[0].conditions[0].id,
-            dsl.storage.filters[subscription.id].subfilters[0]
-          );
+          subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
+          id = Array.from(subfilter.conditions)[0].id;
 
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['bar', 'foo']);
+          should(dsl.storage.foPairs.index.collection.get('notgeospatial').keys).eql(new Set(['foo', 'bar']));
           return dsl.remove(filterId);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.notgeospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.keys.array).match(['bar']);
-          should(dsl.storage.foPairs.index.collection.notgeospatial.fields.bar.ids.array).match([cond]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['bar']));
+          should(storage.fields.bar.get(id)).match(new Set([subfilter]));
         });
     });
   });

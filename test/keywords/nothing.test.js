@@ -14,12 +14,12 @@ describe('DSL.keyword.nothing', () => {
     it('should register in the store', () => {
       return dsl.register('index', 'collection', {nothing: 'anything'})
         .then(subscription => {
-          const storeEntry = dsl.storage.foPairs.index.collection.nothing;
+          const storeEntry = dsl.storage.foPairs.index.collection.get('nothing');
 
           should(storeEntry)
             .be.instanceof(FieldOperand);
           should(storeEntry.fields.all)
-            .eql([dsl.storage.filters[subscription.id].subfilters[0]]);
+            .eql([Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]]);
         });
     });
   });

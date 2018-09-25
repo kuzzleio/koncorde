@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/kuzzleio/koncorde.svg?branch=master)](https://travis-ci.org/kuzzleio/koncorde)
 [![Codecov](http://codecov.io/github/kuzzleio/koncorde/coverage.svg?branch=master)](http://codecov.io/github/kuzzleio/koncorde?branch=master)
+[![Code Quality: Javascript](https://img.shields.io/lgtm/grade/javascript/g/kuzzleio/koncorde.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/koncorde/context:javascript)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/kuzzleio/koncorde.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/koncorde/alerts)
 
 # Koncorde
 
@@ -13,7 +15,7 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
   - [Install](#install)
   - [Index and collection parameters](#index-and-collection-parameters)
   - [Filter unique identifier](#filter-unique-identifier)
-  - [Testing nested properties](#testing-nested-properties)
+  - [Field syntax](#field-syntax)
   - [Filter operands](#filter-operands)
     - [`and`](#and)
     - [`bool`](#bool)
@@ -209,11 +211,13 @@ engine.register('index', 'collection', filter1)
 // Filter ID 1: b4ee9ece4d7b1398, Filter ID 2: b4ee9ece4d7b1398, Equals: true
 ```
 
-## Testing nested properties
+## Field syntax
 
-The examples so far show how to test for fields at the root of provided data, but it is also possible to add filters on nested properties.
+The examples so far show how to test for scalar fields at the root of a document, but it is also possible to test nested properties or array values.
 
-To do that, instead of giving the name of the property to test, its path must be supplied, in the following manner: `path.to.property`
+### Nested properties
+
+To test for a nested property, a path to it must be supplied, in the following manner: `path.to.property`
 
 **Example:**
 
@@ -238,48 +242,41 @@ Here is a filter, testing equality on the field `last` in the `name` sub-object:
 }
 ```
 
-Full code:
+### Array values
 
-```js
-const Koncorde = require('koncorde');
+A few keywords, like [exists](#exists) or [missing](#missing), allow searching for array values.  
 
-const
-  engine = new Koncorde(),
-  filter = {
-    equals: {
-      'name.last': 'Hopper'
+These values can be accessed with the following syntax: `<array path>[<value>]`  
+Only one array value per `exists`/`missing` keyword can be searched in this manner.
+
+Array values must be scalars (strings, numbers, booleans or `null`), following JSON format:
+
+* Strings: the value must be enclosed in double quotes. Example: `foo["string value"]`
+* Numbers, booleans and the null value must be used as is. Examples: `foo[3.14]`, `foo[false]`, `foo[null]`
+
+
+Array values can be combined with [nested properties](#nested-properties): `nested.array["value"]`
+
+**Example:**
+
+Given the following document:
+
+```json
+{
+    "name": {
+        "first": "Grace",
+        "last": "Hopper",
+        "hobbies": ["compiler", "COBOL"]
     }
-  };
+}
+```
 
-engine.register('index', 'collection', filter)
-  .then(result => {
-    // Prints: 'a_filter_id'
-    console.log(`Filter ID: ${result.id}`);
+Here is a filter, testing whether the value `compiler` is listed in the array `hobbies`:
 
-    // Prints: []
-    console.log(engine.test('index', 'collection', {
-      name: {
-        first: 'Ada',
-        last: 'Lovelace'
-      }
-    }));
-
-    // Prints: ['a_filter_id']
-    console.log(engine.test('index', 'collection', {
-      name: {
-        first: 'Grace',
-        last: 'Hopper'
-      }
-    }));
-
-    // Prints: [] (searched field not at the right place)
-    console.log(engine.test('index', 'collection', {
-      identification: {
-        first: 'Grace',
-        last: 'Hopper'
-      }
-    }));
-  });
+```json
+{
+    "exists": "name.hobbies[\"compiler\"]"
+}
 ```
 
 ## Filter operands
@@ -287,7 +284,11 @@ engine.register('index', 'collection', filter)
 ### and
 The `and` filter takes an array of filter objects, combining them with AND operands.
 
-**Example:**
+#### Syntax
+
+`and: <array>`
+
+#### Example
 
 Given the following documents:
 
@@ -311,16 +312,8 @@ The following filter validates the first document:
 ```javascript
 {
   and: [
-    {
-      equals: {
-        city: 'NYC'
-      }
-    },
-    {
-      equals: {
-        hobby: 'computer'
-      }
-    }
+    { equals: { city: 'NYC' } },
+    { equals: { hobby: 'computer' } }
   ]
 }
 ```
@@ -329,16 +322,26 @@ The following filter validates the first document:
 
 A filter matching documents matching boolean combinations of other queries.
 
-This operand accepts the following attributes:
+This operand accepts at least one of the following attributes:
 
 * `must` all listed conditions must be `true`
 * `must_not` all listed conditions must be `false`
 * `should` one of the listed condition must be `true`
 * `should_not` one of the listed condition must be `false`
 
-Each one of these attributes are an array of filter objects.
 
-**Example:**
+#### Syntax
+
+```
+bool: {
+  [must]: <array>,
+  [must_not]: <array>,
+  [should]: <array>,
+  [should_not]: <array>
+}
+```
+
+#### Example
 
 Given the following documents:
 
@@ -372,38 +375,15 @@ The following filter validates the second document:
 {
   bool: {
     must : [
-      {
-        in : {
-          firstName : ['Grace', 'Ada']
-        }
-      },
-      {
-        range: {
-          age: {
-            gte: 36,
-            lt: 85
-          }
-        }
-      }
+      { in : { firstName : ['Grace', 'Ada'] } },
+      { range: { age: { gte: 36, lt: 85 } } }
     ],
     'must_not' : [
-      {
-        equals: {
-          city: 'NYC'
-        }
-      }
+      { equals: { city: 'NYC' } }
     ],
     should : [
-      {
-        equals : {
-          hobby : 'computer'
-        }
-      },
-      {
-        exists : {
-          field : 'lastName'
-        }
-      }
+      { equals : { hobby : 'computer' } },
+      { exists : 'lastName' }
     ]
   }
 }
@@ -413,7 +393,11 @@ The following filter validates the second document:
 
 The `not` filter reverts a filter result.
 
-**Example:**
+#### Syntax
+
+`not: <object>`
+
+#### Example
 
 Given the following documents:
 
@@ -436,11 +420,7 @@ The following filter validates the first document:
 
 ```javascript
 {
-  not: {
-    equals: {
-      city: 'London'
-    }
-  }
+  not: { equals: { city: 'London' } }
 }
 ```
 
@@ -448,7 +428,11 @@ The following filter validates the first document:
 
 The `or` filter takes an array containing filter objects, combining them using OR operands.
 
-**Example:**
+#### Syntax
+
+`or: <array>`
+
+#### Example
 
 Given the following documents:
 
@@ -478,16 +462,8 @@ The following filter validates the first two documents:
 ```javascript
 {
   or: [
-    {
-      equals: {
-        city: 'NYC'
-      }
-    },
-    {
-      equals: {
-        city: 'London'
-      }
-    }
+    { equals: { city: 'NYC' } },
+    { equals: { city: 'London' } }
   ]
 }
 ```
@@ -495,9 +471,19 @@ The following filter validates the first two documents:
 ## Filter terms
 
 ### equals
-The `equals` filter matches documents or messages attributes using string equality.
 
-**Example:**
+Matches attributes using strict equality.  
+The tested attribute must be a scalar (number, string or boolean), and of the same type than the provided filter value.
+
+#### Syntax
+
+```
+equals: {
+  <field name>: <value>
+}
+```
+
+#### Example
 
 Given the following documents:
 
@@ -516,15 +502,28 @@ The following filter validates the first document:
 
 ```javascript
 {
-  equals: {
-    firstName: 'Grace'
-  }
+  equals: { firstName: 'Grace' }
 }
 ```
-### exists
-The `exists` filter matches documents containing non-null fields.
 
-**Example:**
+### exists
+
+Test for the existence of a key in an object, or of a scalar in an array.  
+
+#### Syntax
+
+`exists: 'nested.field.path'`
+(see [nested field syntax](#nested-properties))
+
+`exists: 'nested.array[value]'`
+(see [array value syntax])(#array-values)
+
+The following syntax is deprecated since Koncorde 1.2, and supported for backward compatibility only:
+
+`exists: { field: 'nested.field.path' }`
+
+
+#### Example
 
 Given the following documents:
 
@@ -533,14 +532,14 @@ Given the following documents:
   firstName: 'Grace',
   lastName: 'Hopper',
   city: 'NYC',
-  hobby: 'computer',
+  hobby: ['compiler', 'COBOL'],
   alive: false
 },
 {
   firstName: 'Ada',
   lastName: 'Lovelace',
   city: 'London',
-  hobby: 'computer'
+  hobby: ['programming', 'algorithm']
 }
 ```
 
@@ -548,14 +547,21 @@ The following filter validates the first document:
 
 ```javascript
 {
-  exists: {
-    field: 'alive'
-  }
+  exists: 'alive'
+}
+```
+
+And this filter validates the second document:
+
+```javascript
+{
+  exists: 'hobby["algorithm"]'
 }
 ```
 
 ### geoBoundingBox
-Filter documents containing a geographical point confined within a bounding box:
+
+Filter documents containing a geographical point confined within a provided bounding box:
 
 ![Illustration of geoBoundingBox](http://docs.kuzzle.io/assets/images/geolocation/geoBoundingBox.png)
 
@@ -566,44 +572,47 @@ A bounding box is a 2D box that can be defined using either of the following for
 
 The bounding box description must be stored in an attribute, named after the geographical point to be tested in future documents.
 
-**Format examples:**
+#### Syntax
 
-All of the following filter examples test for a geographical point named `point`, whose coordinates should be in a bounding box with the following properties:
+```
+geoBoundingBox: { 
+  <geopoint field name>: {
+    <bounding box description>
+  } 
+}
+```
+
+#### Bounding box description
+
+All of the following syntaxes below are accepted, and they describe the same bounding box, with the following properties:
 
 * top-left corner of latitude `43.5810609` and longitude `3.8433703`
 * bottom-right corner of latitude `43.6331979` and longitude `3.9282093`
 
-
 ```javascript
 {
-  point: {
-    top: 43.5810609,
-    left: 3.8433703,
-    bottom: 43.6331979,
-    right: 3.9282093
-  }
+  top: 43.5810609,
+  left: 3.8433703,
+  bottom: 43.6331979,
+  right: 3.9282093
 }
 ```
 
 ```javascript
 {
-  point: {
-    topLeft: { lat: 43.5810609, lon: 3.8433703 },
-    bottomRight: { lat: 43.6331979, lon: 3.9282093 }
-  }
+  topLeft: { lat: 43.5810609, lon: 3.8433703 },
+  bottomRight: { lat: 43.6331979, lon: 3.9282093 }
 }
 ```
 
 ```javascript
 {
-  point: {
-    top_left: "43.5810609, 3.8433703",
-    bottom_right: "43.6331979, 3.9282093"
-  }
+  top_left: "43.5810609, 3.8433703",
+  bottom_right: "43.6331979, 3.9282093"
 }
 ```
 
-**Example:**
+#### Example
 
 Given the following documents:
 
@@ -649,11 +658,21 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistance` filter contains the following properties:
 
-* a geopoint defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
+* a [geopoint](https://docs.kuzzle.io/kuzzle-dsl/essential/geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
 * a `distance` parameter in [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
 
+#### Syntax
 
-**Example:**
+```
+geoDistance: {
+  <geopoint field name>: {
+    <geopoint description>
+  },
+  distance: <geodistance>
+}
+```
+
+#### Example
 
 Given the following documents:
 
@@ -698,11 +717,23 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistanceRange` filter contains the following properties:
 
-* a geopoint defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
+* a [geopoint](https://docs.kuzzle.io/kuzzle-dsl/essential/geopoints) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
 * a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
 * a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
 
-**Example:**
+#### Syntax
+
+```
+geoDistanceRange: {
+  <geopoint field name>: {
+    <geopoint description>
+  },
+  from: <geodistance>,
+  to: <geodistance>
+}
+```
+
+#### Example
 
 Given the following documents:
 
@@ -738,19 +769,28 @@ The following filter will match the second document only:
 ```
 
 ### geoPolygon
+
 Filter documents containing a geographical point, confined within a polygon of an arbitrary number of sides:
 
 ![Illustration of geoPolygon](http://docs.kuzzle.io/assets/images/geolocation/geoPolygon.png)
 
-A `geoPolygon` filter is described using a `points` array, containing an arbitrary number of geopoints (at least 3).
+A `geoPolygon` filter is described using an array of [geopoints](https://docs.kuzzle.io/kuzzle-dsl/essential/geopoints) (at least 3).
+
 Koncorde automatically closes geopolygons.
 
 Different geopoint formats can be used to describe different corners of a polygon.
 
-The `points` object must be stored in an attribute named after the geographical point to test in future documents.
+#### Syntax
 
+```
+geoPolygon: {
+  <geopoint field name>: {
+    points: <geopoints array>
+  }
+}
+```
 
-**Example:**
+#### Example
 
 Given the following documents:
 
@@ -795,7 +835,11 @@ The following filter will match the second document only:
 
 This filter returns only documents having their unique document ID listed in the provided list.
 
-**Example:**
+#### Syntax
+
+`ids: <array of strings>`
+
+#### Example
 
 Given the following documents:
 
@@ -829,9 +873,13 @@ The following filter validates first document:
 
 ### in
 
-This filter allows testing a string field against multiple values.
+Like [equals](#equals), but accepts an array of possible scalar values to be tested.
 
-**Example:**
+#### Syntax
+
+`in: { <field name>: <array of values> }`
+
+#### Example
 
 Given the following documents:
 
@@ -854,17 +902,28 @@ The following filter validates the first two documents:
 
 ```javascript
 {
-  in: {
-    firstName: ['Grace', 'Ada']
-  }
+  in: { firstName: ['Grace', 'Ada'] }
 }
 ```
 
 ### missing
 
-A filter matching documents with a missing field.
+A filter matching documents either with a missing field in an object, or with a missing value in an array.
 
-**Example:**
+#### Syntax
+
+`missing: 'nested.field.path'`
+(see [nested field syntax](#nested-properties))
+
+`missing: 'nested.array[value]'`
+(see [array value syntax])(#array-values)
+
+The following syntax is deprecated since Koncorde 1.2, and supported for backward compatibility only:
+
+`missing: { field: 'nested.field.path' }`
+
+
+#### Example
 
 Given the following documents:
 
@@ -873,14 +932,14 @@ Given the following documents:
   firstName: 'Grace',
   lastName: 'Hopper',
   city: 'NYC',
-  hobby: 'computer',
+  hobbies: ['compiler', 'COBOL'],
   alive: false
 },
 {
   firstName: 'Ada',
   lastName: 'Lovelace',
   city: 'London',
-  hobby: 'computer',
+  hobbies: ['algorithm', 'programming'],
 }
 ```
 
@@ -888,27 +947,45 @@ The following filter validates the second document:
 
 ```javascript
 {
-  missing: {
-    field: 'alive'
-  }
+  missing: 'alive'
+}
+```
+
+And this filter validates the first document: 
+
+```javascript
+{
+  missing: 'hobbies["algorithm"]'
 }
 ```
 
 ### range
 
-Filters documents with fields having number attributes within a certain range.
+Filters documents with number attributes within a provided interval.
 
-The range filter accepts the following parameters:
+A range can be defined with at least one of the following arguments:
 
-`gte` Greater-than or equal to
+* `gte`: Greater-than or equal to `<number>`
+* `gt`: Greater-than `<number>`
+* `lte`: Less-than or equal to
+* `lt`: Less-than
 
-`gt` Greater-than
+Ranges can be either bounded or half-bounded.
 
-`lte` Less-than or equal to
+#### Syntax 
 
-`lt` Less-than
+```
+range: {
+  <field to be tested>: {
+    [gte]: <number>,
+    [gt]: <number>,
+    [lte]: <number>,
+    [lt]: <number>
+  }
+}
+```
 
-**Example:**
+#### Example
 
 Given the following documents:
 
@@ -942,7 +1019,6 @@ The following filter validates the last two documents:
 {
   range: {
     age: {
-      gte: 36,
       lt: 85
     }
   }
@@ -951,18 +1027,17 @@ The following filter validates the last two documents:
 
 ### regexp
 
-The `regexp` filter matches documents or messages attributes using perl-compatible regular expressions ([PCRE](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions)).
-You can test only 1 attribute per `regexp` filter.
+The `regexp` filter matches attributes using [PCREs](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions).
+
+#### Syntax
 
 A `regexp` filter has the following structure, splitting the usual `/pattern/flags` into two parts:
 
 ```javascript
-{
-  regexp: {
-    attributeToTest: {
-      value: 'search pattern',
-      flags: 'modifier flags'
-    }
+regexp: {
+  <field name>: {
+    value: '<search pattern>',
+    flags: '<modifier flags>'
   }
 }
 ```
@@ -970,14 +1045,12 @@ A `regexp` filter has the following structure, splitting the usual `/pattern/fla
 If you don't need any modifier flag, then you may also use the following simplified form:
 
 ```javascript
-{
   regexp: {
-    attributeToTest: 'search pattern'
+    <field name>: '<search pattern>'
   }
-}
 ```
 
-**Example:**
+#### Example
 
 Given the following documents:
 
@@ -1013,13 +1086,13 @@ Instantiates a new Koncorde engine.
 
 **constructor([options])**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`options`|`Object`| Optional parameters |
 
-##### Options
+#### Options
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
@@ -1060,13 +1133,13 @@ console.log(Koncorde.convertDistance('3 456,58 kilometers'));
 
 **convertDistance(str)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`str`|`string`| Distance to convert |
 
-##### Returns
+#### Returns
 
 The distance converted in meters (type: number)
 
@@ -1118,13 +1191,13 @@ console.log(Koncorde.convertGeopoint('spfb09x0ud5s'));
 
 **convertGeopoint(point)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`point`|`object`| Geopoint to convert |
 
-##### Returns
+#### Returns
 
 A `Coordinate` object containing the following properties: `lat` (latitude, type: number), `lon` (longitude, type: number)
 
@@ -1136,7 +1209,7 @@ Returns a boolean indicating if filters exist for a given index-collection pair
 
 **exists(index, collection)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
@@ -1144,7 +1217,7 @@ Returns a boolean indicating if filters exist for a given index-collection pair
 |`collection`|`string`| Data collection name |
 
 
-##### Returns
+#### Returns
 
 Returns `true` if at least one filter exists on the provided index-collection pair, returns `false` otherwise
 
@@ -1156,14 +1229,14 @@ Returns the list of filter identifiers registered on a given index-collection pa
 
 **getFilterIds(index, collection)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`index`|`string`| Data index name |
 |`collection`|`string`| Data collection name |
 
-##### Returns
+#### Returns
 
 An `array` of filter unique identifiers corresponding to filters registered on the provided index-collection pair.
 
@@ -1179,7 +1252,7 @@ If you do not need the filter unique identifier prior to save a filter in the en
 
 **normalize(index, collection, filter)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
@@ -1187,7 +1260,7 @@ If you do not need the filter unique identifier prior to save a filter in the en
 |`collection`|`string`| Data collection name |
 |`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
 
-##### Returns
+#### Returns
 
 A `promise` resolving to an object containing the following attributes:
 
@@ -1204,7 +1277,7 @@ Registers a filter to the engine instance. This method is equivalent to executin
 
 **register(index, collection, filter)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
@@ -1212,7 +1285,7 @@ Registers a filter to the engine instance. This method is equivalent to executin
 |`collection`|`string`| Data collection name |
 |`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
 
-##### Returns
+#### Returns
 
 A `promise` resolving to an object containing the following attributes:
 
@@ -1227,13 +1300,13 @@ Removes all references to a given filter from the engine.
 
 **remove(filterId)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filterId`|`string`| Filter unique ID. Obtained by using `register`|
 
-##### Returns
+#### Returns
 
 A `promise` resolved once the filter has been completely removed from the engine.
 
@@ -1245,13 +1318,13 @@ Stores a normalized filter (obtained with [normalize](#normalize)).
 
 **store(normalized)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`normalized`|`Object`| Normalized filter |
 
-##### Returns
+#### Returns
 
 An `Object` containing the following attributes:
 
@@ -1266,7 +1339,7 @@ Test data against filters registered in the engine, returning matching filter id
 
 **test(index, collection, data, [id])**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
@@ -1276,7 +1349,7 @@ Test data against filters registered in the engine, returning matching filter id
 |`id`|`string`| If applicable, data unique ID (to use with the [ids](http://docs.kuzzle.io/kuzzle-dsl/terms/ids/)) filter term |
 
 
-##### Returns
+#### Returns
 
 An array of filter identifiers matching the provided data (and/or documentId, if any).
 
@@ -1288,13 +1361,13 @@ Tests the provided filter without storing it in the engine, to check whether it 
 
 **validate(filter)**
 
-##### Arguments
+#### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
 
-##### Returns
+#### Returns
 
 A resolved promise if the provided filter is valid, or a rejected one with the appropriate error object otherwise.
 
@@ -1308,36 +1381,44 @@ The following results are obtained running `node benchmark.js` at the root of th
 Filter count per tested keyword: 10000
 
 > Benchmarking keyword: equals
-  Registration: time = 0.484s, mem = +41MB
-  Matching x 106,992 ops/sec ±2.46% (70 runs sampled)
+  Indexation: time = 0.435s, mem = +41MB
+  Matching x 4,006,895 ops/sec ±0.35% (97 runs sampled)
+  Filters removal: time = 0.02s
 
 > Benchmarking keyword: exists
-  Registration: time = 2.144s, mem = +18MB
-  Matching x 42,239 ops/sec ±4.31% (59 runs sampled)
+  Indexation: time = 0.487s, mem = +-2MB
+  Matching x 2,449,897 ops/sec ±0.95% (97 runs sampled)
+  Filters removal: time = 0.023s
 
 > Benchmarking keyword: geoBoundingBox
-  Registration: time = 0.842s, mem = +16MB
-  Matching x 51,096 ops/sec ±4.96% (42 runs sampled)
+  Indexation: time = 0.751s, mem = +14MB
+  Matching x 1,339,779 ops/sec ±0.21% (95 runs sampled)
+  Filters removal: time = 0.096s
 
 > Benchmarking keyword: geoDistance
-  Registration: time = 1.392s, mem = +15MB
-  Matching x 40,320 ops/sec ±4.79% (24 runs sampled)
+  Indexation: time = 1.254s, mem = +6MB
+  Matching x 1,226,643 ops/sec ±0.73% (92 runs sampled)
+  Filters removal: time = 0.093s
 
 > Benchmarking keyword: geoDistanceRange
-  Registration: time = 2.056s, mem = +30MB
-  Matching x 33,740 ops/sec ±4.36% (18 runs sampled)
+  Indexation: time = 1.762s, mem = +-10MB
+  Matching x 1,199,081 ops/sec ±0.26% (96 runs sampled)
+  Filters removal: time = 0.088s
 
 > Benchmarking keyword: geoPolygon (10 vertices)
-  Registration: time = 1.446s, mem = +23MB
-  Matching x 16,302 ops/sec ±10.17% (45 runs sampled)
+  Indexation: time = 1.184s, mem = +1MB
+  Matching x 53,395 ops/sec ±0.95% (96 runs sampled)
+  Filters removal: time = 0.103s
 
 > Benchmarking keyword: in (5 random values)
-  Registration: time = 1.849s, mem = +94MB
-  Matching x 8,112 ops/sec ±1.32% (20 runs sampled)
+  Indexation: time = 1.417s, mem = +40MB
+  Matching x 2,086,572 ops/sec ±2.02% (92 runs sampled)
+  Filters removal: time = 0.058s
 
 > Benchmarking keyword: range (random bounds)
-  Registration: time = 0.631s, mem = +6MB
-  Matching x 28,539 ops/sec ±7.26% (87 runs sampled)
+  Indexation: time = 0.407s, mem = +-140MB
+  Matching x 38,611 ops/sec ±0.32% (95 runs sampled)
+  Filters removal: time = 0.064s
 ```
 
 _(results obtained with node v10.2.1)_
