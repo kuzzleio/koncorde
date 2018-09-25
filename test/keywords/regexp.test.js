@@ -88,7 +88,7 @@ describe('DSL.keyword.regexp', () => {
 
   describe('#standardization', () => {
     it('should return the same content, unchanged', () => {
-      let filter = {regexp: {foo: {value: 'foo', flags: 'i'}}};
+      const filter = {regexp: {foo: {value: 'foo', flags: 'i'}}};
       return should(dsl.transformer.standardizer.standardize(filter)).be.fulfilledWith(filter);
     });
   });
@@ -97,12 +97,13 @@ describe('DSL.keyword.regexp', () => {
     it('should store a single condition correctly', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: 'foo', flags: 'i'}}})
         .then(subscription => {
-          let subfilter = new RegexpCondition('foo', dsl.storage.filters[subscription.id].subfilters[0], 'i');
+          const
+            storage = dsl.storage.foPairs.index.collection.regexp,
+            regexp = new RegexpCondition('foo', dsl.storage.filters[subscription.id].subfilters[0], 'i');
 
-          should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array[0]).be.instanceOf(RegexpCondition);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array).match([subfilter]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.get(regexp.stringValue)).eql(regexp);
         });
     });
 
@@ -116,20 +117,21 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {regexp: {foo: {value: 'bar'}}});
         })
         .then(subscription => {
-          let
-            cond2 = new RegexpCondition('bar', dsl.storage.filters[subscription.id].subfilters[0]),
-            conditions = cond1.stringValue < cond2.stringValue ? [cond1, cond2] : [cond2, cond1];
+          const
+            storage = dsl.storage.foPairs.index.collection.regexp,
+            cond2 = new RegexpCondition('bar', dsl.storage.filters[subscription.id].subfilters[0]);
 
-          should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array).match(conditions);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.size).eql(2);
+          should(storage.fields.foo.get(cond1.stringValue)).eql(cond1);
+          should(storage.fields.foo.get(cond2.stringValue)).eql(cond2);
         });
     });
 
     it('should store multiple subfilters on the same condition correctly', () => {
-      let
-        cond,
-        filter = {regexp: {foo: {value: 'foo', flags: 'i'}}};
+      let cond;
+      const filter = {regexp: {foo: {value: 'foo', flags: 'i'}}};
 
       return dsl.register('index', 'collection', filter)
         .then(subscription => {
@@ -138,11 +140,13 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {and: [filter, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
+          const storage = dsl.storage.foPairs.index.collection.regexp;
           cond.subfilters.push(dsl.storage.filters[subscription.id].subfilters[0]);
 
-          should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array).match([cond]);
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.keys).eql(new Set(['foo']));
+          should(storage.fields.foo.size).eql(1);
+          should(storage.fields.foo.get(cond.stringValue)).eql(cond);
         });
     });
   });
@@ -151,10 +155,7 @@ describe('DSL.keyword.regexp', () => {
     it('should match a document if its registered field matches the regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: 'FOOBAR'});
-
-          should(result).be.an.Array().and.not.empty();
-          should(result[0]).be.eql(subscription.id);
+          should(dsl.test('index', 'collection', {foo: 'FOOBAR'})).eql([subscription.id]);
         });
     });
 
@@ -175,10 +176,9 @@ describe('DSL.keyword.regexp', () => {
     it('should match a document with the subscribed nested keyword', () => {
       return dsl.register('index', 'collection', {regexp: {'foo.bar.baz': {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
-          var result = dsl.test('index', 'collection', {foo: {bar: {baz: 'FOOBAR'}}});
+          const result = dsl.test('index', 'collection', {foo: {bar: {baz: 'FOOBAR'}}});
 
-          should(result).be.an.Array().and.not.empty();
-          should(result[0]).be.eql(subscription.id);
+          should(result).eql([subscription.id]);
         });
     });
 
@@ -207,8 +207,8 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
+      const filter = {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}};
       let
-        filter = {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}},
         idToRemove,
         cond;
 
@@ -225,8 +225,8 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array).match([cond]);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo']));
+          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.get(cond.stringValue)).match(cond);
         });
     });
 
@@ -247,8 +247,9 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array).match([cond]);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo']));
+          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.get(cond.stringValue)).match(cond);
+          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.size).eql(1);
         });
     });
 
@@ -264,14 +265,14 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {regexp: {bar: {value: '^\\w{2}oba\\w$', flags: 'i'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['bar', 'foo']);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo', 'bar']));
           idToRemove = subscription.id;
           return dsl.remove(idToRemove);
         })
         .then(() => {
           should(dsl.storage.foPairs.index.collection.regexp).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.regexp.keys.array).match(['foo']);
-          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.expressions.array).match([cond]);
+          should(dsl.storage.foPairs.index.collection.regexp.keys).eql(new Set(['foo']));
+          should(dsl.storage.foPairs.index.collection.regexp.fields.foo.get(cond.stringValue)).match(cond);
           should(dsl.storage.foPairs.index.collection.regexp.fields.bar).be.undefined();
         });
     });

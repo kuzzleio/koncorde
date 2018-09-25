@@ -2,7 +2,7 @@
 
 /* eslint-disable no-console */
 
-const 
+const
   Benchmark = require('benchmark'),
   georandom = require('geojson-random'),
   Random = require('random-js'),
@@ -50,7 +50,7 @@ const test = Bluebird.coroutine(function *_register(name, generator, document) {
   }
 
   filterEndTime = (Date.now() - filterStartTime) / 1000;
-  console.log(`\tRegistration: time = ${filterEndTime}s, mem = +${Math.round((v8.getHeapStatistics().total_heap_size - baseHeap) / 1024 / 1024)}MB`);  
+  console.log(`\tRegistration: time = ${filterEndTime}s, mem = +${Math.round((v8.getHeapStatistics().total_heap_size - baseHeap) / 1024 / 1024)}MB`);
 
   matching(name, document);
 });
@@ -129,7 +129,7 @@ test('equals', () => ({equals: {str: rgen.string(engine, 20)}}), {str: rgen.stri
       for(i = 0; i < 5; i++) {
         values.push(rgen.string(engine, 20));
       }
-      
+
       return {in: {str: values}};
     }, {
       str: rgen.string(engine, 20)

@@ -39,7 +39,7 @@ describe('DSL.keyword.geospatial', () => {
         .then(() => dsl.register('index', 'collection', geoFilter))
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['bar']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['bar']));
           should(dsl.storage.foPairs.index.collection.geospatial.fields.bar).be.an.Object();
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo).be.undefined();
         });
@@ -56,7 +56,7 @@ describe('DSL.keyword.geospatial', () => {
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond]).match([sf]);
         });
     });
@@ -73,7 +73,7 @@ describe('DSL.keyword.geospatial', () => {
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond]).match([sf]);
         });
     });

@@ -176,7 +176,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
           let subfilter = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[subfilter.conditions[0].id]).match([subfilter]);
         });
     });
@@ -192,7 +192,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
           let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf1.conditions[0].id]).match([sf1, sf2]);
         });
     });
@@ -210,7 +210,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
           let sf2 = dsl.storage.filters[subscription.id].subfilters[0];
 
           should(dsl.storage.foPairs.index.collection.geospatial).be.instanceOf(FieldOperand);
-          should(dsl.storage.foPairs.index.collection.geospatial.keys.array).match(['foo']);
+          should(dsl.storage.foPairs.index.collection.geospatial.keys).eql(new Set(['foo']));
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[cond1]).match([sf1]);
           should(dsl.storage.foPairs.index.collection.geospatial.fields.foo[sf2.conditions[0].id]).match([sf2]);
         });
