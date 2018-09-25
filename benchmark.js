@@ -56,7 +56,6 @@ const test = Bluebird.coroutine(function *_register(name, generator, document) {
   console.log(`\n> Benchmarking keyword: ${name}`);
   filterStartTime = Date.now();
 
-
   for (i = 0;i < max; i++) {
     // Using the filter name as a collection to isolate
     // benchmark calculation per keyword
