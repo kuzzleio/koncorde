@@ -310,5 +310,19 @@ describe('DSL.keyword.equals', () => {
           should(equals.fields.baz).be.undefined();
         });
     });
+
+    it('should remove a single collection if other collections are registered', () => {
+      return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
+        .then(() => dsl.register('index', 'collection2', {equals: {foo: 'bar'}}))
+        .then(subscription => {
+          should(dsl.storage.foPairs.index.collection).not.undefined();
+          should(dsl.storage.foPairs.index.collection2).not.undefined();
+          return dsl.remove(subscription.id);
+        })
+        .then(() => {
+          should(dsl.storage.foPairs.index.collection).not.undefined();
+          should(dsl.storage.foPairs.index.collection2).undefined();
+        });
+    });
   });
 });

@@ -156,7 +156,7 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(subscription => {
           const storage = dsl.storage.foPairs.index.collection.get('regexp');
-          cond.subfilters.push(Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]);
+          cond.subfilters.add(Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]);
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));

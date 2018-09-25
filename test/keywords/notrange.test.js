@@ -175,12 +175,13 @@ describe('DSL.keyword.notrange', () => {
           return dsl.register('index', 'collection', {
             and: [
               {not: {range: {foo: {lt: 50}}}},
+              {not: {range: {foo: {gt: 2}}}},
               {not: {range: {foo: {gte: 42, lte: 110}}}}
             ]
           });
         })
         .then(subscription => {
-          should(storage.fields.foo.conditions.size).eql(2);
+          should(storage.fields.foo.conditions.size).eql(3);
           return dsl.remove(subscription.id);
         })
         .then(() => {
