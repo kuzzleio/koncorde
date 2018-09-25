@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/kuzzleio/koncorde.svg?branch=master)](https://travis-ci.org/kuzzleio/koncorde)
 [![Codecov](http://codecov.io/github/kuzzleio/koncorde/coverage.svg?branch=master)](http://codecov.io/github/kuzzleio/koncorde?branch=master)
+[![Code Quality: Javascript](https://img.shields.io/lgtm/grade/javascript/g/kuzzleio/koncorde.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/koncorde/context:javascript)
+[![Total Alerts](https://img.shields.io/lgtm/alerts/g/kuzzleio/koncorde.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/koncorde/alerts)
 
 # Koncorde
 
