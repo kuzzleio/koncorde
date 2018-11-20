@@ -207,6 +207,22 @@ describe('DSL API', () => {
     });
   });
 
+  describe('#hasFilter', () => {
+    it('should return false if the filter does not exist', () => {
+      should(dsl.hasFilter('i dont exist'))
+        .be.false();
+    });
+
+    it('should return true if the filter exists', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(response => {
+          should(dsl.hasFilter(response.id))
+            .be.true();
+        });
+
+    });
+  });
+
   describe('#test', () => {
     /*
      we only check the special case of no registered filter on the provided
