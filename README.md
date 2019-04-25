@@ -5,7 +5,7 @@
 
 # Koncorde
 
-Supersonic real-time data percolation engine, featuring a full-fledged [DSL](http://docs.kuzzle.io/kuzzle-dsl/), including geofencing capabilities.
+Supersonic real-time data percolation engine, featuring a set of [terms](https://docs.kuzzle.io/koncorde/1/essentials/terms/) and [operands](https://docs.kuzzle.io/koncorde/1/essentials/operands/) to build fine-grained filters, including geofencing capabilities.
 
 This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-hostable backend, to handle real-time notifications and data validations.
 
@@ -61,7 +61,7 @@ In other words, this is the reverse of a search engine, where data are indexed, 
 
 In the following example, we'll listen to objects containing a `position` property, describing a geopoint. We want that geopoint to be 500 meters around a pre-defined starting position.
 
-This can be described by the following Kuzzle DSL filter:
+This can be described by the following Koncorde filter:
 
 ```json
 {
@@ -658,8 +658,8 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistance` filter contains the following properties:
 
-* a [geopoint](https://docs.kuzzle.io/kuzzle-dsl/essential/geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
-* a `distance` parameter in [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
+* a [geopoint](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geopoints) defining the point of origin. This geopoint attribute must be named after the geographical point to test in future documents
+* a `distance` parameter in [geodistance format](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geodistances)
 
 #### Syntax
 
@@ -717,9 +717,9 @@ Filter documents containing a geographical point, whose position is within a dis
 
 A `geoDistanceRange` filter contains the following properties:
 
-* a [geopoint](https://docs.kuzzle.io/kuzzle-dsl/essential/geopoints) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
-* a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
-* a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](http://docs.kuzzle.io/kuzzle-dsl/essential/geodistances/)
+* a [geopoint](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geopoints) defining the center point of the distance range. This geopoint attribute must be named after the geographical point to test in future documents
+* a `from` attribute, describing the minimum distance from the center point, using a [geodistance format](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geodistances)
+* a `to` attribute, describing the maximum distance from the center point, using a [geodistance format](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geodistances)
 
 #### Syntax
 
@@ -774,11 +774,13 @@ Filter documents containing a geographical point, confined within a polygon of a
 
 ![Illustration of geoPolygon](http://docs.kuzzle.io/assets/images/geolocation/geoPolygon.png)
 
-A `geoPolygon` filter is described using an array of [geopoints](https://docs.kuzzle.io/kuzzle-dsl/essential/geopoints) (at least 3).
+A `geoPolygon` filter is described using an array of [geopoints](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geopoints) (at least 3).
 
 Koncorde automatically closes geopolygons.
 
 Different geopoint formats can be used to describe different corners of a polygon.
+
+You can use http://geojson.io/ to draw your polygons on a map and then export the corresponding coordinates.
 
 #### Syntax
 
@@ -1258,7 +1260,7 @@ If you do not need the filter unique identifier prior to save a filter in the en
 |------|------|----------------------------------|
 |`index`|`string`| Data index name |
 |`collection`|`string`| Data collection name |
-|`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
+|`filter`|`object`| A filter in [Koncorde format](https://docs.kuzzle.io/koncorde/1) |
 
 #### Returns
 
@@ -1283,7 +1285,7 @@ Registers a filter to the engine instance. This method is equivalent to executin
 |------|------|----------------------------------|
 |`index`|`string`| Data index name |
 |`collection`|`string`| Data collection name |
-|`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
+|`filter`|`object`| A filter in [Koncorde format](https://docs.kuzzle.io/koncorde/1) |
 
 #### Returns
 
@@ -1346,7 +1348,7 @@ Test data against filters registered in the engine, returning matching filter id
 |`index`|`string`| Data index name |
 |`collection`|`string`| Data collection name |
 |`data`|`object`| Data to test against filters |
-|`id`|`string`| If applicable, data unique ID (to use with the [ids](http://docs.kuzzle.io/kuzzle-dsl/terms/ids/)) filter term |
+|`id`|`string`| If applicable, data unique ID (to use with the [ids](https://docs.kuzzle.io/koncorde/1/essentials/terms/#ids)) filter term |
 
 
 #### Returns
@@ -1365,7 +1367,7 @@ Tests the provided filter without storing it in the engine, to check whether it 
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`filter`|`object`| A filter in [Kuzzle DSL](http://docs.kuzzle.io/kuzzle-dsl) format |
+|`filter`|`object`| A filter in [Koncorde format](https://docs.kuzzle.io/koncorde/1) |
 
 #### Returns
 
