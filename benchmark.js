@@ -5,17 +5,21 @@
 const
   Benchmark = require('benchmark'),
   georandom = require('geojson-random'),
-  Random = require('random-js'),
+  {
+    MersenneTwister19937,
+    string: randomStringEngine,
+    integer: randomIntegerEngine
+  } = require('random-js'),
   Bluebird = require('bluebird'),
   Koncorde = require('.'),
   v8 = require('v8');
 
 const
   max = 10000,
-  engine = Random.engines.mt19937().autoSeed(),
+  engine = MersenneTwister19937.autoSeed(),
   rgen = {
-    string: Random.string(),
-    int: Random.integer(-10000, 10000)
+    string: randomStringEngine(),
+    int: randomIntegerEngine(-10000, 10000)
   };
 
 let filters = [];
