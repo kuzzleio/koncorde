@@ -1,0 +1,27 @@
+# Node
+node_modules
+npm-debug.log*
+.node_history
+.reify-cache
+*.log
+
+# Exclude coverage report
+coverage
+.nyc_output
+
+# IDE
+.idea
+
+*#
+*~
+.*.swp
+.tags
+
+#sonarqube
+.sonar
+.scannerwork
+.sonarlint
+/sonarlint.json
+
+#Docs for npm package
+/doc/
