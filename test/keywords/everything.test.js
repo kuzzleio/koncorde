@@ -30,7 +30,8 @@ describe('DSL.keyword.everything', () => {
     it('should register an empty filter correctly', () => {
       return dsl.register('index', 'collection', {})
         .then(subscription => {
-          const storeEntry = dsl.storage.foPairs.index.collection.get('everything');
+          const storeEntry = dsl.storage.foPairs
+            .get('index', 'collection', 'everything');
 
           should(storeEntry)
             .be.instanceof(FieldOperand);
@@ -71,7 +72,7 @@ describe('DSL.keyword.everything', () => {
       return dsl.register('index', 'collection', {})
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
+          should(dsl.storage.foPairs._cache).and.be.empty();
         });
     });
   });

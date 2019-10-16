@@ -99,10 +99,10 @@ describe('koncorde.operands.and', () => {
         })
         .then(() => koncorde.remove(id))
         .then(() => {
-          should(koncorde.storage.foPairs.index.collection.get('exists')).be.an.Object();
-          should(koncorde.storage.foPairs.index.collection.get('equals')).be.undefined();
-          should(koncorde.storage.foPairs.index.collection.get('notexists')).be.undefined();
-          should(koncorde.storage.foPairs.index.collection.get('range')).be.undefined();
+          should(koncorde.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
+          should(koncorde.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
+          should(koncorde.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
+          should(koncorde.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
         });
     });
   });

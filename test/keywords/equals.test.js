@@ -71,7 +71,7 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           const
             subfilter = getSubfilter(subscription.id),
-            storage = dsl.storage.foPairs.index.collection.get('equals');
+            storage = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -91,7 +91,10 @@ describe('DSL.keyword.equals', () => {
         })
         .then(subscription => {
           const quxSubfilter = getSubfilter(subscription.id);
-          const equals = dsl.storage.foPairs.index.collection.get('equals');
+          const equals = dsl.storage.foPairs.get(
+            'index',
+            'collection',
+            'equals');
 
           should(equals).be.an.instanceof(FieldOperand);
           should(equals.keys).eql(new Set(['foo']));
@@ -107,15 +110,21 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           barSubfilter = getSubfilter(subscription.id);
 
-          return dsl.register('index', 'collection', {and: [{equals: {baz: 'qux'}}, {equals: {foo: 'bar'}}]});
+          return dsl.register('index', 'collection', {
+            and: [
+              { equals: { baz: 'qux' } },
+              { equals: { foo: 'bar' } }
+            ]
+          });
         })
         .then(subscription => {
           const multiSubfilter = getSubfilter(subscription.id);
-          const equals = dsl.storage.foPairs.index.collection.get('equals');
+          const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
           should(equals).be.an.instanceof(FieldOperand);
           should(equals.keys).eql(new Set(['foo', 'baz']));
-          should(equals.fields.foo.get('bar')).eql(new Set([barSubfilter, multiSubfilter]));
+          should(equals.fields.foo.get('bar')).eql(
+            new Set([barSubfilter, multiSubfilter]));
           should(equals.fields.baz.get('qux')).eql(new Set([multiSubfilter]));
         });
     });
@@ -222,7 +231,7 @@ describe('DSL.keyword.equals', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
+          should(dsl.storage.foPairs._cache).be.an.Object().and.be.empty();
         });
     });
 
@@ -248,7 +257,8 @@ describe('DSL.keyword.equals', () => {
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const equals = dsl.storage.foPairs.index.collection.get('equals');
+          const equals = dsl.storage.foPairs
+            .get('index', 'collection', 'equals');
 
           should(equals).be.an.instanceof(FieldOperand);
           should(equals.keys).eql(new Set(['foo', 'baz']));
@@ -264,7 +274,7 @@ describe('DSL.keyword.equals', () => {
 
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(subscription => {
-          equals = dsl.storage.foPairs.index.collection.get('equals');
+          equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
           barSubfilter = getSubfilter(subscription.id);
 
@@ -296,7 +306,7 @@ describe('DSL.keyword.equals', () => {
           return dsl.register('index', 'collection', {equals: {baz: 'qux'}});
         })
         .then(subscription => {
-          equals = dsl.storage.foPairs.index.collection.get('equals');
+          equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
           should(equals.keys).eql(new Set(['foo', 'baz']));
           should(equals.fields.baz.get('qux')).eql(new Set([getSubfilter(subscription.id)]));
@@ -315,13 +325,13 @@ describe('DSL.keyword.equals', () => {
       return dsl.register('index', 'collection', {equals: {foo: 'bar'}})
         .then(() => dsl.register('index', 'collection2', {equals: {foo: 'bar'}}))
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection).not.undefined();
-          should(dsl.storage.foPairs.index.collection2).not.undefined();
+          should(dsl.storage.foPairs.has('index', 'collection')).be.true();
+          should(dsl.storage.foPairs.has('index', 'collection2')).be.true();
           return dsl.remove(subscription.id);
         })
         .then(() => {
-          should(dsl.storage.foPairs.index.collection).not.undefined();
-          should(dsl.storage.foPairs.index.collection2).undefined();
+          should(dsl.storage.foPairs.has('index', 'collection')).be.true();
+          should(dsl.storage.foPairs.has('index', 'collection2')).be.false();
         });
     });
   });

@@ -21,7 +21,7 @@ describe('DSL.keyword.notregexp', () => {
       return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
         .then(subscription => {
           const
-            storage = dsl.storage.foPairs.index.collection.get('notregexp'),
+            storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
             condition = new RegexpCondition(
               '^\\w{2}oba\\w$',
               Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
@@ -95,8 +95,7 @@ describe('DSL.keyword.notregexp', () => {
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
           should(spy.called).be.true();
-
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
+          should(dsl.storage.foPairs._cache).be.empty();
         });
     });
   });

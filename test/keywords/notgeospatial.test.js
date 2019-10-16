@@ -25,7 +25,7 @@ describe('DSL.keyword.notgeospatial', () => {
       return dsl.register('index', 'collection', {not: {geoDistance: {foo: {lat: 13, lon: 42}, distance: '1000m'}}})
         .then(subscription => {
           const
-            storage = dsl.storage.foPairs.index.collection.get('notgeospatial'),
+            storage = dsl.storage.foPairs.get('index', 'collection', 'notgeospatial'),
             subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             id = Array.from(subfilter.conditions)[0].id;
 
@@ -52,7 +52,7 @@ describe('DSL.keyword.notgeospatial', () => {
           const
             subfilter2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             id2 = Array.from(subfilter2.conditions)[0].id,
-            storage = dsl.storage.foPairs.index.collection.get('notgeospatial');
+            storage = dsl.storage.foPairs.get('index', 'collection', 'notgeospatial');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -80,7 +80,7 @@ describe('DSL.keyword.notgeospatial', () => {
         })
         .then(subscription => {
           const
-            storage = dsl.storage.foPairs.index.collection.get('notgeospatial'),
+            storage = dsl.storage.foPairs.get('index', 'collection', 'notgeospatial'),
             subfilter2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           should(storage).be.instanceOf(FieldOperand);
@@ -185,13 +185,13 @@ describe('DSL.keyword.notgeospatial', () => {
       return dsl.register('index', 'collection', filter)
         .then(subscription => {
           filterId = subscription.id;
-          storage = dsl.storage.foPairs.index.collection.get('notgeospatial');
+          storage = dsl.storage.foPairs.get('index', 'collection', 'notgeospatial');
         });
     });
 
     it('should destroy the whole structure when removing the last item', () => {
       dsl.remove(filterId);
-      should(dsl.storage.foPairs).be.an.Object().and.be.empty();
+      should(dsl.storage.foPairs._cache).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -256,7 +256,7 @@ describe('DSL.keyword.notgeospatial', () => {
           subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
           id = Array.from(subfilter.conditions)[0].id;
 
-          should(dsl.storage.foPairs.index.collection.get('notgeospatial').keys).eql(new Set(['foo', 'bar']));
+          should(dsl.storage.foPairs.get('index', 'collection', 'notgeospatial').keys).eql(new Set(['foo', 'bar']));
           return dsl.remove(filterId);
         })
         .then(() => {

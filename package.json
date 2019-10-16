@@ -32,8 +32,8 @@
   "homepage": "https://github.com/kuzzleio/koncorde#readme",
   "dependencies": {
     "bluebird": "^3.5.5",
-    "boost-geospatial-index": "^1.0.4",
-    "espresso-logic-minimizer": "^2.0.2",
+    "boost-geospatial-index": "^1.0.5",
+    "espresso-logic-minimizer": "^2.0.3",
     "js-combinatorics": "^0.5.4",
     "json-stable-stringify": "^1.0.1",
     "kuzzle-common-objects": "^3.0.15",

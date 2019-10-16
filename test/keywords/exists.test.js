@@ -149,7 +149,7 @@ describe('Koncorde.keyword.exists', () => {
         .then(subscription => {
           const
             subfilter = koncorde.storage.filters.get(subscription.id).subfilters,
-            storage = koncorde.storage.foPairs.index.collection.get('exists');
+            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -178,7 +178,7 @@ describe('Koncorde.keyword.exists', () => {
           const
             quxSubfilter = Array.from(
               filters.get(subscription.id).subfilters)[0],
-            storage = koncorde.storage.foPairs.index.collection.get('exists');
+            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -195,7 +195,7 @@ describe('Koncorde.keyword.exists', () => {
           const
             subfilter = Array.from(
               koncorde.storage.filters.get(subscription.id).subfilters)[0],
-            storage = koncorde.storage.foPairs.index.collection.get('exists');
+            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -226,7 +226,7 @@ describe('Koncorde.keyword.exists', () => {
           const
             quxSubfilter = Array.from(
               koncorde.storage.filters.get(subscription.id).subfilters)[0],
-            storage = koncorde.storage.foPairs.index.collection.get('exists');
+            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo', 'qux']));
@@ -338,7 +338,7 @@ describe('Koncorde.keyword.exists', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return koncorde.register('index', 'collection', {exists: 'foo'})
         .then(subscription => koncorde.remove(subscription.id))
-        .then(() => should(koncorde.storage.foPairs).be.an.Object().and.be.empty());
+        .then(() => should(koncorde.storage.foPairs._cache).be.empty());
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -363,7 +363,7 @@ describe('Koncorde.keyword.exists', () => {
           return koncorde.remove(idToRemove);
         })
         .then(() => {
-          const storage = koncorde.storage.foPairs.index.collection.get('exists');
+          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -383,7 +383,7 @@ describe('Koncorde.keyword.exists', () => {
       return koncorde.register('index', 'collection', {exists: 'foo["bar"]'})
         .then(subscription => {
           idToRemove = subscription.id;
-          storage = koncorde.storage.foPairs.index.collection.get('exists');
+          storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
           singleSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
 
           return koncorde.register('index', 'collection', {
@@ -418,11 +418,11 @@ describe('Koncorde.keyword.exists', () => {
           return koncorde.register('index', 'collection', {exists: 'bar'});
         })
         .then(subscription => {
-          should(koncorde.storage.foPairs.index.collection.get('exists').keys).eql(new Set(['foo', 'bar']));
+          should(koncorde.storage.foPairs.get('index', 'collection', 'exists').keys).eql(new Set(['foo', 'bar']));
           return koncorde.remove(subscription.id);
         })
         .then(() => {
-          const storage = koncorde.storage.foPairs.index.collection.get('exists');
+          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -445,7 +445,7 @@ describe('Koncorde.keyword.exists', () => {
         })
         .then(subscription => koncorde.remove(subscription.id))
         .then(() => {
-          const storage = koncorde.storage.foPairs.index.collection.get('exists');
+          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -468,7 +468,7 @@ describe('Koncorde.keyword.exists', () => {
         })
         .then(subscription => koncorde.remove(subscription.id))
         .then(() => {
-          const storage = koncorde.storage.foPairs.index.collection.get('exists');
+          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -490,7 +490,7 @@ describe('Koncorde.keyword.exists', () => {
         })
         .then(subscription => koncorde.remove(subscription.id))
         .then(() => {
-          const storage = koncorde.storage.foPairs.index.collection.get('exists');
+          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));

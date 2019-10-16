@@ -110,9 +110,7 @@ describe('DSL.keyword.notequals', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return dsl.register('index', 'collection', {not: {equals: {foo: 'bar'}}})
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+        .then(() => should(dsl.storage.foPairs._cache).be.empty());
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -130,7 +128,7 @@ describe('DSL.keyword.notequals', () => {
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('notequals');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'notequals');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -153,7 +151,7 @@ describe('DSL.keyword.notequals', () => {
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('notequals');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'notequals');
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.get('bar')).match(new Set([barSubfilter]));
@@ -171,11 +169,11 @@ describe('DSL.keyword.notequals', () => {
           return dsl.register('index', 'collection', {not: {equals: {baz: 'qux'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.get('notequals').keys).eql(new Set(['foo', 'baz']));
+          should(dsl.storage.foPairs.get('index', 'collection', 'notequals').keys).eql(new Set(['foo', 'baz']));
           return dsl.remove(subscription.id);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('notequals');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'notequals');
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
           should(storage.fields.foo.get('bar')).match(new Set([barSubfilter]));

@@ -67,10 +67,10 @@ describe('DSL.operands.or', () => {
         })
         .then(() => dsl.remove(id))
         .then(() => {
-          should(dsl.storage.foPairs.index.collection.get('exists')).be.an.Object();
-          should(dsl.storage.foPairs.index.collection.get('equals')).be.undefined();
-          should(dsl.storage.foPairs.index.collection.get('notexists')).be.undefined();
-          should(dsl.storage.foPairs.index.collection.get('range')).be.undefined();
+          should(dsl.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
+          should(dsl.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
+          should(dsl.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
+          should(dsl.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
         });
     });
   });

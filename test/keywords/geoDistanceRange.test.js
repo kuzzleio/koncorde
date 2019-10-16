@@ -147,7 +147,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         .then(subscription => {
           const
             subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.index.collection.get('geospatial');
+            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -165,7 +165,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         .then(subscription => {
           const
             sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.index.collection.get('geospatial');
+            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
@@ -185,7 +185,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         .then(subscription => {
           const
             sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.index.collection.get('geospatial');
+            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));

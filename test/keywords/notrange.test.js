@@ -19,7 +19,7 @@ describe('DSL.keyword.notrange', () => {
         .then(subscription => {
           const
             subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            store = dsl.storage.foPairs.index.collection.get('notrange');
+            store = dsl.storage.foPairs.get('index', 'collection', 'notrange');
 
           should(store).be.instanceOf(FieldOperand);
           should(store.keys).eql(new Set(['foo']));
@@ -51,7 +51,7 @@ describe('DSL.keyword.notrange', () => {
         .then(subscription => {
           const
             sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            store = dsl.storage.foPairs.index.collection.get('notrange');
+            store = dsl.storage.foPairs.get('index', 'collection', 'notrange');
 
           should(store).be.instanceOf(FieldOperand);
           should(store.keys).eql(new Set(['foo']));
@@ -157,9 +157,7 @@ describe('DSL.keyword.notrange', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return dsl.register('index', 'collection', {not: {range: {foo: {gte: 42, lte: 110}}}})
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+        .then(() => should(dsl.storage.foPairs._cache).be.empty());
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -169,7 +167,7 @@ describe('DSL.keyword.notrange', () => {
 
       return dsl.register('index', 'collection', {not: {range: {foo: {gte: 42, lte: 110}}}})
         .then(subscription => {
-          storage = dsl.storage.foPairs.index.collection.get('notrange');
+          storage = dsl.storage.foPairs.get('index', 'collection', 'notrange');
           multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {
@@ -210,11 +208,11 @@ describe('DSL.keyword.notrange', () => {
         })
         .then(subscription => {
           multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          should(dsl.storage.foPairs.index.collection.get('notrange').keys).eql(new Set(['bar', 'foo']));
+          should(dsl.storage.foPairs.get('index', 'collection', 'notrange').keys).eql(new Set(['bar', 'foo']));
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('notrange');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'notrange');
 
           should(storage).be.instanceOf(FieldOperand);
           should(storage.keys).eql(new Set(['foo']));
