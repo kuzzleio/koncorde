@@ -207,6 +207,35 @@ describe('DSL API', () => {
     });
   });
 
+  describe('#getIndexes', () => {
+    it('should return an empty array if no filter exist on the provided index and collection', () => {
+      should(dsl.getIndexes()).be.an.Array().and.be.empty();
+    });
+
+    it('should return the list of registered indexes on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => dsl.register('i', 'c', {exists: 'foo'}))
+        .then(() => dsl.register('i2', 'c', {exists: 'foo'}))
+        .then(() => should(dsl.getIndexes().sort()).match(['i', 'i2']));
+    });
+  });
+
+  describe('#getCollections', () => {
+    it('should return an empty array if no filter exist on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.getCollections('foo')).be.an.Array().and.be.empty();
+        });
+    });
+
+    it('should return the list of registered collections on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => dsl.register('i', 'c', {exists: 'foo'}))
+        .then(() => dsl.register('i', 'c2', {exists: 'foo'}))
+        .then(() => should(dsl.getCollections('i').sort()).match(['c', 'c2']));
+    });
+  });
+
   describe('#hasFilter', () => {
     it('should return false if the filter does not exist', () => {
       should(dsl.hasFilter('i dont exist'))
