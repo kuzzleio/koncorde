@@ -33,10 +33,10 @@ describe('DSL.keyword.everything', () => {
           const storeEntry = dsl.storage.foPairs
             .get('index', 'collection', 'everything');
 
-          should(storeEntry)
-            .be.instanceof(FieldOperand);
-          should(storeEntry.fields.all)
-            .eql(Array.from(dsl.storage.filters.get(subscription.id).subfilters));
+          should(storeEntry).be.instanceof(FieldOperand);
+          should(storeEntry.fields).have.value(
+            'all',
+            Array.from(dsl.storage.filters.get(subscription.id).subfilters));
         });
     });
   });
@@ -55,15 +55,17 @@ describe('DSL.keyword.everything', () => {
     it('should not match if the document is in another index', () => {
       return dsl.register('index', 'collection', {})
         .then(() => {
-          should(dsl.test('foobar', 'collection', {foo: 'bar'})).be.an.Array().and.be.empty();
+          should(dsl.test('foobar', 'collection', {foo: 'bar'}))
+            .be.an.Array()
+            .be.empty();
         });
     });
 
     it('should not match if the document is in another collection', () => {
       return dsl.register('index', 'collection', {})
-        .then(() => {
-          should(dsl.test('index', 'foobar', {foo: 'bar'})).be.an.Array().and.be.empty();
-        });
+        .then(() => should(dsl.test('index', 'foobar', {foo: 'bar'}))
+          .be.an.Array()
+          .be.empty());
     });
   });
 
@@ -71,9 +73,7 @@ describe('DSL.keyword.everything', () => {
     it('should remove the whole f-o pair on delete', () => {
       return dsl.register('index', 'collection', {})
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(dsl.storage.foPairs._cache).and.be.empty();
-        });
+        .then(() => should(dsl.storage.foPairs._cache).and.be.empty());
     });
   });
 });

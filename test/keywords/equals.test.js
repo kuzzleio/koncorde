@@ -74,9 +74,9 @@ describe('DSL.keyword.equals', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo).instanceOf(Map);
-          should(storage.fields.foo.get('bar')).eql(new Set([subfilter]));
+          should(storage.fields.get('foo'))
+            .instanceOf(Map)
+            .have.value('bar', new Set([subfilter]));
         });
     });
 
@@ -97,9 +97,10 @@ describe('DSL.keyword.equals', () => {
             'equals');
 
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(new Set(['foo']));
-          should(equals.fields.foo.get('bar')).eql(new Set([barSubfilter]));
-          should(equals.fields.foo.get('qux')).eql(new Set([quxSubfilter]));
+          should(equals.fields.get('foo'))
+            .have.value('bar', new Set([barSubfilter]));
+          should(equals.fields.get('foo'))
+            .have.value('qux', new Set([quxSubfilter]));
         });
     });
 
@@ -122,10 +123,10 @@ describe('DSL.keyword.equals', () => {
           const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(new Set(['foo', 'baz']));
-          should(equals.fields.foo.get('bar')).eql(
-            new Set([barSubfilter, multiSubfilter]));
-          should(equals.fields.baz.get('qux')).eql(new Set([multiSubfilter]));
+          should(equals.fields.get('foo'))
+            .have.value('bar', new Set([barSubfilter, multiSubfilter]));
+          should(equals.fields.get('baz'))
+            .have.value('qux', new Set([multiSubfilter]));
         });
     });
   });
@@ -261,9 +262,10 @@ describe('DSL.keyword.equals', () => {
             .get('index', 'collection', 'equals');
 
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(new Set(['foo', 'baz']));
-          should(equals.fields.foo.get('bar')).eql(new Set([multiSubfilter]));
-          should(equals.fields.baz.get('qux')).eql(new Set([multiSubfilter]));
+          should(equals.fields.get('foo'))
+            .have.value('bar', new Set([multiSubfilter]));
+          should(equals.fields.get('baz'))
+            .have.value('qux', new Set([multiSubfilter]));
         });
     });
 
@@ -281,21 +283,20 @@ describe('DSL.keyword.equals', () => {
           return dsl.register('index', 'collection', {equals: {foo: 'qux'}});
         })
         .then(subscription => {
-          should(equals.fields.foo.get('bar')).eql(new Set([barSubfilter]));
-          should(equals.fields.foo.get('qux')).eql(new Set([getSubfilter(subscription.id)]));
+          should(equals.fields.get('foo').get('bar')).eql(new Set([barSubfilter]));
+          should(equals.fields.get('foo').get('qux')).eql(new Set([getSubfilter(subscription.id)]));
           return dsl.remove(subscription.id);
         })
         .then(() => {
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(new Set(['foo']));
-          should(equals.fields.foo.get('bar')).eql(new Set([barSubfilter]));
-          should(equals.fields.foo.get('qux')).be.undefined();
+          should(equals.fields.get('foo'))
+            .have.value('bar', new Set([barSubfilter]))
+            .not.have.key('qux');
         });
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
       let
-        idToRemove,
         barSubfilter,
         equals;
 
@@ -308,16 +309,16 @@ describe('DSL.keyword.equals', () => {
         .then(subscription => {
           equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
 
-          should(equals.keys).eql(new Set(['foo', 'baz']));
-          should(equals.fields.baz.get('qux')).eql(new Set([getSubfilter(subscription.id)]));
-          idToRemove = subscription.id;
-          return dsl.remove(idToRemove);
+          should(equals.fields.get('baz'))
+            .have.value('qux', new Set([getSubfilter(subscription.id)]));
+
+          return dsl.remove(subscription.id);
         })
         .then(() => {
           should(equals).be.an.instanceof(FieldOperand);
-          should(equals.keys).eql(new Set(['foo']));
-          should(equals.fields.foo.get('bar')).eql(new Set([barSubfilter]));
-          should(equals.fields.baz).be.undefined();
+          should(equals.fields.get('foo'))
+            .have.value('bar', new Set([barSubfilter]));
+          should(equals.fields).not.have.key('baz');
         });
     });
 

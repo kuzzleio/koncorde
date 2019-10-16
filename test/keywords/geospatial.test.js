@@ -39,9 +39,8 @@ describe('DSL.keyword.geospatial', () => {
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage.keys).eql(new Set(['bar']));
-          should(storage.fields.bar).be.an.Object();
-          should(storage.fields.foo).be.undefined();
+          should(storage.fields.get('bar')).be.an.Object();
+          should(storage.fields.get('foo')).be.undefined();
         });
     });
 
@@ -58,8 +57,7 @@ describe('DSL.keyword.geospatial', () => {
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond)).match(new Set([sf]));
+          should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
         });
     });
 
@@ -77,8 +75,7 @@ describe('DSL.keyword.geospatial', () => {
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond)).match(new Set([sf]));
+          should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
         });
     });
   });

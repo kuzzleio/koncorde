@@ -18,7 +18,7 @@ describe('DSL.keyword.nothing', () => {
 
           should(storeEntry)
             .be.instanceof(FieldOperand);
-          should(storeEntry.fields.all)
+          should(storeEntry.fields.get('all'))
             .eql([Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]]);
         });
     });

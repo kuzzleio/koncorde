@@ -30,11 +30,10 @@ describe('DSL.keyword.notgeospatial', () => {
             id = Array.from(subfilter.conditions)[0].id;
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
           should(storage.custom.index).be.an.Object();
-          should(storage.fields.foo).be.instanceOf(Map);
-          should(storage.fields.foo.size).be.eql(1);
-          should(storage.fields.foo.get(id)).eql(new Set([subfilter]));
+          should(storage.fields.get('foo')).be.instanceOf(Map);
+          should(storage.fields.get('foo').size).be.eql(1);
+          should(storage.fields.get('foo').get(id)).eql(new Set([subfilter]));
         });
     });
 
@@ -55,13 +54,11 @@ describe('DSL.keyword.notgeospatial', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'notgeospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
           should(storage.custom.index).be.an.Object();
-          should(storage.fields.foo).be.instanceOf(Map);
-          should(storage.fields.foo.size).be.eql(2);
-
-          should(storage.fields.foo.get(id1)).eql(new Set([subfilter1]));
-          should(storage.fields.foo.get(id2)).eql(new Set([subfilter2]));
+          should(storage.fields.get('foo')).be.instanceOf(Map);
+          should(storage.fields.get('foo').size).be.eql(2);
+          should(storage.fields.get('foo').get(id1)).eql(new Set([subfilter1]));
+          should(storage.fields.get('foo').get(id2)).eql(new Set([subfilter2]));
         });
     });
 
@@ -84,11 +81,10 @@ describe('DSL.keyword.notgeospatial', () => {
             subfilter2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
           should(storage.custom.index).be.an.Object();
-          should(storage.fields.foo).be.instanceOf(Map);
-          should(storage.fields.foo.size).be.eql(1);
-          should(storage.fields.foo.get(id)).eql(new Set([subfilter, subfilter2]));
+          should(storage.fields.get('foo')).be.instanceOf(Map);
+          should(storage.fields.get('foo').size).be.eql(1);
+          should(storage.fields.get('foo').get(id)).eql(new Set([subfilter, subfilter2]));
         });
     });
   });
@@ -204,9 +200,7 @@ describe('DSL.keyword.notgeospatial', () => {
         })
         .then(() => {
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-
-          should(storage.fields.foo.get(Array.from(sf.conditions)[1].id)).match(new Set([sf]));
+          should(storage.fields.get('foo').get(Array.from(sf.conditions)[1].id)).match(new Set([sf]));
         });
     });
 
@@ -232,8 +226,7 @@ describe('DSL.keyword.notgeospatial', () => {
         })
         .then(() => {
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(id)).match(new Set([subfilter]));
+          should(storage.fields.get('foo').get(id)).match(new Set([subfilter]));
         });
     });
 
@@ -256,13 +249,15 @@ describe('DSL.keyword.notgeospatial', () => {
           subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
           id = Array.from(subfilter.conditions)[0].id;
 
-          should(dsl.storage.foPairs.get('index', 'collection', 'notgeospatial').keys).eql(new Set(['foo', 'bar']));
+          const operand = dsl.storage.foPairs
+            .get('index', 'collection', 'notgeospatial');
+
+          should(operand.fields).have.keys('foo', 'bar');
           return dsl.remove(filterId);
         })
         .then(() => {
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['bar']));
-          should(storage.fields.bar.get(id)).match(new Set([subfilter]));
+          should(storage.fields.get('bar').get(id)).match(new Set([subfilter]));
         });
     });
   });

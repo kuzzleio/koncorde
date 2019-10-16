@@ -127,19 +127,23 @@ describe('Koncorde.keyword.exists', () => {
     });
 
     it('should not interpret unclosed brackets as an array value', () => {
-      const res = koncorde.transformer.standardizer.standardize(
-        {exists: 'foo[bar'});
+      const res = koncorde.transformer.standardizer.standardize({
+        exists: 'foo[bar'
+      });
 
-      return should(res).be.fulfilledWith(
-        { exists: new NormalizedExists('foo[bar', false, null) });
+      return should(res).be.fulfilledWith({
+        exists: new NormalizedExists('foo[bar', false, null)
+      });
     });
 
     it('should properly interpret escaped brackets as an object field name', () => {
-      const res = koncorde.transformer.standardizer.standardize(
-        {exists: 'foo.ba\\[true\\]'});
+      const res = koncorde.transformer.standardizer.standardize({
+        exists: 'foo.ba\\[true\\]'
+      });
 
-      return should(res).be.fulfilledWith(
-        {exists: new NormalizedExists('foo.ba[true]', false, null)});
+      return should(res).be.fulfilledWith({
+        exists: new NormalizedExists('foo.ba[true]', false, null)
+      });
     });
   });
 
@@ -152,10 +156,9 @@ describe('Koncorde.keyword.exists', () => {
             storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).eql(subfilter);
-          should(storage.fields.foo.values).instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(0);
+          should(storage.fields.get('foo').subfilters).eql(subfilter);
+          should(storage.fields.get('foo').values).instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(0);
         });
     });
 
@@ -181,11 +184,10 @@ describe('Koncorde.keyword.exists', () => {
             storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters)
+          should(storage.fields.get('foo').subfilters)
             .eql(new Set([barSubfilter, quxSubfilter]));
-          should(storage.fields.foo.values).instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(0);
+          should(storage.fields.get('foo').values).instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(0);
         });
     });
 
@@ -198,11 +200,10 @@ describe('Koncorde.keyword.exists', () => {
             storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters.size).eql(0);
-          should(storage.fields.foo.values).instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('bar'))
+          should(storage.fields.get('foo').subfilters.size).eql(0);
+          should(storage.fields.get('foo').values).instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(1);
+          should(storage.fields.get('foo').values.get('bar'))
             .eql(new Set([subfilter]));
         });
     });
@@ -229,13 +230,12 @@ describe('Koncorde.keyword.exists', () => {
             storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo', 'qux']));
-          should(storage.fields.foo.subfilters.size).eql(0);
-          should(storage.fields.foo.values).instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('bar'))
+          should(storage.fields.get('foo').subfilters.size).eql(0);
+          should(storage.fields.get('foo').values).instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(1);
+          should(storage.fields.get('foo').values.get('bar'))
             .eql(new Set([barSubfilter, quxSubfilter]));
-          should(storage.fields.qux.values.get('bar'))
+          should(storage.fields.get('qux').values.get('bar'))
             .eql(new Set([quxSubfilter]));
         });
     });
@@ -366,10 +366,10 @@ describe('Koncorde.keyword.exists', () => {
           const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match(new Set([multiSubfilter]));
-          should(storage.fields.foo.values).be.instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(0);
+          should(storage.fields.get('foo').subfilters)
+            .match(new Set([multiSubfilter]));
+          should(storage.fields.get('foo').values).be.instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(0);
         });
     });
 
@@ -394,16 +394,18 @@ describe('Koncorde.keyword.exists', () => {
           });
         })
         .then(subscription => {
-          multiSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
-          should(storage.fields.foo.values.get('bar')).match(new Set([singleSubfilter, multiSubfilter]));
-          should(storage.fields.foo.subfilters.size).eql(0);
+          multiSubfilter = Array.from(
+            koncorde.storage.filters.get(subscription.id).subfilters)[0];
+          should(storage.fields.get('foo').values.get('bar'))
+            .match(new Set([singleSubfilter, multiSubfilter]));
+          should(storage.fields.get('foo').subfilters.size).eql(0);
           return koncorde.remove(idToRemove);
         })
         .then(() => {
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters.size).eql(0);
-          should(storage.fields.foo.values.get('bar')).match(new Set([multiSubfilter]));
+          should(storage.fields.get('foo').subfilters.size).eql(0);
+          should(storage.fields.get('foo').values.get('bar'))
+            .match(new Set([multiSubfilter]));
         });
     });
 
@@ -418,18 +420,21 @@ describe('Koncorde.keyword.exists', () => {
           return koncorde.register('index', 'collection', {exists: 'bar'});
         })
         .then(subscription => {
-          should(koncorde.storage.foPairs.get('index', 'collection', 'exists').keys).eql(new Set(['foo', 'bar']));
+          const operand = koncorde.storage.foPairs
+            .get('index', 'collection', 'exists');
+
+          should(operand.fields).have.keys('foo', 'bar');
           return koncorde.remove(subscription.id);
         })
         .then(() => {
           const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match(new Set([fooSubfilter]));
-          should(storage.fields.foo.values).be.instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(0);
-          should(storage.fields.bar).be.undefined();
+          should(storage.fields.get('foo').subfilters)
+            .match(new Set([fooSubfilter]));
+          should(storage.fields.get('foo').values).be.instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(0);
+          should(storage.fields.get('bar')).be.undefined();
         });
     });
 
@@ -448,11 +453,10 @@ describe('Koncorde.keyword.exists', () => {
           const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match(new Set([fooSubfilter]));
-          should(storage.fields.foo.values).be.instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(0);
-          should(storage.fields.bar).be.undefined();
+          should(storage.fields.get('foo').subfilters).match(new Set([fooSubfilter]));
+          should(storage.fields.get('foo').values).be.instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(0);
+          should(storage.fields.get('bar')).be.undefined();
         });
     });
 
@@ -471,10 +475,9 @@ describe('Koncorde.keyword.exists', () => {
           const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters).match(new Set([fooSubfilter]));
-          should(storage.fields.foo.values).be.instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(0);
+          should(storage.fields.get('foo').subfilters).match(new Set([fooSubfilter]));
+          should(storage.fields.get('foo').values).be.instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(0);
         });
     });
 
@@ -493,11 +496,11 @@ describe('Koncorde.keyword.exists', () => {
           const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.subfilters.size).eql(0);
-          should(storage.fields.foo.values).be.instanceOf(Map);
-          should(storage.fields.foo.values.size).eql(1);
-          should(storage.fields.foo.values.get('bar')).eql(new Set([fooSubfilter]));
+          should(storage.fields.get('foo').subfilters.size).eql(0);
+          should(storage.fields.get('foo').values).be.instanceOf(Map);
+          should(storage.fields.get('foo').values.size).eql(1);
+          should(storage.fields.get('foo').values.get('bar'))
+            .eql(new Set([fooSubfilter]));
         });
     });
   });

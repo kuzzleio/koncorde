@@ -106,8 +106,7 @@ describe('DSL.keyword.regexp', () => {
             );
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(regexp.stringValue)).eql(regexp);
+          should(storage.fields.get('foo').get(regexp.stringValue)).eql(regexp);
         });
     });
 
@@ -133,10 +132,9 @@ describe('DSL.keyword.regexp', () => {
             );
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.size).eql(2);
-          should(storage.fields.foo.get(cond1.stringValue)).eql(cond1);
-          should(storage.fields.foo.get(cond2.stringValue)).eql(cond2);
+          should(storage.fields.get('foo').size).eql(2);
+          should(storage.fields.get('foo').get(cond1.stringValue)).eql(cond1);
+          should(storage.fields.get('foo').get(cond2.stringValue)).eql(cond2);
         });
     });
 
@@ -159,9 +157,8 @@ describe('DSL.keyword.regexp', () => {
           cond.subfilters.add(Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]);
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.size).eql(1);
-          should(storage.fields.foo.get(cond.stringValue)).eql(cond);
+          should(storage.fields.get('foo').size).eql(1);
+          should(storage.fields.get('foo').get(cond.stringValue)).eql(cond);
         });
     });
   });
@@ -244,8 +241,7 @@ describe('DSL.keyword.regexp', () => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond.stringValue)).match(cond);
+          should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
         });
     });
 
@@ -272,16 +268,13 @@ describe('DSL.keyword.regexp', () => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond.stringValue)).match(cond);
-          should(storage.fields.foo.size).eql(1);
+          should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
+          should(storage.fields.get('foo').size).eql(1);
         });
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
-      let
-        idToRemove,
-        cond;
+      let cond;
 
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
@@ -294,17 +287,17 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {regexp: {bar: {value: '^\\w{2}oba\\w$', flags: 'i'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.get('index', 'collection', 'regexp').keys).eql(new Set(['foo', 'bar']));
-          idToRemove = subscription.id;
-          return dsl.remove(idToRemove);
+          const operand = dsl.storage.foPairs.get('index', 'collection', 'regexp');
+          should (operand.fields).have.keys('foo', 'bar');
+
+          return dsl.remove(subscription.id);
         })
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond.stringValue)).match(cond);
-          should(storage.fields.bar).be.undefined();
+          should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
+          should(storage.fields.get('bar')).be.undefined();
         });
     });
   });

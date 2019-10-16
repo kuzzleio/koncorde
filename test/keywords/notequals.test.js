@@ -131,12 +131,10 @@ describe('DSL.keyword.notequals', () => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'notequals');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo).instanceOf(Map);
-
-          should(storage.fields.foo.size).eql(2);
-          should(storage.fields.foo.get('bar')).eql(new Set([subfilter]));
-          should(storage.fields.foo.get('qux')).eql(new Set([subfilter]));
+          should(storage.fields.get('foo')).instanceOf(Map);
+          should(storage.fields.get('foo').size).eql(2);
+          should(storage.fields.get('foo').get('bar')).eql(new Set([subfilter]));
+          should(storage.fields.get('foo').get('qux')).eql(new Set([subfilter]));
         });
     });
 
@@ -153,9 +151,8 @@ describe('DSL.keyword.notequals', () => {
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'notequals');
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get('bar')).match(new Set([barSubfilter]));
-          should(storage.fields.foo.get('qux')).undefined();
+          should(storage.fields.get('foo').get('bar')).match(new Set([barSubfilter]));
+          should(storage.fields.get('foo').get('qux')).undefined();
         });
     });
 
@@ -169,15 +166,17 @@ describe('DSL.keyword.notequals', () => {
           return dsl.register('index', 'collection', {not: {equals: {baz: 'qux'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.get('index', 'collection', 'notequals').keys).eql(new Set(['foo', 'baz']));
+          const operand = dsl.storage.foPairs
+            .get('index', 'collection', 'notequals');
+
+          should(operand.fields).have.keys('foo', 'baz');
           return dsl.remove(subscription.id);
         })
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'notequals');
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get('bar')).match(new Set([barSubfilter]));
-          should(storage.fields.baz).be.undefined();
+          should(storage.fields.get('foo').get('bar')).match(new Set([barSubfilter]));
+          should(storage.fields.get('baz')).be.undefined();
         });
     });
   });

@@ -68,10 +68,10 @@ describe('DSL.keyword.range', () => {
             store = dsl.storage.foPairs.get('index', 'collection', 'range');
 
           should(store).be.instanceOf(FieldOperand);
-          should(store.keys).eql(new Set(['foo']));
-          should(store.fields.foo.conditions.size).be.eql(1);
+          should(store.fields.get('foo').conditions.size).be.eql(1);
 
-          const rangeInfo = Array.from(store.fields.foo.conditions.values())[0];
+          const rangeInfo = Array.from(
+            store.fields.get('foo').conditions.values())[0];
           should(rangeInfo).instanceOf(RangeCondition);
           should(rangeInfo.subfilters).match(new Set([subfilter]));
           should(rangeInfo.low).approximately(42, 1e-9);
@@ -94,22 +94,23 @@ describe('DSL.keyword.range', () => {
             store = dsl.storage.foPairs.get('index', 'collection', 'range');
 
           should(store).be.instanceOf(FieldOperand);
-          should(store.keys).eql(new Set(['foo']));
-          should(store.fields.foo.conditions.size).be.eql(2);
+          should(store.fields.get('foo').conditions.size).be.eql(2);
 
-          let rangeInfo = store.fields.foo.conditions.get(Array.from(sf1.conditions)[0].id);
+          let rangeInfo = store.fields.get('foo').conditions.get(
+            Array.from(sf1.conditions)[0].id);
           should(rangeInfo).instanceOf(RangeCondition);
           should(rangeInfo.subfilters).match(new Set([sf1]));
           should(rangeInfo.low).approximately(42, 1e-9);
           should(rangeInfo.high).approximately(100, 1e-9);
 
-          rangeInfo = store.fields.foo.conditions.get(Array.from(sf2.conditions)[0].id);
+          rangeInfo = store.fields.get('foo').conditions.get(
+            Array.from(sf2.conditions)[0].id);
           should(rangeInfo).instanceOf(RangeCondition);
           should(rangeInfo.subfilters).match(new Set([sf2]));
           should(rangeInfo.low).be.exactly(10);
           should(rangeInfo.high).be.exactly(78);
 
-          should(store.fields.foo.tree).be.an.Object();
+          should(store.fields.get('foo').tree).be.an.Object();
         });
     });
   });
@@ -211,15 +212,14 @@ describe('DSL.keyword.range', () => {
           });
         })
         .then(subscription => {
-          should(storage.fields.foo.conditions.size).eql(2);
+          should(storage.fields.get('foo').conditions.size).eql(2);
           return dsl.remove(subscription.id);
         })
         .then(() => {
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.conditions.size).eql(1);
+          should(storage.fields.get('foo').conditions.size).eql(1);
 
-          const rangeInfo = Array.from(storage.fields.foo.conditions.values())[0];
+          const rangeInfo = Array.from(storage.fields.get('foo').conditions.values())[0];
           should(rangeInfo.subfilters).match(new Set([multiSubfilter]));
           should(rangeInfo.low).approximately(42, 1e-9);
           should(rangeInfo.high).approximately(110, 1e-9);
@@ -239,21 +239,22 @@ describe('DSL.keyword.range', () => {
         })
         .then(subscription => {
           multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          should(dsl.storage.foPairs.get('index', 'collection', 'range').keys).eql(new Set(['bar', 'foo']));
+          const operand = dsl.storage.foPairs.get('index', 'collection', 'range');
+
+          should(operand.fields).have.keys('bar', 'foo');
           return dsl.remove(idToRemove);
         })
         .then(() => {
           const storage = dsl.storage.foPairs.get('index', 'collection', 'range');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.conditions.size).eql(1);
+          should(storage.fields.get('foo').conditions.size).eql(1);
 
-          const rangeInfo = Array.from(storage.fields.foo.conditions.values())[0];
+          const rangeInfo = Array.from(storage.fields.get('foo').conditions.values())[0];
           should(rangeInfo.subfilters).match(new Set([multiSubfilter]));
           should(rangeInfo.low).approximately(42, 1e-9);
           should(rangeInfo.high).approximately(110, 1e-9);
-          should(storage.fields.bar).be.undefined();
+          should(storage.fields.get('bar')).be.undefined();
         });
     });
   });

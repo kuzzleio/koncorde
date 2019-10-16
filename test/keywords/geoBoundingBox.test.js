@@ -175,8 +175,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(Array.from(subfilter.conditions)[0].id)).match(new Set([subfilter]));
+          should(storage.fields.get('foo')).have.value(
+            Array.from(subfilter.conditions)[0].id,
+            new Set([subfilter]));
         });
     });
 
@@ -193,8 +194,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(Array.from(sf1.conditions)[0].id)).match(new Set([sf1, sf2]));
+          should(storage.fields.get('foo')).have.value(
+            Array.from(sf1.conditions)[0].id,
+            new Set([sf1, sf2]));
         });
     });
 
@@ -213,18 +215,22 @@ describe('DSL.keyword.geoBoundingBox', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond1)).match(new Set([sf1]));
-          should(storage.fields.foo.get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
+          should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
+          should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
         });
     });
   });
 
   describe('#matching', () => {
     it('should match a point inside the bbox', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
+      return dsl
+        .register('index', 'collection', { geoBoundingBox: { foo: bbox } })
         .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {latLon: [43.6073913, 3.9109057]}});
+          const result = dsl.test('index', 'collection', {
+            foo: {
+              latLon: [ 43.6073913, 3.9109057 ]
+            }
+          });
 
           should(result).eql([subscription.id]);
         });

@@ -116,8 +116,7 @@ describe('DSL.keyword.geoPolygon', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(Array.from(subfilter.conditions)[0].id)).match(new Set([subfilter]));
+          should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id)).match(new Set([subfilter]));
         });
     });
 
@@ -134,8 +133,7 @@ describe('DSL.keyword.geoPolygon', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(Array.from(sf1.conditions)[0].id)).match(new Set([sf1, sf2]));
+          should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id)).match(new Set([sf1, sf2]));
         });
     });
 
@@ -154,9 +152,8 @@ describe('DSL.keyword.geoPolygon', () => {
             storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond1)).match(new Set([sf1]));
-          should(storage.fields.foo.get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
+          should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
+          should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
         });
     });
   });

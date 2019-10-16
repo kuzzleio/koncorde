@@ -31,8 +31,7 @@ describe('DSL.keyword.notregexp', () => {
           should(spy.called).be.true();
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(condition.stringValue)).eql(condition);
+          should(storage.fields.get('foo').get(condition.stringValue)).eql(condition);
         });
     });
   });
