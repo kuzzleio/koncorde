@@ -43,7 +43,8 @@ describe('DSL.keyword.regexp', () => {
       return should(dsl.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}})).be.rejectedWith(BadRequestError);
     });
 
-    it('should reject filters with invalid flags', () => {
+    it('should reject filters with invalid flags (js engine only)', () => {
+      dsl = new DSL({ regExpEngine: 'js' });
       return should(dsl.validate({
         regexp: {
           foo: {
@@ -100,6 +101,7 @@ describe('DSL.keyword.regexp', () => {
           const
             storage = dsl.storage.foPairs.get('index', 'collection', 'regexp'),
             regexp = new RegexpCondition(
+              { regExpEngine: 're2' },
               'foo',
               Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
               'i'
@@ -116,6 +118,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: 'foo', flags: 'i'}}})
         .then(subscription => {
           cond1 = new RegexpCondition(
+            { regExpEngine: 're2' },
             'foo',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -127,6 +130,7 @@ describe('DSL.keyword.regexp', () => {
           const
             storage = dsl.storage.foPairs.get('index', 'collection', 'regexp'),
             cond2 = new RegexpCondition(
+              { regExpEngine: 're2' },
               'bar',
               Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]
             );
@@ -145,6 +149,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', filter)
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             'foo',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -230,6 +235,7 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             '^\\w{2}oba\\w$',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -253,6 +259,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             '^\\w{2}oba\\w$',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -279,6 +286,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             '^\\w{2}oba\\w$',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'

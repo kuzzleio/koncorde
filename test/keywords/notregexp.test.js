@@ -23,6 +23,29 @@ describe('DSL.keyword.notregexp', () => {
           const
             storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
             condition = new RegexpCondition(
+              { regExpEngine: 're2' },
+              '^\\w{2}oba\\w$',
+              Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+              'i'
+            );
+
+          should(spy.called).be.true();
+
+          should(storage).be.instanceOf(FieldOperand);
+          should(storage.fields.get('foo').get(condition.stringValue)).eql(condition);
+        });
+    });
+
+    it('should invoke regexp storage function (js engine)', () => {
+      dsl = new DSL({ regExpEngine: 'js' });
+      const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
+
+      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
+        .then(subscription => {
+          const
+            storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
+            condition = new RegexpCondition(
+              { regExpEngine: 'js' },
               '^\\w{2}oba\\w$',
               Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
               'i'

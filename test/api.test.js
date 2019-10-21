@@ -43,19 +43,24 @@ describe('DSL API', () => {
       }))
         .throw({message: 'Invalid seed: expected a 32 bytes long Buffer'});
 
+      should(() => new Dsl({ regExpEngine: 'foo' }))
+        .throw({message: 'Invalid configuration value for "regExpEngine". Supported: re2, js'});
+
       {
         // valid params
         const
           seed = Buffer.from('01234567890123456789012345678901'),
           engine = new Dsl({
             seed,
-            maxMinTerms: 3
+            maxMinTerms: 3,
+            regExpEngine: 'js'
           });
 
         should(engine.config)
           .eql({
             seed,
-            maxMinTerms: 3
+            maxMinTerms: 3,
+            regExpEngine: 'js'
           });
       }
 
