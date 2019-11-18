@@ -43,7 +43,8 @@ describe('DSL.keyword.regexp', () => {
       return should(dsl.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}})).be.rejectedWith(BadRequestError);
     });
 
-    it('should reject filters with invalid flags', () => {
+    it('should reject filters with invalid flags (js engine only)', () => {
+      dsl = new DSL({ regExpEngine: 'js' });
       return should(dsl.validate({
         regexp: {
           foo: {
@@ -98,16 +99,16 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: 'foo', flags: 'i'}}})
         .then(subscription => {
           const
-            storage = dsl.storage.foPairs.index.collection.get('regexp'),
+            storage = dsl.storage.foPairs.get('index', 'collection', 'regexp'),
             regexp = new RegexpCondition(
+              { regExpEngine: 're2' },
               'foo',
               Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
               'i'
             );
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(regexp.stringValue)).eql(regexp);
+          should(storage.fields.get('foo').get(regexp.stringValue)).eql(regexp);
         });
     });
 
@@ -117,6 +118,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: 'foo', flags: 'i'}}})
         .then(subscription => {
           cond1 = new RegexpCondition(
+            { regExpEngine: 're2' },
             'foo',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -126,17 +128,17 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(subscription => {
           const
-            storage = dsl.storage.foPairs.index.collection.get('regexp'),
+            storage = dsl.storage.foPairs.get('index', 'collection', 'regexp'),
             cond2 = new RegexpCondition(
+              { regExpEngine: 're2' },
               'bar',
               Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]
             );
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.size).eql(2);
-          should(storage.fields.foo.get(cond1.stringValue)).eql(cond1);
-          should(storage.fields.foo.get(cond2.stringValue)).eql(cond2);
+          should(storage.fields.get('foo').size).eql(2);
+          should(storage.fields.get('foo').get(cond1.stringValue)).eql(cond1);
+          should(storage.fields.get('foo').get(cond2.stringValue)).eql(cond2);
         });
     });
 
@@ -147,6 +149,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', filter)
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             'foo',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -155,13 +158,12 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {and: [filter, {equals: {foo: 'bar'}}]});
         })
         .then(subscription => {
-          const storage = dsl.storage.foPairs.index.collection.get('regexp');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
           cond.subfilters.add(Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]);
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.size).eql(1);
-          should(storage.fields.foo.get(cond.stringValue)).eql(cond);
+          should(storage.fields.get('foo').size).eql(1);
+          should(storage.fields.get('foo').get(cond.stringValue)).eql(cond);
         });
     });
   });
@@ -216,9 +218,7 @@ describe('DSL.keyword.regexp', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+        .then(() => should(dsl.storage.foPairs._cache).be.empty());
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -235,6 +235,7 @@ describe('DSL.keyword.regexp', () => {
         })
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             '^\\w{2}oba\\w$',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -243,11 +244,10 @@ describe('DSL.keyword.regexp', () => {
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('regexp');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond.stringValue)).match(cond);
+          should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
         });
     });
 
@@ -259,6 +259,7 @@ describe('DSL.keyword.regexp', () => {
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             '^\\w{2}oba\\w$',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -271,23 +272,21 @@ describe('DSL.keyword.regexp', () => {
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('regexp');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond.stringValue)).match(cond);
-          should(storage.fields.foo.size).eql(1);
+          should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
+          should(storage.fields.get('foo').size).eql(1);
         });
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
-      let
-        idToRemove,
-        cond;
+      let cond;
 
       return dsl.register('index', 'collection', {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}})
         .then(subscription => {
           cond = new RegexpCondition(
+            { regExpEngine: 're2' },
             '^\\w{2}oba\\w$',
             Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
             'i'
@@ -296,17 +295,17 @@ describe('DSL.keyword.regexp', () => {
           return dsl.register('index', 'collection', {regexp: {bar: {value: '^\\w{2}oba\\w$', flags: 'i'}}});
         })
         .then(subscription => {
-          should(dsl.storage.foPairs.index.collection.get('regexp').keys).eql(new Set(['foo', 'bar']));
-          idToRemove = subscription.id;
-          return dsl.remove(idToRemove);
+          const operand = dsl.storage.foPairs.get('index', 'collection', 'regexp');
+          should (operand.fields).have.keys('foo', 'bar');
+
+          return dsl.remove(subscription.id);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('regexp');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'regexp');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond.stringValue)).match(cond);
-          should(storage.fields.bar).be.undefined();
+          should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
+          should(storage.fields.get('bar')).be.undefined();
         });
     });
   });
