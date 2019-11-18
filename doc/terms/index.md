@@ -585,7 +585,7 @@ The following filter validates the last two documents:
 
 ## regexp
 
-The `regexp` filter matches attributes using [PCREs](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions).
+The `regexp` filter matches attributes using either [RE2](https://github.com/google/re2) (by default), or [PCREs](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions).
 
 ### Syntax
 
