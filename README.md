@@ -38,7 +38,9 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
     - [`convertDistance`](#convertdistance)
     - [`convertGeopoint`](#convertgeopoint)
     - [`exists`](#exists-1)
+    - [`getCollections`](#getcollections)
     - [`getFilterIds`](#getfilterids)
+    - [`getIndexes`](#getindexes)
     - [`normalize`](#normalize)
     - [`register`](#register)
     - [`remove`](#remove)
@@ -1029,7 +1031,7 @@ The following filter validates the last two documents:
 
 ### regexp
 
-The `regexp` filter matches attributes using [PCREs](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions).
+The `regexp` filter matches attributes using either [RE2](https://github.com/google/re2) (by default), or [PCREs](https://en.wikipedia.org/wiki/Perl_Compatible_Regular_Expressions).
 
 #### Syntax
 
@@ -1098,8 +1100,9 @@ Instantiates a new Koncorde engine.
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied.
-|`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed.
+|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied. |
+|`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed. |
+| `regExpEngine` | `String` | `re2` | Set the engine to either [re2](https://github.com/google/re2) or [js](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp). The former is not fully compatible with PCREs, while the latter is vulnerable to [catastrophic backtracking](https://www.regular-expressions.info/catastrophic.html), making it unsafe if regular expressions are provided by outside clients |
 
 ---
 
@@ -1225,11 +1228,30 @@ Returns `true` if at least one filter exists on the provided index-collection pa
 
 ---
 
+### `getCollections`
+
+Returns the list of collections associated to an index registered in this Koncorde instance
+
+**getCollections(index)**
+
+#### Arguments
+
+| Name | Type | Description                      |
+|------|------|----------------------------------|
+|`index`|`string`| Data index name |
+
+#### Returns
+
+An `array` of collection names.
+
+---
+
 ### `getFilterIds`
 
 Returns the list of filter identifiers registered on a given index-collection pair
 
 **getFilterIds(index, collection)**
+
 
 #### Arguments
 
@@ -1241,6 +1263,18 @@ Returns the list of filter identifiers registered on a given index-collection pa
 #### Returns
 
 An `array` of filter unique identifiers corresponding to filters registered on the provided index-collection pair.
+
+---
+
+### `getIndexes`
+
+Returns the list of indexes registered in this Koncorde instance
+
+**getIndexes()**
+
+#### Returns
+
+An `array` of index names.
 
 ---
 
@@ -1380,47 +1414,45 @@ A resolved promise if the provided filter is valid, or a rejected one with the a
 The following results are obtained running `node benchmark.js` at the root of the projet.
 
 ```
-Filter count per tested keyword: 10000
-
 > Benchmarking keyword: equals
-  Indexation: time = 0.435s, mem = +41MB
-  Matching x 4,006,895 ops/sec ±0.35% (97 runs sampled)
-  Filters removal: time = 0.02s
+  Indexation: time = 0.357s, mem = +42MB
+  Matching x 1,738,037 ops/sec ±0.28% (94 runs sampled)
+  Filters removal: time = 0.022s
 
 > Benchmarking keyword: exists
-  Indexation: time = 0.487s, mem = +-2MB
-  Matching x 2,449,897 ops/sec ±0.95% (97 runs sampled)
-  Filters removal: time = 0.023s
+  Indexation: time = 0.374s, mem = +23MB
+  Matching x 1,526,909 ops/sec ±0.72% (97 runs sampled)
+  Filters removal: time = 0.026s
 
 > Benchmarking keyword: geoBoundingBox
-  Indexation: time = 0.751s, mem = +14MB
-  Matching x 1,339,779 ops/sec ±0.21% (95 runs sampled)
-  Filters removal: time = 0.096s
+  Indexation: time = 0.674s, mem = +-26MB
+  Matching x 878,760 ops/sec ±0.45% (93 runs sampled)
+  Filters removal: time = 0.095s
 
 > Benchmarking keyword: geoDistance
-  Indexation: time = 1.254s, mem = +6MB
-  Matching x 1,226,643 ops/sec ±0.73% (92 runs sampled)
-  Filters removal: time = 0.093s
+  Indexation: time = 1.094s, mem = +12MB
+  Matching x 727,164 ops/sec ±0.60% (95 runs sampled)
+  Filters removal: time = 0.104s
 
 > Benchmarking keyword: geoDistanceRange
-  Indexation: time = 1.762s, mem = +-10MB
-  Matching x 1,199,081 ops/sec ±0.26% (96 runs sampled)
-  Filters removal: time = 0.088s
+  Indexation: time = 1.53s, mem = +-16MB
+  Matching x 872,478 ops/sec ±0.50% (96 runs sampled)
+  Filters removal: time = 0.095s
 
 > Benchmarking keyword: geoPolygon (10 vertices)
-  Indexation: time = 1.184s, mem = +1MB
-  Matching x 53,395 ops/sec ±0.95% (96 runs sampled)
-  Filters removal: time = 0.103s
+  Indexation: time = 1.039s, mem = +21MB
+  Matching x 33,889 ops/sec ±0.34% (96 runs sampled)
+  Filters removal: time = 0.105s
 
 > Benchmarking keyword: in (5 random values)
-  Indexation: time = 1.417s, mem = +40MB
-  Matching x 2,086,572 ops/sec ±2.02% (92 runs sampled)
-  Filters removal: time = 0.058s
+  Indexation: time = 1.089s, mem = +17MB
+  Matching x 1,498,878 ops/sec ±0.43% (95 runs sampled)
+  Filters removal: time = 0.057s
 
 > Benchmarking keyword: range (random bounds)
-  Indexation: time = 0.407s, mem = +-140MB
-  Matching x 38,611 ops/sec ±0.32% (95 runs sampled)
-  Filters removal: time = 0.064s
+  Indexation: time = 0.304s, mem = +14MB
+  Matching x 35,926 ops/sec ±0.37% (95 runs sampled)
+  Filters removal: time = 0.071s
 ```
 
-_(results obtained with node v10.2.1)_
+_(results obtained with node v12.12.0)_
