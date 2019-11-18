@@ -2,9 +2,7 @@ sudo: false
 dist: trusty
 language: node_js
 node_js:
-- '6'
-- '8'
-- '10'
+- '12'
 addons:
   apt:
     sources:
@@ -22,7 +20,7 @@ deploy:
   provider: npm
   email: support@kuzzle.io
   api_key:
-    secure: 4sAYUpTOqz6xdEvkfUkHex8fo0OJfQYqcmnQR73ux8peaGYn4UazbhaNZ4rLF3p614GKnnct8HQ5G32COqPOFPvLH0VWhYBM30d24dKDIaOADsimOshk6MOrCPbb5+0ZJPXLyOasHN1wmIbqM/jYh7Kifsjttygd7vZfiDcm3X8eZJ836XE3nKCDLyqYFYittpvCD5Nci6YIRFPCU2c67Y6cbtR8eEPAE6lIilVr0EZb5Og88/cGtgA5jQ4TQkQYH7OTyDoH6nJX22nhWLqkj9L3xXIgTrKpP+bDxlFSE9NqJnB+P6EX2MhKj4HA0n9pjQsXWnHCmcq2mUbgKvQMiSAWn2PEZBSm7PGedyjoE7N04vuVueJdWiTb0R/P5d6jJoI9notcjtbkdv6hpOOTn6DmmpeG91YAlJrRUfOhzaEkhzyHKlz9IDCrmR8kMiFu5pKLmhxDSuQilCBWr5X5KY8VcHIJEkdmdY/PRZtXwH+gMyWeR2ccbnDFnnc8AuD0hJmT/IGSVCuXelKINn/y9L27I83Lhk96GDnU/IEX+svWNJn4VX+CnfdtQTJE+107ZrXKBXkaTnSYgxxqortvqZNDvOTGGmyYGYTfjbIeFrkSZZpk+d1UhkMWGZ/rPeQUE4vtGrt2UCuC/z2/m0H6NNd2E+tJ01XhO4b9NwatZGs=
+    secure: 0xp8WbR/ygFKlCNxthjCo9XPQgg+kz5hWyVnCBB39dRL0Kl3IzouApId28ttNRkNRPpO/IkWtuW0TP7E3kl2hE6TdATGc4aiio1BVof+fCEh/FqQU9kqxsKf3nx9ZjQpvOErPLxXR2BmKuY9FgENjOF/tehIJ30r7YSXu5sxYrM7q2XLTb27SZrTUpRwdcSxo1vdO+af+W5VlPk8w3rH1VxBcmiPysN7oBL9JFoS3yqXBCuIQP+KuvavgqSpcBO1Xh4B+ZlxvJzt667HJlaaAFL3XhEqg20eRGAGxRWfuzIMBqbh49Qf8l2OfpodHxREKVOKGW9jRebCwNLgkW1DXF6OpE+tnDLVCb8x/qhDU3si0NCGRzOPRv3Tg5PdaIMVzspS1XnloD1LIusppGhj7gheHDhPAwNejNje64ry4T7yIz5kCltL9IfcWNUJ6ep6O8sQafovO8DvJ+ZpPaBKJU2P9D6JVHxiiy1/EdGGAjfNdvrPJrUGihmCfDNzv8XxmeWtE1xOlLS4/ywK30P10VkFmfnYzloM30oYm+SL1Z1c9dJmc7Kan17hQ6xcGl7Ra+/9qBR8+evk0jozxwmsfS9Fqa4cvP4cOzWdDtRD7ejgNkfy/9Edz1Y9S5KK45UDEtGaQc7cGf7iqgf1UB54JUgNTtgvFYRKWgWZvXBvyTA=
   on:
     repo: kuzzleio/koncorde
     branch: master

@@ -19,18 +19,17 @@ describe('DSL.keyword.notrange', () => {
         .then(subscription => {
           const
             subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            store = dsl.storage.foPairs.index.collection.get('notrange');
+            store = dsl.storage.foPairs.get('index', 'collection', 'notrange');
 
           should(store).be.instanceOf(FieldOperand);
-          should(store.keys).eql(new Set(['foo']));
-          should(store.fields.foo.conditions.size).be.eql(1);
+          should(store.fields.get('foo').conditions.size).be.eql(1);
 
-          const rangeCondition = Array.from(store.fields.foo.conditions.values())[0];
+          const rangeCondition = Array.from(store.fields.get('foo').conditions.values())[0];
           should(rangeCondition).instanceOf(RangeCondition);
           should(rangeCondition.subfilters).eql(new Set([subfilter]));
           should(rangeCondition.low).approximately(42, 1e-9);
           should(rangeCondition.high).approximately(100, 1e-9);
-          should(store.fields.foo.tree).be.an.Object();
+          should(store.fields.get('foo').tree).be.an.Object();
         });
     });
 
@@ -51,34 +50,36 @@ describe('DSL.keyword.notrange', () => {
         .then(subscription => {
           const
             sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            store = dsl.storage.foPairs.index.collection.get('notrange');
+            store = dsl.storage.foPairs.get('index', 'collection', 'notrange');
 
           should(store).be.instanceOf(FieldOperand);
-          should(store.keys).eql(new Set(['foo']));
-          should(store.fields.foo.conditions.size).be.eql(3);
+          should(store.fields.get('foo').conditions.size).be.eql(3);
 
-          const cd1 = store.fields.foo.conditions.get(Array.from(sf1.conditions)[0].id);
+          const cd1 = store.fields.get('foo').conditions.get(
+            Array.from(sf1.conditions)[0].id);
 
           should(cd1).instanceOf(RangeCondition);
           should(cd1.subfilters).eql(new Set([sf1]));
           should(cd1.low).exactly(42);
           should(cd1.high).exactly(100);
 
-          const cd2 = store.fields.foo.conditions.get(Array.from(sf2.conditions)[0].id);
+          const cd2 = store.fields.get('foo').conditions.get(
+            Array.from(sf2.conditions)[0].id);
 
           should(cd2).instanceOf(RangeCondition);
           should(cd2.subfilters).eql(new Set([sf2]));
           should(cd2.low).approximately(10, 1e-9);
           should(cd2.high).approximately(78, 1e-9);
 
-          const cd3 = store.fields.foo.conditions.get(Array.from(sf2.conditions)[1].id);
+          const cd3 = store.fields.get('foo').conditions.get(
+            Array.from(sf2.conditions)[1].id);
 
           should(cd3).instanceOf(RangeCondition);
           should(cd3.subfilters).eql(new Set([sf2]));
           should(cd3.low).exactly(0);
           should(cd3.high).exactly(50);
 
-          should(store.fields.foo.tree).be.an.Object();
+          should(store.fields.get('foo').tree).be.an.Object();
         });
     });
   });
@@ -157,9 +158,7 @@ describe('DSL.keyword.notrange', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return dsl.register('index', 'collection', {not: {range: {foo: {gte: 42, lte: 110}}}})
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+        .then(() => should(dsl.storage.foPairs._cache).be.empty());
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -169,7 +168,7 @@ describe('DSL.keyword.notrange', () => {
 
       return dsl.register('index', 'collection', {not: {range: {foo: {gte: 42, lte: 110}}}})
         .then(subscription => {
-          storage = dsl.storage.foPairs.index.collection.get('notrange');
+          storage = dsl.storage.foPairs.get('index', 'collection', 'notrange');
           multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
 
           return dsl.register('index', 'collection', {
@@ -181,15 +180,15 @@ describe('DSL.keyword.notrange', () => {
           });
         })
         .then(subscription => {
-          should(storage.fields.foo.conditions.size).eql(3);
+          should(storage.fields.get('foo').conditions.size).eql(3);
           return dsl.remove(subscription.id);
         })
         .then(() => {
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.conditions.size).eql(1);
+          should(storage.fields.get('foo').conditions.size).eql(1);
 
-          const rcd = storage.fields.foo.conditions.get(Array.from(multiSubfilter.conditions)[0].id);
+          const rcd = storage.fields.get('foo').conditions.get(
+            Array.from(multiSubfilter.conditions)[0].id);
           should(rcd).instanceOf(RangeCondition);
           should(rcd.subfilters).match(new Set([multiSubfilter]));
           should(rcd.low).approximately(42, 1e-9);
@@ -202,31 +201,46 @@ describe('DSL.keyword.notrange', () => {
         idToRemove,
         multiSubfilter;
 
-      return dsl.register('index', 'collection', {not: {range: {bar: {gt: 42, lt: 110}}}})
+      return dsl
+        .register('index', 'collection', {
+          not: {
+            range: {
+              bar: { gt: 42, lt: 110 }
+            }
+          }
+        })
         .then(subscription => {
           idToRemove = subscription.id;
 
-          return dsl.register('index', 'collection', {not: {range: {foo: {gt: 42, lt: 110}}}});
+          return dsl.register('index', 'collection', {
+            not: {
+              range: {
+                foo: { gt: 42, lt: 110 }
+              }
+            }
+          });
         })
         .then(subscription => {
           multiSubfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          should(dsl.storage.foPairs.index.collection.get('notrange').keys).eql(new Set(['bar', 'foo']));
+          const operand = dsl.storage.foPairs
+            .get('index', 'collection', 'notrange');
+
+          should(operand.fields).have.keys('bar', 'foo');
           return dsl.remove(idToRemove);
         })
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('notrange');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'notrange');
 
           should(storage).be.instanceOf(FieldOperand);
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.conditions.size).eql(1);
+          should(storage.fields.get('foo').conditions.size).eql(1);
 
-          const rcd = storage.fields.foo.conditions.get(Array.from(multiSubfilter.conditions)[0].id);
+          const rcd = storage.fields.get('foo').conditions.get(Array.from(multiSubfilter.conditions)[0].id);
 
           should(rcd).instanceOf(RangeCondition);
           should(rcd.subfilters).match(new Set([multiSubfilter]));
           should(rcd.low).eql(42);
           should(rcd.high).eql(110);
-          should(storage.fields.bar).be.undefined();
+          should(storage.fields.get('bar')).be.undefined();
         });
     });
   });

@@ -29,9 +29,7 @@ describe('DSL.keyword.geospatial', () => {
     it('should destroy the whole structure when removing the last item', () => {
       return dsl.register('index', 'collection', geoFilter)
         .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(dsl.storage.foPairs).be.an.Object().and.be.empty();
-        });
+        .then(() => should(dsl.storage.foPairs._cache).be.empty());
     });
 
     it('should remove the entire field if its last condition is removed', () => {
@@ -39,11 +37,10 @@ describe('DSL.keyword.geospatial', () => {
         .then(() => dsl.register('index', 'collection', geoFilter))
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('geospatial');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage.keys).eql(new Set(['bar']));
-          should(storage.fields.bar).be.an.Object();
-          should(storage.fields.foo).be.undefined();
+          should(storage.fields.get('bar')).be.an.Object();
+          should(storage.fields.get('foo')).be.undefined();
         });
     });
 
@@ -58,10 +55,9 @@ describe('DSL.keyword.geospatial', () => {
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('geospatial');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond)).match(new Set([sf]));
+          should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
         });
     });
 
@@ -77,10 +73,9 @@ describe('DSL.keyword.geospatial', () => {
         })
         .then(subscription => dsl.remove(subscription.id))
         .then(() => {
-          const storage = dsl.storage.foPairs.index.collection.get('geospatial');
+          const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage.keys).eql(new Set(['foo']));
-          should(storage.fields.foo.get(cond)).match(new Set([sf]));
+          should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
         });
     });
   });

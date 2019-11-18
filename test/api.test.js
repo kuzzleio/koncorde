@@ -43,19 +43,24 @@ describe('DSL API', () => {
       }))
         .throw({message: 'Invalid seed: expected a 32 bytes long Buffer'});
 
+      should(() => new Dsl({ regExpEngine: 'foo' }))
+        .throw({message: 'Invalid configuration value for "regExpEngine". Supported: re2, js'});
+
       {
         // valid params
         const
           seed = Buffer.from('01234567890123456789012345678901'),
           engine = new Dsl({
             seed,
-            maxMinTerms: 3
+            maxMinTerms: 3,
+            regExpEngine: 'js'
           });
 
         should(engine.config)
           .eql({
             seed,
-            maxMinTerms: 3
+            maxMinTerms: 3,
+            regExpEngine: 'js'
           });
       }
 
@@ -204,6 +209,35 @@ describe('DSL API', () => {
           ids.push(result.id);
           should(dsl.getFilterIds('i', 'c').sort()).match(ids.sort());
         });
+    });
+  });
+
+  describe('#getIndexes', () => {
+    it('should return an empty array if no filter exist on the provided index and collection', () => {
+      should(dsl.getIndexes()).be.an.Array().and.be.empty();
+    });
+
+    it('should return the list of registered indexes on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => dsl.register('i', 'c', {exists: 'foo'}))
+        .then(() => dsl.register('i2', 'c', {exists: 'foo'}))
+        .then(() => should(dsl.getIndexes().sort()).match(['i', 'i2']));
+    });
+  });
+
+  describe('#getCollections', () => {
+    it('should return an empty array if no filter exist on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => {
+          should(dsl.getCollections('foo')).be.an.Array().and.be.empty();
+        });
+    });
+
+    it('should return the list of registered collections on the provided index and collection', () => {
+      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
+        .then(() => dsl.register('i', 'c', {exists: 'foo'}))
+        .then(() => dsl.register('i', 'c2', {exists: 'foo'}))
+        .then(() => should(dsl.getCollections('i').sort()).match(['c', 'c2']));
     });
   });
 
