@@ -1,9 +1,6 @@
-'use strict';
-
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../');
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
+const DSL = require('../../');
 
 describe('DSL.keyword.in', () => {
   let dsl;
@@ -34,14 +31,14 @@ describe('DSL.keyword.in', () => {
     });
 
     it('should validate a well-formed ids filter', () => {
-      return should(dsl.validate({in: {foo: ['foo', 'bar', 'baz']}})).be.fulfilledWith(true);
+      return should(dsl.validate({in: {foo: ['foo', 'bar', 'baz']}})).be.fulfilledWith();
     });
   });
 
   describe('#standardization', () => {
     it('should return a list of "equals" conditions in a "or" operand', () => {
-      return should(dsl.transformer.standardizer.standardize({in: {foo: ['foo', 'bar', 'baz']}}))
-        .be.fulfilledWith({or: [
+      should(dsl.transformer.standardizer.standardize({in: {foo: ['foo', 'bar', 'baz']}}))
+        .match({or: [
           {equals: {foo: 'foo'}},
           {equals: {foo: 'bar'}},
           {equals: {foo: 'baz'}}

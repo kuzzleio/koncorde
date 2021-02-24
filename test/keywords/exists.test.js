@@ -1,11 +1,9 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  { errors: { BadRequestError } } = require('kuzzle-common-objects'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  Koncorde = require('../../'),
-  NormalizedExists = require('../../lib/transform/normalizedExists');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const Koncorde = require('../../');
+const NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('Koncorde.keyword.exists', () => {
   let koncorde;
@@ -57,7 +55,7 @@ describe('Koncorde.keyword.exists', () => {
 
     it('should validate filters with a string argument', () => {
       return should(koncorde.validate({exists: {field: 'bar'}}))
-        .be.fulfilledWith(true);
+        .be.fulfilledWith();
     });
 
     it('should reject filters with an empty string argument', () => {
@@ -66,7 +64,7 @@ describe('Koncorde.keyword.exists', () => {
     });
 
     it('should validate filters written in simplified form', () => {
-      return should(koncorde.validate({exists: 'bar'})).fulfilledWith(true);
+      return should(koncorde.validate({exists: 'bar'})).fulfilledWith();
     });
 
     it('should reject a filter in simplified form with an empty value', () => {
@@ -82,15 +80,18 @@ describe('Koncorde.keyword.exists', () => {
 
   describe('#standardization', () => {
     it('should return the normalized filter (from old syntax)', () => {
-      return should(
-        koncorde.transformer.standardizer.standardize({exists: {field: 'bar'}})
-      ).be.fulfilledWith({exists: new NormalizedExists('bar', false, null)});
+      const result = koncorde.transformer.standardizer.standardize({
+        exists: { field: 'bar' },
+      });
+
+      should(result).match({exists: new NormalizedExists('bar', false, null)});
     });
 
     it('should return the normalized filter (from simplified syntax)', () => {
-      return should(
-        koncorde.transformer.standardizer.standardize({exists: 'bar'})
-      ).be.fulfilledWith({exists: new NormalizedExists('bar', false, null)});
+      const result = koncorde.transformer.standardizer.standardize({
+        exists: 'bar',
+      });
+      should(result).match({exists: new NormalizedExists('bar', false, null)});
     });
 
     it('should parse and normalize array values', () => {
@@ -106,24 +107,21 @@ describe('Koncorde.keyword.exists', () => {
         '"42"'
       ];
 
-      const promises = values.map(
-        v => koncorde.transformer.standardizer.standardize(
-          { exists: `foo.bar[${v}]` }));
-
-      return Promise.all(promises)
-        .then(results => {
-          for (let i = 0; i < values.length; i++) {
-            const expected = typeof values[i] === 'string' ?
-              values[i].replace(/"/g, '') :
-              values[i];
-
-            should(results[i].exists).instanceOf(NormalizedExists);
-            should(results[i].exists.array).be.true();
-            should(results[i].exists.path).eql('foo.bar');
-            should(results[i].exists.value).eql(expected);
-            should(typeof results[i].exists.value).eql(typeof values[i]);
-          }
+      for (const value of values) {
+        const result = koncorde.transformer.standardizer.standardize({
+          exists: `foo.bar[${value}]`,
         });
+
+        const expected = typeof value === 'string' ?
+          value.replace(/"/g, '') :
+          value;
+
+        should(result.exists).instanceOf(NormalizedExists);
+        should(result.exists.array).be.true();
+        should(result.exists.path).eql('foo.bar');
+        should(result.exists.value).eql(expected);
+        should(typeof result.exists.value).eql(typeof value);
+      }
     });
 
     it('should not interpret unclosed brackets as an array value', () => {
@@ -131,7 +129,7 @@ describe('Koncorde.keyword.exists', () => {
         exists: 'foo[bar'
       });
 
-      return should(res).be.fulfilledWith({
+      should(res).match({
         exists: new NormalizedExists('foo[bar', false, null)
       });
     });
@@ -141,7 +139,7 @@ describe('Koncorde.keyword.exists', () => {
         exists: 'foo.ba\\[true\\]'
       });
 
-      return should(res).be.fulfilledWith({
+      should(res).match({
         exists: new NormalizedExists('foo.ba[true]', false, null)
       });
     });

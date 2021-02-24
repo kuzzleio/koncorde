@@ -1,9 +1,6 @@
-'use strict';
-
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Koncorde = require('../../');
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
+const Koncorde = require('../../');
 
 describe('koncorde.operands.and', () => {
   let koncorde;
@@ -34,7 +31,7 @@ describe('koncorde.operands.and', () => {
     });
 
     it('should validate a well-formed "and" operand', () => {
-      return should(koncorde.validate({and: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})).be.fulfilledWith(true);
+      return should(koncorde.validate({and: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})).be.fulfilledWith();
     });
   });
 

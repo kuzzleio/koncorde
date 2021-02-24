@@ -1,10 +1,8 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.equals', () => {
   let dsl;
@@ -31,7 +29,7 @@ describe('DSL.keyword.equals', () => {
     });
 
     it('should validate filters with number argument', () => {
-      return should(dsl.validate({equals: {foo: 42}})).be.fulfilledWith(true);
+      return should(dsl.validate({equals: {foo: 42}})).be.fulfilledWith();
     });
 
     it('should reject filters with object argument', () => {
@@ -43,25 +41,25 @@ describe('DSL.keyword.equals', () => {
     });
 
     it('should validate filters with null argument', () => {
-      return should(dsl.validate({equals: {foo: null}})).be.fulfilledWith(true);
+      return should(dsl.validate({equals: {foo: null}})).be.fulfilledWith();
     });
 
     it('should validate filters with boolean argument', () => {
-      return should(dsl.validate({equals: {foo: true}})).be.fulfilledWith(true);
+      return should(dsl.validate({equals: {foo: true}})).be.fulfilledWith();
     });
 
     it('should validate filters with a string argument', () => {
-      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith(true);
+      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith();
     });
 
     it('should validate filters with an empty string argument', () => {
-      return should(dsl.validate({equals: {foo: ''}})).be.fulfilledWith(true);
+      return should(dsl.validate({equals: {foo: ''}})).be.fulfilledWith();
     });
   });
 
   describe('#standardization', () => {
     it('should return the same content, unchanged', () => {
-      return should(dsl.transformer.standardizer.standardize({equals: {foo: 'bar'}})).be.fulfilledWith({equals: {foo: 'bar'}});
+      should(dsl.transformer.standardizer.standardize({equals: {foo: 'bar'}})).match({equals: {foo: 'bar'}});
     });
   });
 

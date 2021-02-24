@@ -1,8 +1,5 @@
-'use strict';
-
-const
-  should = require('should'),
-  DSL = require('../../');
+const should = require('should/as-function');
+const DSL = require('../../');
 
 /**
  * Mutualizes filter removal for all 4 geospatial keywords

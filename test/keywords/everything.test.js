@@ -1,9 +1,6 @@
-'use strict';
-
-const
-  should = require('should'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const should = require('should/as-function');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.everything', () => {
   let dsl;
@@ -14,15 +11,15 @@ describe('DSL.keyword.everything', () => {
 
   describe('#validation', () => {
     it('should validate an empty filter', () => {
-      return should(dsl.validate({})).be.fulfilledWith(true);
+      return should(dsl.validate({})).be.fulfilledWith();
     });
 
     it('should validate a null filter', () => {
-      return should(dsl.validate(null)).be.fulfilledWith(true);
+      return should(dsl.validate(null)).be.fulfilledWith();
     });
 
     it('should validate an undefined filter', () => {
-      return should(dsl.validate(null)).be.fulfilledWith(true);
+      return should(dsl.validate(null)).be.fulfilledWith();
     });
   });
 

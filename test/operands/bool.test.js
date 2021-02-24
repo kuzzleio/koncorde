@@ -1,10 +1,8 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../'),
-  NormalizedExists = require('../../lib/transform/normalizedExists');
+const DSL = require('../../');
+const NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('DSL.operands.bool', () => {
   let dsl;
@@ -72,26 +70,24 @@ describe('DSL.operands.bool', () => {
         }
       };
 
-      return dsl.transformer.standardizer.standardize(bool)
-        .then(result => {
-          should(result).match({
-            and: [
-              {or: [
-                {equals: {firstName: 'Grace'}},
-                {equals: {firstName: 'Ada'}}
-              ]},
-              {or: [
-                {equals: {hobby: 'computer'}},
-                {exists: new NormalizedExists('lastName', false, null)}
-              ]},
-              {and: [
-                {range: {age: {gte: 36, lt: 85}}},
-                {not: {equals: {city: 'NYC'}}},
-                {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}}
-              ]}
-            ]
-          });
-        });
+      const result = dsl.transformer.standardizer.standardize(bool);
+      should(result).match({
+        and: [
+          {or: [
+            {equals: {firstName: 'Grace'}},
+            {equals: {firstName: 'Ada'}}
+          ]},
+          {or: [
+            {equals: {hobby: 'computer'}},
+            {exists: new NormalizedExists('lastName', false, null)}
+          ]},
+          {and: [
+            {range: {age: {gte: 36, lt: 85}}},
+            {not: {equals: {city: 'NYC'}}},
+            {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}}
+          ]}
+        ]
+      });
     });
   });
 });

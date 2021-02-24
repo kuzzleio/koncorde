@@ -1,11 +1,9 @@
-'use strict';
+const should = require('should/as-function');
+const sinon = require('sinon');
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  RegexpCondition = require('../../lib/storage/objects/regexpCondition'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const RegexpCondition = require('../../lib/storage/objects/regexpCondition');
+const DSL = require('../../');
 
 describe('DSL.keyword.notregexp', () => {
   let dsl;

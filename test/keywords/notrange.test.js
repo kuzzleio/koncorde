@@ -1,10 +1,8 @@
-'use strict';
+const should = require('should/as-function');
 
-const
-  should = require('should'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../'),
-  RangeCondition = require('../../lib/storage/objects/rangeCondition');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
+const RangeCondition = require('../../lib/storage/objects/rangeCondition');
 
 describe('DSL.keyword.notrange', () => {
   let dsl;

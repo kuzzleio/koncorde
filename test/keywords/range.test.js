@@ -1,11 +1,9 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  RangeCondition = require('../../lib/storage/objects/rangeCondition'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const RangeCondition = require('../../lib/storage/objects/rangeCondition');
+const DSL = require('../../');
 
 describe('DSL.keyword.range', () => {
   let dsl;
@@ -44,7 +42,7 @@ describe('DSL.keyword.range', () => {
     });
 
     it('should validate a valid range filter', () => {
-      return should(dsl.validate({range: {foo: {gt: 42, lte: 200}}})).be.fulfilledWith(true);
+      return should(dsl.validate({range: {foo: {gt: 42, lte: 200}}})).be.fulfilledWith();
     });
 
     it('should reject a range filter with inverted boundaries', () => {
@@ -55,7 +53,7 @@ describe('DSL.keyword.range', () => {
   describe('#standardization', () => {
     it('should return the same content, unchanged', () => {
       const filter = {range: {foo: {gt: 42, lte: 113}}};
-      return should(dsl.transformer.standardizer.standardize(filter)).be.fulfilledWith(filter);
+      should(dsl.transformer.standardizer.standardize(filter)).match(filter);
     });
   });
 

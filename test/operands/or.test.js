@@ -1,9 +1,6 @@
-'use strict';
-
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../');
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
+const DSL = require('../../');
 
 describe('DSL.operands.or', () => {
   let dsl;
@@ -33,8 +30,8 @@ describe('DSL.operands.or', () => {
       return should(dsl.validate({or: [{equals: {foo: 'bar'}}, {exists: {foo: 'bar'}}]})).be.rejectedWith(BadRequestError);
     });
 
-    it('should validate a well-formed "and" operand', () => {
-      return should(dsl.validate({or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})).be.fulfilledWith(true);
+    it('should validate a well-formed "or" operand', () => {
+      return should(dsl.validate({or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})).be.fulfilledWith();
     });
   });
 

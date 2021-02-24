@@ -1,32 +1,28 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.geoBoundingBox', () => {
-  let
-    dsl,
-    standardize;
-  const
-    bbox = {
-      topLeft: { lat: 43.6331979, lon: 3.8433703 },
-      bottomRight: { lat: 43.5810609, lon: 3.9282093 }
-    },
-    bboxStandardized = {
-      geospatial: {
-        geoBoundingBox: {
-          foo: {
-            bottom: 43.5810609,
-            left: 3.8433703,
-            top: 43.6331979,
-            right: 3.9282093
-          }
+  let dsl;
+  let standardize;
+  const bbox = {
+    topLeft: { lat: 43.6331979, lon: 3.8433703 },
+    bottomRight: { lat: 43.5810609, lon: 3.9282093 }
+  };
+  const bboxStandardized = {
+    geospatial: {
+      geoBoundingBox: {
+        foo: {
+          bottom: 43.5810609,
+          left: 3.8433703,
+          top: 43.6331979,
+          right: 3.9282093
         }
       }
-    };
+    }
+  };
 
   beforeEach(() => {
     dsl = new DSL();
@@ -35,11 +31,11 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
-      return should(standardize({geoBoundingBox: {}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoBoundingBox: {}})).throw(BadRequestError);
     });
 
     it('should reject a filter with multiple field attributes', () => {
-      return should(standardize({geoBoundingBox: {foo: bbox, bar: bbox}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoBoundingBox: {foo: bbox, bar: bbox}})).throw(BadRequestError);
     });
 
     it('should validate a {top, left, bottom, right} bbox', () => {
@@ -50,7 +46,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
         right: 3.9282093
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {"top", "left", "bottom", "right"} bbox', () => {
@@ -61,11 +57,11 @@ describe('DSL.keyword.geoBoundingBox', () => {
         right: '3.9282093'
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {topLeft: {lat, lon}, bottomRight: {lat, lon}} bbox', () => {
-      return should(standardize({geoBoundingBox: {foo: bbox}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: bbox}})).match(bboxStandardized);
     });
 
     it('should validate a {top_left: {lat, lon}, bottom_right: {lat, lon}} bbox', () => {
@@ -74,7 +70,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
         bottom_right: { lat: 43.5810609, lon: 3.9282093 }
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {topLeft: [lat, lon], bottomRight: [lat, lon]} bbox', () => {
@@ -83,7 +79,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
         bottomRight: [43.5810609, 3.9282093]
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {top_left: [lat, lon], bottom_right: [lat, lon]} bbox', () => {
@@ -92,7 +88,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
         bottom_right: [43.5810609, 3.9282093]
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {topLeft: "lat, lon", bottomRight: "lat, lon" bbox', () => {
@@ -101,7 +97,7 @@ describe('DSL.keyword.geoBoundingBox', () => {
         bottomRight: '43.5810609, 3.9282093'
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {top_left: "lat, lon", bottom_right: "lat, lon" bbox', () => {
@@ -110,48 +106,60 @@ describe('DSL.keyword.geoBoundingBox', () => {
         bottom_right: '43.5810609, 3.9282093'
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.fulfilledWith(bboxStandardized);
+      should(standardize({geoBoundingBox: {foo: box}})).match(bboxStandardized);
     });
 
     it('should validate a {topLeft: "geohash", bottomRight: "geohash"} bbox', () => {
-      return standardize({geoBoundingBox: {foo: {topLeft: 'spf8prntv18e', bottomRight: 'spdzcmsqjft4'}}})
-        .then(result => {
-          const box = bboxStandardized.geospatial.geoBoundingBox.foo;
+      const result = standardize({
+        geoBoundingBox: {
+          foo: {
+            topLeft: 'spf8prntv18e',
+            bottomRight: 'spdzcmsqjft4',
+          },
+        },
+      });
 
-          should(result).be.an.Object();
-          should(result.geospatial).be.an.Object();
-          should(result.geospatial.geoBoundingBox).be.an.Object();
-          should(result.geospatial.geoBoundingBox.foo).be.an.Object();
-          should(result.geospatial.geoBoundingBox.foo.top).be.approximately(box.top, 10e-7);
-          should(result.geospatial.geoBoundingBox.foo.bottom).be.approximately(box.bottom, 10e-7);
-          should(result.geospatial.geoBoundingBox.foo.left).be.approximately(box.left, 10e-7);
-          should(result.geospatial.geoBoundingBox.foo.right).be.approximately(box.right, 10e-7);
-        });
+      const box = bboxStandardized.geospatial.geoBoundingBox.foo;
+
+      should(result).be.an.Object();
+      should(result.geospatial).be.an.Object();
+      should(result.geospatial.geoBoundingBox).be.an.Object();
+      should(result.geospatial.geoBoundingBox.foo).be.an.Object();
+      should(result.geospatial.geoBoundingBox.foo.top).be.approximately(box.top, 10e-7);
+      should(result.geospatial.geoBoundingBox.foo.bottom).be.approximately(box.bottom, 10e-7);
+      should(result.geospatial.geoBoundingBox.foo.left).be.approximately(box.left, 10e-7);
+      should(result.geospatial.geoBoundingBox.foo.right).be.approximately(box.right, 10e-7);
     });
 
     it('should validate a {top_left: "geohash", bottom_right: "geohash"} bbox', () => {
-      return standardize({geoBoundingBox: {foo: {top_left: 'spf8prntv18e', bottom_right: 'spdzcmsqjft4'}}})
-        .then(result => {
-          const box = bboxStandardized.geospatial.geoBoundingBox.foo;
+      const result = standardize({
+        geoBoundingBox: {
+          foo: {
+            top_left: 'spf8prntv18e',
+            bottom_right: 'spdzcmsqjft4',
+          },
+        },
+      });
 
-          should(result).be.an.Object();
-          should(result.geospatial).be.an.Object();
-          should(result.geospatial.geoBoundingBox).be.an.Object();
-          should(result.geospatial.geoBoundingBox.foo).be.an.Object();
-          should(result.geospatial.geoBoundingBox.foo.top).be.approximately(box.top, 10e-7);
-          should(result.geospatial.geoBoundingBox.foo.bottom).be.approximately(box.bottom, 10e-7);
-          should(result.geospatial.geoBoundingBox.foo.left).be.approximately(box.left, 10e-7);
-          should(result.geospatial.geoBoundingBox.foo.right).be.approximately(box.right, 10e-7);
-        });
+      const box = bboxStandardized.geospatial.geoBoundingBox.foo;
+
+      should(result).be.an.Object();
+      should(result.geospatial).be.an.Object();
+      should(result.geospatial.geoBoundingBox).be.an.Object();
+      should(result.geospatial.geoBoundingBox.foo).be.an.Object();
+      should(result.geospatial.geoBoundingBox.foo.top).be.approximately(box.top, 10e-7);
+      should(result.geospatial.geoBoundingBox.foo.bottom).be.approximately(box.bottom, 10e-7);
+      should(result.geospatial.geoBoundingBox.foo.left).be.approximately(box.left, 10e-7);
+      should(result.geospatial.geoBoundingBox.foo.right).be.approximately(box.right, 10e-7);
     });
 
     it('should reject an unrecognized bbox format', () => {
       const box = {
         top_left: '40.73 / -74.1',
-        bottom_right: '40.01 / -71.12'
+        bottom_right: '40.01 / -71.12',
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoBoundingBox: {foo: box}})).throw(BadRequestError);
     });
 
     it('should reject a non-convertible bbox point string', () => {
@@ -162,7 +170,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
         right: 'foobar'
       };
 
-      return should(standardize({geoBoundingBox: {foo: box}})).be.rejectedWith(BadRequestError, {message: `Invalid geoBoundingBox format: ${JSON.stringify(box)}`});
+      should(() => standardize({geoBoundingBox: {foo: box}})).throw(
+        BadRequestError,
+        { message: `Invalid geoBoundingBox format: ${JSON.stringify(box)}` });
     });
   });
 

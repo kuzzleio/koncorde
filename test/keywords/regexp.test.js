@@ -1,11 +1,8 @@
-'use strict';
-
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  RegexpCondition = require('../../lib/storage/objects/regexpCondition'),
-  DSL = require('../../');
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const RegexpCondition = require('../../lib/storage/objects/regexpCondition');
+const DSL = require('../../');
 
 describe('DSL.keyword.regexp', () => {
   let dsl;
@@ -90,7 +87,7 @@ describe('DSL.keyword.regexp', () => {
   describe('#standardization', () => {
     it('should return the same content, unchanged', () => {
       const filter = {regexp: {foo: {value: 'foo', flags: 'i'}}};
-      return should(dsl.transformer.standardizer.standardize(filter)).be.fulfilledWith(filter);
+      should(dsl.transformer.standardizer.standardize(filter)).match(filter);
     });
   });
 

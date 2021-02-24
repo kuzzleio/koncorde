@@ -1,7 +1,7 @@
-const
-  should = require('should'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const should = require('should/as-function');
+
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.nothing', () => {
   let dsl;

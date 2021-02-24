@@ -1,12 +1,10 @@
-'use strict';
-
 require('reify');
 
-const
-  should = require('should').noConflict(),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Dsl = require('../'),
-  sinon = require('sinon');
+const should = require('should').noConflict();
+const { BadRequestError } = require('kuzzle-common-objects');
+
+const Dsl = require('../');
+const sinon = require('sinon');
 
 describe('DSL API', () => {
   let dsl;
@@ -69,7 +67,7 @@ describe('DSL API', () => {
 
   describe('#validate', () => {
     it('should resolve to "true" if a filter is valid', () => {
-      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith(true);
+      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith();
     });
 
     it('should resolve to a BadRequestError if a filter is not valid', () => {
@@ -287,7 +285,7 @@ describe('DSL API', () => {
             foo: 'bar'
           });
 
-          should(stub).calledWith('i', 'c', {
+          should(stub.calledWith('i', 'c', {
             bar: 'bar',
             qux: 'qux',
             obj: {
@@ -308,7 +306,7 @@ describe('DSL API', () => {
             'obj.bottlesOfBeer': 99,
             arr: ['foo', 'bar'],
             foo: 'bar'
-          });
+          })).be.true();
         });
     });
   });
@@ -366,7 +364,7 @@ describe('DSL API', () => {
       return dsl.normalize('i', 'c', f)
         .then(() => {
           should(dsl.transformer.normalize.calledOnce).be.true();
-          should(dsl.transformer.normalize).calledWith(f);
+          should(dsl.transformer.normalize.calledWith(f)).be.true();
 
           should(dsl.storage.getFilterId.calledOnce).be.true();
           should(dsl.storage.getFilterId).calledWith('i', 'c', n);
@@ -388,7 +386,7 @@ describe('DSL API', () => {
       dsl.store(r);
 
       should(dsl.storage.store.calledOnce).be.true();
-      should(dsl.storage.store).calledWith(r.index, r.collection, r.normalized, r.id);
+      should(dsl.storage.store.calledWith(r.index, r.collection, r.normalized, r.id)).be.true();
     });
   });
 });

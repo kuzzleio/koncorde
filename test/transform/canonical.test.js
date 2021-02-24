@@ -1,6 +1,6 @@
-const
-  Canonical = require('../../lib/transform/canonical'),
-  should = require('should');
+const should = require('should/as-function');
+
+const Canonical = require('../../lib/transform/canonical');
 
 describe('api/dsl/transform/canonical', () => {
   let canonical;

@@ -1,46 +1,42 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.geoPolygon', () => {
-  let
-    dsl,
-    standardize;
-  const
-    polygon = {
-      points: [
-        {lat: 43.6021299, lon: 3.8989713},
-        {lat: 43.6057389, lon: 3.8968173},
-        {lat: 43.6092889, lon: 3.8970423},
-        {lat: 43.6100359, lon: 3.9040853},
-        {lat: 43.6069619, lon: 3.9170343},
-        {lat: 43.6076479, lon: 3.9230133},
-        {lat: 43.6038779, lon: 3.9239153},
-        {lat: 43.6019189, lon: 3.9152403},
-        {lat: 43.6036049, lon: 3.9092313}
-      ]
-    },
-    polygonStandardized = {
-      geospatial: {
-        geoPolygon: {
-          foo: [
-            [43.6021299, 3.8989713],
-            [43.6057389, 3.8968173],
-            [43.6092889, 3.8970423],
-            [43.6100359, 3.9040853],
-            [43.6069619, 3.9170343],
-            [43.6076479, 3.9230133],
-            [43.6038779, 3.9239153],
-            [43.6019189, 3.9152403],
-            [43.6036049, 3.9092313]
-          ]
-        }
+  let dsl;
+  let standardize;
+  const polygon = {
+    points: [
+      {lat: 43.6021299, lon: 3.8989713},
+      {lat: 43.6057389, lon: 3.8968173},
+      {lat: 43.6092889, lon: 3.8970423},
+      {lat: 43.6100359, lon: 3.9040853},
+      {lat: 43.6069619, lon: 3.9170343},
+      {lat: 43.6076479, lon: 3.9230133},
+      {lat: 43.6038779, lon: 3.9239153},
+      {lat: 43.6019189, lon: 3.9152403},
+      {lat: 43.6036049, lon: 3.9092313}
+    ]
+  };
+  const polygonStandardized = {
+    geospatial: {
+      geoPolygon: {
+        foo: [
+          [43.6021299, 3.8989713],
+          [43.6057389, 3.8968173],
+          [43.6092889, 3.8970423],
+          [43.6100359, 3.9040853],
+          [43.6069619, 3.9170343],
+          [43.6076479, 3.9230133],
+          [43.6038779, 3.9239153],
+          [43.6019189, 3.9152403],
+          [43.6036049, 3.9092313]
+        ]
       }
-    };
+    }
+  };
 
   beforeEach(() => {
     dsl = new DSL();
@@ -49,33 +45,33 @@ describe('DSL.keyword.geoPolygon', () => {
 
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
-      return should(standardize({geoPolygon: {}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {}})).throw(BadRequestError);
     });
 
     it('should reject a filter with multiple field attributes', () => {
-      return should(standardize({geoPolygon: {foo: polygon, bar: polygon}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: polygon, bar: polygon}})).throw(BadRequestError);
     });
 
     it('should reject a filter without a points field', () => {
-      return should(standardize({geoPolygon: {foo: {bar: [[0, 0], [5, 5], [5, 0]]}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {bar: [[0, 0], [5, 5], [5, 0]]}}})).throw(BadRequestError);
     });
 
     it('should reject a filter with an empty points field', () => {
-      return should(standardize({geoPolygon: {foo: {points: []}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: []}}})).throw(BadRequestError);
     });
 
     it('should reject a polygon with less than 3 points defined', () => {
-      return should(standardize({geoPolygon: {foo: {points: [[0, 0], [5, 5]]}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: [[0, 0], [5, 5]]}}})).throw(BadRequestError);
     });
 
     it('should reject a polygon with a non-array points field', () => {
-      return should(standardize({geoPolygon: {foo: {points: 'foobar'}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: 'foobar'}}})).throw(BadRequestError);
     });
 
     it('should reject a polygon containing an invalid point format', () => {
       const p = polygon.points.slice();
       p.push(42);
-      return should(standardize({geoPolygon: {foo: {points: p}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: p}}})).throw(BadRequestError);
     });
 
     it('should standardize all geopoint types in a single points array', () => {
@@ -93,17 +89,15 @@ describe('DSL.keyword.geoPolygon', () => {
         ]
       };
 
-      return standardize({geoPolygon: {foo: points}})
-        .then(result => {
-          should(result.geospatial).be.an.Object();
-          should(result.geospatial.geoPolygon).be.an.Object();
-          should(result.geospatial.geoPolygon.foo).be.an.Object();
+      const result = standardize({geoPolygon: {foo: points}});
+      should(result.geospatial).be.an.Object();
+      should(result.geospatial.geoPolygon).be.an.Object();
+      should(result.geospatial.geoPolygon.foo).be.an.Object();
 
-          result.geospatial.geoPolygon.foo.forEach((p, i) => {
-            should(p[0]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][0], 10e-6);
-            should(p[1]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][1], 10e-6);
-          });
-        });
+      result.geospatial.geoPolygon.foo.forEach((p, i) => {
+        should(p[0]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][0], 10e-6);
+        should(p[1]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][1], 10e-6);
+      });
     });
   });
 

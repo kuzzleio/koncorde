@@ -1,29 +1,25 @@
-'use strict';
+const should = require('should/as-function');
+const { BadRequestError } = require('kuzzle-common-objects');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.geoDistanceRange', () => {
-  let
-    dsl,
-    standardize;
-  const
-    point = { lat: 43.6331979, lon: 3.8433703 },
-    distanceStandardized = {
-      geospatial: {
-        geoDistanceRange: {
-          foo: {
-            lat: 43.6331979,
-            lon: 3.8433703,
-            from: 1000,
-            to: 10000
-          }
+  let dsl;
+  let standardize;
+  const point = { lat: 43.6331979, lon: 3.8433703 };
+  const distanceStandardized = {
+    geospatial: {
+      geoDistanceRange: {
+        foo: {
+          lat: 43.6331979,
+          lon: 3.8433703,
+          from: 1000,
+          to: 10000
         }
       }
-    };
+    }
+  };
 
   beforeEach(() => {
     dsl = new DSL();
@@ -32,112 +28,108 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
-      return should(standardize({geoDistanceRange: {}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {}})).throw(BadRequestError);
     });
 
     it('should reject a filter with multiple field attributes', () => {
-      return should(standardize({geoDistanceRange: {foo: point, bar: point, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: point, bar: point, from: '1km', to: '10km'}})).throw(BadRequestError);
     });
 
     it('should validate a {lat, lon} point', () => {
-      return should(standardize({geoDistanceRange: {foo: point, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: point, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {latLon: [lat, lon]} point', () => {
       const p = {latLon: [point.lat, point.lon]};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {lat_lon: [lat, lon]} point', () => {
       const p = {lat_lon: [point.lat, point.lon]};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {latLon: {lat: lat, lon: lon}} point', () => {
       const p = {latLon: {lat: point.lat, lon: point.lon}};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {lat_lon: {lat: lat, lon: lon}} point', () => {
       const p = {lat_lon: {lat: point.lat, lon: point.lon}};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {latLon: "lat, lon"} point', () => {
       const p = {latLon: `${point.lat}, ${point.lon}`};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {lat_lon: "lat, lon"} point', () => {
       const p = {lat_lon: `${point.lat}, ${point.lon}`};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.fulfilledWith(distanceStandardized);
+      should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).match(distanceStandardized);
     });
 
     it('should validate a {latLon: "geohash"} point', () => {
       const p = {latLon: 'spf8prntv18e'};
 
-      return standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})
-        .then(result => {
-          should(result).be.an.Object();
-          should(result.geospatial).be.an.Object();
-          should(result.geospatial.geoDistanceRange).be.an.Object();
-          should(result.geospatial.geoDistanceRange.foo).be.an.Object();
-          should(result.geospatial.geoDistanceRange.foo.from).be.eql(1000);
-          should(result.geospatial.geoDistanceRange.foo.to).be.eql(10000);
-          should(result.geospatial.geoDistanceRange.foo.lat).be.approximately(point.lat, 10e-7);
-          should(result.geospatial.geoDistanceRange.foo.lon).be.approximately(point.lon, 10e-7);
-        });
+      const result = standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}});
+      should(result).be.an.Object();
+      should(result.geospatial).be.an.Object();
+      should(result.geospatial.geoDistanceRange).be.an.Object();
+      should(result.geospatial.geoDistanceRange.foo).be.an.Object();
+      should(result.geospatial.geoDistanceRange.foo.from).be.eql(1000);
+      should(result.geospatial.geoDistanceRange.foo.to).be.eql(10000);
+      should(result.geospatial.geoDistanceRange.foo.lat).be.approximately(point.lat, 10e-7);
+      should(result.geospatial.geoDistanceRange.foo.lon).be.approximately(point.lon, 10e-7);
     });
 
     it('should validate a {lat_lon: "geohash"} point', () => {
       const p = {lat_lon: 'spf8prntv18e'};
 
-      return standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})
-        .then(result => {
-          should(result).be.an.Object();
-          should(result.geospatial).be.an.Object();
-          should(result.geospatial.geoDistanceRange).be.an.Object();
-          should(result.geospatial.geoDistanceRange.foo).be.an.Object();
-          should(result.geospatial.geoDistanceRange.foo.from).be.eql(1000);
-          should(result.geospatial.geoDistanceRange.foo.to).be.eql(10000);
-          should(result.geospatial.geoDistanceRange.foo.lat).be.approximately(point.lat, 10e-7);
-          should(result.geospatial.geoDistanceRange.foo.lon).be.approximately(point.lon, 10e-7);
-        });
+      const result = standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}});
+      should(result).be.an.Object();
+      should(result.geospatial).be.an.Object();
+      should(result.geospatial.geoDistanceRange).be.an.Object();
+      should(result.geospatial.geoDistanceRange.foo).be.an.Object();
+      should(result.geospatial.geoDistanceRange.foo.from).be.eql(1000);
+      should(result.geospatial.geoDistanceRange.foo.to).be.eql(10000);
+      should(result.geospatial.geoDistanceRange.foo.lat).be.approximately(point.lat, 10e-7);
+      should(result.geospatial.geoDistanceRange.foo.lon).be.approximately(point.lon, 10e-7);
     });
 
     it('should reject an unrecognized point format', () => {
       const p = {foo: 'bar'};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).throw(BadRequestError);
     });
 
     it('should reject an invalid latLon argument type', () => {
       const p = {latLon: 42};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).throw(BadRequestError);
     });
 
     it('should reject an invalid latLon argument string', () => {
       const p = {latLon: '[10, 10]'};
-      return should(standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: p, from: '1km', to: '10km'}})).throw(BadRequestError);
     });
 
     it('should reject a filter with a non-string from value', () => {
-      return should(standardize({geoDistanceRange: {foo: point, from: 42, to: '10km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: point, from: 42, to: '10km'}})).throw(BadRequestError);
     });
 
     it('should reject a filter with a non-string to value', () => {
-      return should(standardize({geoDistanceRange: {foo: point, from: '1km', to: 42}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: point, from: '1km', to: 42}})).throw(BadRequestError);
     });
 
     it('should reject a filter with incorrect from value', () => {
-      return should(standardize({geoDistanceRange: {foo: point, from: '1 micronanomillimeter', to: '1km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: point, from: '1 micronanomillimeter', to: '1km'}})).throw(BadRequestError);
     });
 
     it('should reject a filter with incorrect to value', () => {
-      return should(standardize({geoDistanceRange: {foo: point, from: '1 km', to: '1 ly'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: point, from: '1 km', to: '1 ly'}})).throw(BadRequestError);
     });
 
     it('should reject a filter with a negative range', () => {
-      return should(standardize({geoDistanceRange: {foo: point, from: '10 km', to: '1km'}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoDistanceRange: {foo: point, from: '10 km', to: '1km'}})).throw(BadRequestError);
     });
   });
 

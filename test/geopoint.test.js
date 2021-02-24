@@ -1,9 +1,7 @@
-'use strict';
+const should = require('should/as-function');
 
-const
-  should = require('should'),
-  Coordinates = require('../lib/util/coordinate'),
-  convert = require('../lib/util/convertGeopoint');
+const Coordinates = require('../lib/util/coordinate');
+const convert = require('../lib/util/convertGeopoint');
 
 describe('#geopoint conversions', () => {
   const coords = new Coordinates(43.6021299, 3.8989713);
@@ -18,7 +16,7 @@ describe('#geopoint conversions', () => {
     const converted = convert('spfb09x0ud5s');
 
     should(converted).be.instanceOf(Coordinates);
-    
+
     should(converted.lat).be.approximately(coords.lat, 10e-6);
     should(converted.lon).be.approximately(coords.lon, 10e-6);
   });
@@ -75,7 +73,7 @@ describe('#geopoint conversions', () => {
     const converted = convert('spfb09x0ud5s');
 
     should(converted).be.instanceOf(Coordinates);
-    
+
     should(converted.lat).be.approximately(coords.lat, 10e-6);
     should(converted.lon).be.approximately(coords.lon, 10e-6);
   });
@@ -84,7 +82,7 @@ describe('#geopoint conversions', () => {
     const converted = convert('spfb09x0ud5s');
 
     should(converted).be.instanceOf(Coordinates);
-    
+
     should(converted.lat).be.approximately(coords.lat, 10e-6);
     should(converted.lon).be.approximately(coords.lon, 10e-6);
   });

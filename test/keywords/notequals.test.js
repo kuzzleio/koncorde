@@ -1,11 +1,8 @@
-'use strict';
-
 require('reify');
 
-const
-  should = require('should'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const should = require('should/as-function');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 describe('DSL.keyword.notequals', () => {
   let dsl;
@@ -16,7 +13,7 @@ describe('DSL.keyword.notequals', () => {
 
   describe('#standardization', () => {
     it('should return the same content, unchanged', () => {
-      return should(dsl.transformer.standardizer.standardize({not: {equals: {foo: 'bar'}}})).be.fulfilledWith({not: {equals: {foo: 'bar'}}});
+      should(dsl.transformer.standardizer.standardize({not: {equals: {foo: 'bar'}}})).match({not: {equals: {foo: 'bar'}}});
     });
   });
 

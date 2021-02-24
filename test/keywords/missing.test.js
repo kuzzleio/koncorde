@@ -1,9 +1,6 @@
-'use strict';
-
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  DSL = require('../../');
+const should = require('should/as-function');
+const sinon = require('sinon');
+const DSL = require('../../');
 
 describe('DSL.keyword.missing', () => {
   let dsl;
@@ -16,21 +13,17 @@ describe('DSL.keyword.missing', () => {
     it('should return a parsed "not exists" condition (from old syntax)', () => {
       const spy = sinon.spy(dsl.transformer.standardizer, 'exists');
 
-      return dsl.transformer.standardizer.standardize({missing: {field: 'foo'}})
-        .then(result => {
-          should(spy.called).be.true();
-          should(result).match({ not: { exists: {path: 'foo', array: false} } });
-        });
+      const result = dsl.transformer.standardizer.standardize({missing: {field: 'foo'}});
+      should(spy.called).be.true();
+      should(result).match({ not: { exists: {path: 'foo', array: false} } });
     });
 
     it('should return a parsed "not exists" condition', () => {
       const spy = sinon.spy(dsl.transformer.standardizer, 'exists');
 
-      return dsl.transformer.standardizer.standardize({missing: 'foo'})
-        .then(result => {
-          should(spy.called).be.true();
-          should(result).match({ not: { exists: {path: 'foo', array: false} } });
-        });
+      const result = dsl.transformer.standardizer.standardize({missing: 'foo'});
+      should(spy.called).be.true();
+      should(result).match({ not: { exists: {path: 'foo', array: false} } });
     });
   });
 

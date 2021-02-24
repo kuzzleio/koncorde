@@ -1,9 +1,7 @@
-'use strict';
+const should = require('should/as-function');
 
-const
-  should = require('should'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/storage/objects/fieldOperand');
+const DSL = require('../../');
 
 /**
  * Tests not geoBoundingBox, not geoDistance, not geoDistanceRange
