@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 
 const FieldOperand = require('../../lib/storage/objects/fieldOperand');
 const DSL = require('../../');
@@ -17,49 +16,55 @@ describe('DSL.keyword.equals', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({equals: ['foo', 'bar']})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: ['foo', 'bar']}))
+        .be.rejectedWith('"equals" must be a non-empty object');
     });
 
     it('should reject filters with more than 1 field', () => {
-      return should(dsl.validate({equals: {foo: 'foo', bar: 'bar'}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: {foo: 'foo', bar: 'bar'}}))
+        .be.rejectedWith('"equals" can contain only one attribute');
     });
 
     it('should reject filters with array argument', () => {
-      return should(dsl.validate({equals: {foo: ['bar']}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: {foo: ['bar']}}))
+        .be.rejectedWith('"foo" in "equals" must be either a string, a number, a boolean or null');
     });
 
     it('should validate filters with number argument', () => {
-      return should(dsl.validate({equals: {foo: 42}})).be.fulfilledWith();
+      return should(dsl.validate({equals: {foo: 42}})).be.fulfilled();
     });
 
     it('should reject filters with object argument', () => {
-      return should(dsl.validate({equals: {foo: {}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: {foo: {}}}))
+        .be.rejectedWith('"foo" in "equals" must be either a string, a number, a boolean or null');
     });
 
     it('should reject filters with undefined argument', () => {
-      return should(dsl.validate({equals: {foo: undefined}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({equals: {foo: undefined}}))
+        .be.rejectedWith('"foo" in "equals" must be either a string, a number, a boolean or null');
     });
 
     it('should validate filters with null argument', () => {
-      return should(dsl.validate({equals: {foo: null}})).be.fulfilledWith();
+      return should(dsl.validate({equals: {foo: null}})).be.fulfilled();
     });
 
     it('should validate filters with boolean argument', () => {
-      return should(dsl.validate({equals: {foo: true}})).be.fulfilledWith();
+      return should(dsl.validate({equals: {foo: true}})).be.fulfilled();
     });
 
     it('should validate filters with a string argument', () => {
-      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith();
+      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilled();
     });
 
     it('should validate filters with an empty string argument', () => {
-      return should(dsl.validate({equals: {foo: ''}})).be.fulfilledWith();
+      return should(dsl.validate({equals: {foo: ''}})).be.fulfilled();
     });
   });
 
   describe('#standardization', () => {
     it('should return the same content, unchanged', () => {
-      should(dsl.transformer.standardizer.standardize({equals: {foo: 'bar'}})).match({equals: {foo: 'bar'}});
+      should(dsl.transformer.standardizer.standardize({equals: {foo: 'bar'}}))
+        .match({equals: {foo: 'bar'}});
     });
   });
 

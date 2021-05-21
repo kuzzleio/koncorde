@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 const DSL = require('../../');
 
 describe('DSL.operands.or', () => {
@@ -11,23 +10,49 @@ describe('DSL.operands.or', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({or: []})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({or: []}))
+        .be.rejectedWith('Attribute "or" cannot be empty');
     });
 
     it('should reject non-array content', () => {
-      return should(dsl.validate({or: {foo: 'bar'}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({or: {foo: 'bar'}}))
+        .be.rejectedWith('Attribute "or" must be an array');
     });
 
     it('should reject if one of the content is not an object', () => {
-      return should(dsl.validate({or: [{equals: {foo: 'bar'}}, [{exists: {field: 'foo'}}]]})).be.rejectedWith(BadRequestError);
+      const filter = {
+        or: [
+          {equals: {foo: 'bar'}},
+          [ {exists: {field: 'foo'}} ],
+        ],
+      };
+
+      return should(dsl.validate(filter))
+        .be.rejectedWith('"or" operand can only contain non-empty objects');
     });
 
     it('should reject if one of the content object does not refer to a valid keyword', () => {
-      return should(dsl.validate({or: [{equals: {foo: 'bar'}}, {foo: 'bar'}]})).be.rejectedWith(BadRequestError);
+      const filter = {
+        or: [
+          {equals: {foo: 'bar'}},
+          {foo: 'bar'},
+        ],
+      };
+
+      return should(dsl.validate(filter))
+        .be.rejectedWith('Unknown DSL keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
-      return should(dsl.validate({or: [{equals: {foo: 'bar'}}, {exists: {foo: 'bar'}}]})).be.rejectedWith(BadRequestError);
+      const filter = {
+        or: [
+          {equals: {foo: 'bar'}},
+          {exists: {foo: 'bar'}},
+        ],
+      };
+
+      return should(dsl.validate(filter))
+        .be.rejectedWith('"exists" requires the following attribute: field');
     });
 
     it('should validate a well-formed "or" operand', () => {

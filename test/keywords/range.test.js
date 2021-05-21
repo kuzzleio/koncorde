@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 
 const FieldOperand = require('../../lib/storage/objects/fieldOperand');
 const RangeCondition = require('../../lib/storage/objects/rangeCondition');
@@ -14,39 +13,48 @@ describe('DSL.keyword.range', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({range: {}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {}}))
+        .be.rejectedWith('"range" must be a non-empty object');
     });
 
     it('should reject filters with more than 1 field', () => {
-      return should(dsl.validate({range: {foo: 'foo', bar: 'bar'}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: 'foo', bar: 'bar'}}))
+        .be.rejectedWith('"range" can contain only one attribute');
     });
 
     it('should reject an empty field definition', () => {
-      return should(dsl.validate({range: {foo: {}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: {}}}))
+        .be.rejectedWith('"range.foo" must be a non-empty object');
     });
 
     it('should reject a field definition containing an unrecognized range keyword', () => {
-      return should(dsl.validate({range: {foo: {gt: 42, lt: 113, bar: 'baz'}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: {gt: 42, lt: 113, bar: 'baz'}}}))
+        .be.rejectedWith('"range.foo" accepts only the following attributes : gt, gte, lt, lte');
     });
 
     it('should reject a field definition with a range keyword not containing a number', () => {
-      return should(dsl.validate({range: {foo: {gt: '42', lt: 113}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: {gt: '42', lt: 113}}}))
+        .be.rejectedWith('"range.foo.gt" must be a number');
     });
 
     it('should reject a field definition containing more than 1 lower boundary', () => {
-      return should(dsl.validate({range: {foo: {gt: 42, gte: 13, lt: 113}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: {gt: 42, gte: 13, lt: 113}}}))
+        .be.rejectedWith('"range.foo:" only 1 lower boundary allowed');
     });
 
     it('should reject a field definition containing more than 1 upper boundary', () => {
-      return should(dsl.validate({range: {foo: {gt: 42, lt: 113, lte: 200}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: {gt: 42, lt: 113, lte: 200}}}))
+        .be.rejectedWith('"range.foo:" only 1 upper boundary allowed');
     });
 
     it('should validate a valid range filter', () => {
-      return should(dsl.validate({range: {foo: {gt: 42, lte: 200}}})).be.fulfilledWith();
+      return should(dsl.validate({range: {foo: {gt: 42, lte: 200}}}))
+        .be.fulfilled();
     });
 
     it('should reject a range filter with inverted boundaries', () => {
-      return should(dsl.validate({range: {foo: {lt: 42, gt: 200}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({range: {foo: {lt: 42, gt: 200}}}))
+        .be.rejectedWith('"range.foo:" lower boundary must be strictly inferior to the upper one');
     });
   });
 

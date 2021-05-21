@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 
 const FieldOperand = require('../../lib/storage/objects/fieldOperand');
 const DSL = require('../../');
@@ -31,11 +30,13 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
-      should(() => standardize({geoBoundingBox: {}})).throw(BadRequestError);
+      should(() => standardize({geoBoundingBox: {}}))
+        .throw('"geoBoundingBox" must be a non-empty object');
     });
 
     it('should reject a filter with multiple field attributes', () => {
-      should(() => standardize({geoBoundingBox: {foo: bbox, bar: bbox}})).throw(BadRequestError);
+      should(() => standardize({geoBoundingBox: {foo: bbox, bar: bbox}}))
+        .throw('"geoBoundingBox" can contain only one attribute');
     });
 
     it('should validate a {top, left, bottom, right} bbox', () => {
@@ -125,10 +126,18 @@ describe('DSL.keyword.geoBoundingBox', () => {
       should(result.geospatial).be.an.Object();
       should(result.geospatial.geoBoundingBox).be.an.Object();
       should(result.geospatial.geoBoundingBox.foo).be.an.Object();
-      should(result.geospatial.geoBoundingBox.foo.top).be.approximately(box.top, 10e-7);
-      should(result.geospatial.geoBoundingBox.foo.bottom).be.approximately(box.bottom, 10e-7);
-      should(result.geospatial.geoBoundingBox.foo.left).be.approximately(box.left, 10e-7);
-      should(result.geospatial.geoBoundingBox.foo.right).be.approximately(box.right, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.top)
+        .be.approximately(box.top, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.bottom)
+        .be.approximately(box.bottom, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.left)
+        .be.approximately(box.left, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.right)
+        .be.approximately(box.right, 10e-7);
     });
 
     it('should validate a {top_left: "geohash", bottom_right: "geohash"} bbox', () => {
@@ -147,10 +156,18 @@ describe('DSL.keyword.geoBoundingBox', () => {
       should(result.geospatial).be.an.Object();
       should(result.geospatial.geoBoundingBox).be.an.Object();
       should(result.geospatial.geoBoundingBox.foo).be.an.Object();
-      should(result.geospatial.geoBoundingBox.foo.top).be.approximately(box.top, 10e-7);
-      should(result.geospatial.geoBoundingBox.foo.bottom).be.approximately(box.bottom, 10e-7);
-      should(result.geospatial.geoBoundingBox.foo.left).be.approximately(box.left, 10e-7);
-      should(result.geospatial.geoBoundingBox.foo.right).be.approximately(box.right, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.top)
+        .be.approximately(box.top, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.bottom)
+        .be.approximately(box.bottom, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.left)
+        .be.approximately(box.left, 10e-7);
+
+      should(result.geospatial.geoBoundingBox.foo.right)
+        .be.approximately(box.right, 10e-7);
     });
 
     it('should reject an unrecognized bbox format', () => {
@@ -159,7 +176,8 @@ describe('DSL.keyword.geoBoundingBox', () => {
         bottom_right: '40.01 / -71.12',
       };
 
-      should(() => standardize({geoBoundingBox: {foo: box}})).throw(BadRequestError);
+      should(() => standardize({geoBoundingBox: {foo: box}}))
+        .throw('Unrecognized geo-point format in "geoBoundingBox.foo');
     });
 
     it('should reject a non-convertible bbox point string', () => {
@@ -170,9 +188,8 @@ describe('DSL.keyword.geoBoundingBox', () => {
         right: 'foobar'
       };
 
-      should(() => standardize({geoBoundingBox: {foo: box}})).throw(
-        BadRequestError,
-        { message: `Invalid geoBoundingBox format: ${JSON.stringify(box)}` });
+      should(() => standardize({geoBoundingBox: {foo: box}}))
+        .throw(`Invalid geoBoundingBox format: ${JSON.stringify(box)}`);
     });
   });
 
