@@ -12,15 +12,15 @@ describe('DSL.keyword.nothing', () => {
 
   describe('#storage', () => {
     it('should register in the store', () => {
-      return dsl.register('index', 'collection', {nothing: 'anything'})
-        .then(subscription => {
-          const storeEntry = dsl.storage.foPairs.get('index', 'collection', 'nothing');
+      const subscription = dsl.register('index', 'collection', {
+        nothing: 'anything',
+      });
 
-          should(storeEntry)
-            .be.instanceof(FieldOperand);
-          should(storeEntry.fields.get('all'))
-            .eql([Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]]);
-        });
+      const storeEntry = dsl.storage.foPairs.get('index', 'collection', 'nothing');
+
+      should(storeEntry).be.instanceof(FieldOperand);
+      should(storeEntry.fields.get('all'))
+        .eql([Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0]]);
     });
   });
 });

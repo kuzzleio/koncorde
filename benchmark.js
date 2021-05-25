@@ -47,7 +47,7 @@ function removeFilters() {
   console.log(`\tFilters removal: time = ${(Date.now() - removalStart)/1000}s`);
 }
 
-async function test (name, generator, document) {
+function test (name, generator, document) {
   const baseHeap = v8.getHeapStatistics().total_heap_size;
 
   console.log(`\n> Benchmarking keyword: ${name}`);
@@ -56,7 +56,7 @@ async function test (name, generator, document) {
   for (let i = 0;i < max; i++) {
     // Using the filter name as a collection to isolate
     // benchmark calculation per keyword
-    filters.push((await koncorde.register('i', name, generator())).id);
+    filters.push(koncorde.register('i', name, generator()).id);
   }
 
   const filterEndTime = (Date.now() - filterStartTime) / 1000;
@@ -65,18 +65,18 @@ async function test (name, generator, document) {
   matching(name, document);
 }
 
-async function run () {
-  await test(
+function run () {
+  test(
     'equals',
     () => ({equals: {str: rgen.string(engine, 20)}}),
     { str: rgen.string(engine, 20) });
 
-  await test(
+  test(
     'exists',
     () => ({exists: {field: rgen.string(engine, 20)}}),
     { [rgen.string(engine, 20)]: true });
 
-  await test('geoBoundingBox',
+  test('geoBoundingBox',
     () => {
       const pos = georandom.position();
 
@@ -93,7 +93,7 @@ async function run () {
     },
     { point: [0, 0] });
 
-  await test('geoDistance',
+  test('geoDistance',
     () => {
       const pos = georandom.position();
 
@@ -106,7 +106,7 @@ async function run () {
     },
     { point: [0, 0] });
 
-  await test('geoDistanceRange',
+  test('geoDistanceRange',
     () => {
       const pos = georandom.position();
 
@@ -120,7 +120,7 @@ async function run () {
     },
     { point: [0, 0] });
 
-  await test('geoPolygon (10 vertices)',
+  test('geoPolygon (10 vertices)',
     () => {
       const polygon = georandom
         .polygon(1)
@@ -137,7 +137,7 @@ async function run () {
     },
     { point: [0, 0] });
 
-  await test('in (5 random values)',
+  test('in (5 random values)',
     () => {
       const values = [];
 
@@ -149,7 +149,7 @@ async function run () {
     },
     { str: rgen.string(engine, 20) });
 
-  await test('range (random bounds)',
+  test('range (random bounds)',
     () => {
       const bound = rgen.int(engine);
 

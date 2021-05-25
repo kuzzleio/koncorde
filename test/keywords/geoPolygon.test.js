@@ -5,6 +5,8 @@ const DSL = require('../../');
 
 describe('DSL.keyword.geoPolygon', () => {
   let dsl;
+  let filters;
+  let foPairs;
   let standardize;
   const polygon = {
     points: [
@@ -39,6 +41,8 @@ describe('DSL.keyword.geoPolygon', () => {
 
   beforeEach(() => {
     dsl = new DSL();
+    filters = dsl.storage.filters;
+    foPairs = dsl.storage.foPairs;
     standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
   });
 
@@ -111,99 +115,126 @@ describe('DSL.keyword.geoPolygon', () => {
 
   describe('#storage', () => {
     it('should store a single geoPolygon correctly', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          const
-            subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sub = dsl.register('index', 'collection', {
+        geoPolygon: {
+          foo: polygon,
+        },
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id)).match(new Set([subfilter]));
-        });
+      const subfilter = Array.from(filters.get(sub.id).subfilters)[0];
+      const storage = foPairs.get('index', 'collection', 'geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id))
+        .match(new Set([subfilter]));
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      let sf1;
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          return dsl.register('index', 'collection', {and: [{geoPolygon: {foo: polygon}}, {equals: {foo: 'bar'}}]});
-        })
-        .then(subscription => {
-          const
-            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sub1 = dsl.register('index', 'collection', {
+        geoPolygon: {
+          foo: polygon,
+        },
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id)).match(new Set([sf1, sf2]));
-        });
+      const sub2 = dsl.register('index', 'collection', {
+        and: [
+          {geoPolygon: {foo: polygon}},
+          {equals: {foo: 'bar'}},
+        ],
+      });
+
+      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
+      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      const storage = foPairs.get('index', 'collection', 'geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id))
+        .match(new Set([sf1, sf2]));
     });
 
     it('should add another condition to an already existing field', () => {
-      let cond1, sf1;
+      const sub1 = dsl.register('index', 'collection', {
+        geoPolygon: {
+          foo: polygon,
+        },
+      });
 
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          cond1 = Array.from(sf1.conditions)[0].id;
-          return dsl.register('index', 'collection', {geoBoundingBox: {foo: {topLeft: 'dr5r9ydj2y73', bottomRight: 'drj7teegpus6'}}});
-        })
-        .then(subscription => {
-          const
-            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sub2 = dsl.register('index', 'collection', {
+        geoBoundingBox: {
+          foo: {
+            bottomRight: 'drj7teegpus6',
+            topLeft: 'dr5r9ydj2y73',
+          },
+        },
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
-          should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
-        });
+      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
+      const cond1 = Array.from(sf1.conditions)[0].id;
+      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      const storage = foPairs.get('index', 'collection', 'geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
+      should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id))
+        .match(new Set([sf2]));
     });
   });
 
   describe('#matching', () => {
     it('should match a point inside the polygon', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {latLon: [43.6073913, 3.9109057]}});
+      const sub = dsl.register('index', 'collection', {
+        geoPolygon: {foo: polygon},
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: {latLon: [43.6073913, 3.9109057]},
+      });
+
+      should(result).eql([sub.id]);
     });
 
     it('should match a point exactly on a polygon corner', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {latLon: polygon.points[0]}});
+      const sub = dsl.register('index', 'collection', {
+        geoPolygon: {foo: polygon},
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: {latLon: polygon.points[0]},
+      });
+
+      should(result).eql([sub.id]);
     });
 
     it('should not match if a point is outside the bbox', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {foo: {lat: polygon.points[0][0] + 10e-6, lon: polygon.points[0][1] + 10e-6}});
+      dsl.register('index', 'collection', {geoPolygon: {foo: polygon}});
+      const result = dsl.test('index', 'collection', {
+        foo: {
+          lat: polygon.points[0][0] + 10e-6,
+          lon: polygon.points[0][1] + 10e-6,
+        },
+      });
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document does not contain a geopoint', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {bar: {latLon: polygon.points[0]}});
+      dsl.register('index', 'collection', {geoPolygon: {foo: polygon}});
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = dsl.test('index', 'collection', {
+        bar: { latLon: polygon.points[0] },
+      });
+
+      should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {foo: '43.6331979 / 3.8433703'});
+      dsl.register('index', 'collection', {geoPolygon: {foo: polygon}});
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: '43.6331979 / 3.8433703',
+      });
+
+      should(result).be.an.Array().and.be.empty();
     });
   });
 });

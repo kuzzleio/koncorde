@@ -7,103 +7,172 @@ const DSL = require('../../');
 
 describe('DSL.keyword.notregexp', () => {
   let dsl;
+  let filters;
+  let foPairs;
 
   beforeEach(() => {
     dsl = new DSL();
+    filters = dsl.storage.filters;
+    foPairs = dsl.storage.foPairs;
   });
 
   describe('#storage', () => {
     it('should invoke regexp storage function', () => {
       const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
 
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const
-            storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
-            condition = new RegexpCondition(
-              { regExpEngine: 're2' },
-              '^\\w{2}oba\\w$',
-              Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-              'i'
-            );
+      const subscription = dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(spy.called).be.true();
+      const storage = foPairs.get('index', 'collection', 'notregexp');
+      const condition = new RegexpCondition(
+        { regExpEngine: 're2' },
+        '^\\w{2}oba\\w$',
+        Array.from(filters.get(subscription.id).subfilters)[0],
+        'i');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(condition.stringValue)).eql(condition);
-        });
+      should(spy.called).be.true();
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(condition.stringValue))
+        .eql(condition);
     });
 
     it('should invoke regexp storage function (js engine)', () => {
       dsl = new DSL({ regExpEngine: 'js' });
       const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
 
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const
-            storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
-            condition = new RegexpCondition(
-              { regExpEngine: 'js' },
-              '^\\w{2}oba\\w$',
-              Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-              'i'
-            );
+      const subscription = dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(spy.called).be.true();
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp');
+      const condition = new RegexpCondition(
+        { regExpEngine: 'js' },
+        '^\\w{2}oba\\w$',
+        Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
+        'i');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(condition.stringValue)).eql(condition);
-        });
+      should(spy.called).be.true();
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(condition.stringValue))
+        .eql(condition);
     });
   });
 
   describe('#matching', () => {
     it('should not match a document if its registered field matches the regexp', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('index', 'collection', {foo: 'foobar'})).be.an.Array().and.be.empty();
-        });
+      dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      should(dsl.test('index', 'collection', {foo: 'foobar'}))
+        .be.an.Array().and.be.empty();
     });
 
     it('should match a document if its registered field does not match the regexp', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: 'bar'});
+      const subscription = dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {foo: 'bar'});
+
+      should(result).eql([subscription.id]);
     });
 
     it('should match if the document does not contain the registered field', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('index', 'collection', {bar: 'qux'}))
-            .be.an.Array()
-            .and.have.length(1);
-        });
+      dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      should(dsl.test('index', 'collection', {bar: 'qux'}))
+        .be.an.Array()
+        .and.have.length(1);
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {'foo.bar.baz': {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {bar: {baz: 'bar'}}});
+      const subscription = dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            'foo.bar.baz': {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {foo: {bar: {baz: 'bar'}}});
+
+      should(result).eql([subscription.id]);
     });
 
     it('should not match if the document is in another index', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('foobar', 'collection', {foo: 'qux'})).be.an.Array().and.empty();
-        });
+      dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      should(dsl.test('foobar', 'collection', {foo: 'qux'}))
+        .be.an.Array().and.empty();
     });
 
     it('should not match if the document is in another collection', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('index', 'foobar', {foo: 'qux'})).be.an.Array().and.empty();
-        });
+      dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      should(dsl.test('index', 'foobar', {foo: 'qux'}))
+        .be.an.Array().and.empty();
     });
   });
 
@@ -111,12 +180,21 @@ describe('DSL.keyword.notregexp', () => {
     it('should invoke regexp removal function', () => {
       const spy = sinon.spy(dsl.storage.removeOperand, 'regexp');
 
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(spy.called).be.true();
-          should(dsl.storage.foPairs._cache).be.empty();
-        });
+      const subscription = dsl.register('index', 'collection', {
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      dsl.remove(subscription.id);
+
+      should(spy.called).be.true();
+      should(dsl.storage.foPairs._cache).be.empty();
     });
   });
 });
