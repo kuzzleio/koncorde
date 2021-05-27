@@ -22,12 +22,12 @@ const rgen = {
 let filters = [];
 const koncorde = new Koncorde();
 
-const matching = (name, document) => {
+const matching = document => {
   const suite = new Benchmark.Suite();
 
   suite
     .add('\tMatching', () => {
-      koncorde.test('i', name, document);
+      koncorde.test(document);
     })
     .on('cycle', event => {
       console.log(String(event.target));
@@ -56,7 +56,7 @@ function test (name, generator, document) {
   for (let i = 0;i < max; i++) {
     // Using the filter name as a collection to isolate
     // benchmark calculation per keyword
-    filters.push(koncorde.register('i', name, generator()).id);
+    filters.push(koncorde.register(generator()));
   }
 
   const filterEndTime = (Date.now() - filterStartTime) / 1000;

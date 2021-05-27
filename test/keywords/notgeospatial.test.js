@@ -24,7 +24,7 @@ describe('DSL.keyword.notgeospatial', () => {
 
   describe('#storage', () => {
     it('should store a single geospatial keyword correctly', () => {
-      const sub = dsl.register('index', 'collection', {
+      const id = dsl.register({
         not: {
           geoDistance: {
             foo: {
@@ -36,19 +36,19 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      const storage = foPairs.get('index', 'collection', 'notgeospatial');
-      const subfilter = Array.from(filters.get(sub.id).subfilters)[0];
-      const id = Array.from(subfilter.conditions)[0].id;
+      const storage = foPairs.get('notgeospatial');
+      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const condId = Array.from(subfilter.conditions)[0].id;
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.custom.index).be.an.Object();
       should(storage.fields.get('foo')).be.instanceOf(Map);
       should(storage.fields.get('foo').size).be.eql(1);
-      should(storage.fields.get('foo').get(id)).eql(new Set([subfilter]));
+      should(storage.fields.get('foo').get(condId)).eql(new Set([subfilter]));
     });
 
     it('should add another condition to an already tested field', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({
         not: {
           geoDistance: {
             foo: {
@@ -60,7 +60,7 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = dsl.register({
         not: {
           geoBoundingBox: {
             foo: {
@@ -73,18 +73,18 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      const subfilter1 = Array.from(filters.get(sub1.id).subfilters)[0];
-      const subfilter2 = Array.from(filters.get(sub2.id).subfilters)[0];
-      const id1 = Array.from(subfilter1.conditions)[0].id;
-      const id2 = Array.from(subfilter2.conditions)[0].id;
-      const storage = foPairs.get('index', 'collection', 'notgeospatial');
+      const subfilter1 = Array.from(filters.get(id1).subfilters)[0];
+      const subfilter2 = Array.from(filters.get(id2).subfilters)[0];
+      const condId1 = Array.from(subfilter1.conditions)[0].id;
+      const condId2 = Array.from(subfilter2.conditions)[0].id;
+      const storage = foPairs.get('notgeospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.custom.index).be.an.Object();
       should(storage.fields.get('foo')).be.instanceOf(Map);
       should(storage.fields.get('foo').size).be.eql(2);
-      should(storage.fields.get('foo').get(id1)).eql(new Set([subfilter1]));
-      should(storage.fields.get('foo').get(id2)).eql(new Set([subfilter2]));
+      should(storage.fields.get('foo').get(condId1)).eql(new Set([subfilter1]));
+      should(storage.fields.get('foo').get(condId2)).eql(new Set([subfilter2]));
     });
 
     it('should add another subfilter to an already tested shape', () => {
@@ -100,17 +100,17 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const sub1 = dsl.register('index', 'collection', filter);
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = dsl.register(filter);
+      const id2 = dsl.register({
         and: [
-          {equals: {bar: 'baz'}},
+          { equals: {bar: 'baz' } },
           filter,
         ],
       });
 
-      const storage = foPairs.get('index', 'collection', 'notgeospatial');
-      const subfilter = Array.from(filters.get(sub1.id).subfilters)[0];
-      const subfilter2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      const storage = foPairs.get('notgeospatial');
+      const subfilter = Array.from(filters.get(id1).subfilters)[0];
+      const subfilter2 = Array.from(filters.get(id2).subfilters)[0];
       const id = Array.from(subfilter.conditions)[0].id;
 
       should(storage).be.instanceOf(FieldOperand);
@@ -129,7 +129,7 @@ describe('DSL.keyword.notgeospatial', () => {
     let polygonId;
 
     beforeEach(() => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         not: {
           geoBoundingBox: {
             foo: {
@@ -142,7 +142,7 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      let subscription = dsl.register('index', 'collection', {
+      distanceId = dsl.register({
         not: {
           geoDistance: {
             foo: {
@@ -154,9 +154,7 @@ describe('DSL.keyword.notgeospatial', () => {
         }
       });
 
-      distanceId = subscription.id;
-
-      subscription = dsl.register('index', 'collection', {
+      distanceRangeId = dsl.register({
         not: {
           geoDistanceRange: {
             foo: {
@@ -169,33 +167,29 @@ describe('DSL.keyword.notgeospatial', () => {
         }
       });
 
-      distanceRangeId = subscription.id;
-
-      subscription = dsl.register('index', 'collection', {
+      polygonId = dsl.register({
         not: {
           geoPolygon: {
             foo: {
               points: [
-                {latLon: [43.6021299, 3.8989713]},
-                {latLon: [43.6057389, 3.8968173]},
-                {latLon: [43.6092889, 3.8970423]},
-                {latLon: [43.6100359, 3.9040853]},
-                {latLon: [43.6069619, 3.9170343]},
-                {latLon: [43.6076479, 3.9230133]},
-                {latLon: [43.6038779, 3.9239153]},
-                {latLon: [43.6019189, 3.9152403]},
-                {latLon: [43.6036049, 3.9092313]},
+                { latLon: [ 43.6021299, 3.8989713 ] },
+                { latLon: [ 43.6057389, 3.8968173 ] },
+                { latLon: [ 43.6092889, 3.8970423 ] },
+                { latLon: [ 43.6100359, 3.9040853 ] },
+                { latLon: [ 43.6069619, 3.9170343 ] },
+                { latLon: [ 43.6076479, 3.9230133 ] },
+                { latLon: [ 43.6038779, 3.9239153 ] },
+                { latLon: [ 43.6019189, 3.9152403 ] },
+                { latLon: [ 43.6036049, 3.9092313 ] },
               ]
             }
           }
         }
       });
-
-      polygonId = subscription.id;
     });
 
     it('should match shapes not containing the provided point', () => {
-      let result = dsl.test('index', 'collection', {
+      let result = dsl.test({
         foo: {
           lat: 43.6073913,
           lon: 3.9109057,
@@ -206,18 +200,18 @@ describe('DSL.keyword.notgeospatial', () => {
     });
 
     it('should return an empty array if the provided point is invalid', () => {
-      should(dsl.test('index', 'collection', {foo: {lat: 'foo', lon: 'bar'}}))
+      should(dsl.test({ foo: { lat: 'foo', lon: 'bar' } }))
         .be.an.Array().and.be.empty();
     });
 
     it('should return all subscriptions if the document does not contain the registered field', () => {
-      should(dsl.test('index', 'collection', {bar: {lat: 43.6073913, lon: 3.9109057}}))
+      should(dsl.test({ bar: { lat: 43.6073913, lon: 3.9109057 } }))
         .be.an.Array()
         .and.has.length(4);
     });
 
     it('should reject a shape if the point is right on its border', () => {
-      const result = dsl.test('index', 'collection', {
+      const result = dsl.test({
         foo: {
           lat: 43.5810609,
           lon: 3.8433703,
@@ -247,26 +241,24 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const subscription = dsl.register('index', 'collection', filter);
-
-      filterId = subscription.id;
-      storage = foPairs.get('index', 'collection', 'notgeospatial');
+      filterId = dsl.register(filter);
+      storage = foPairs.get('notgeospatial');
     });
 
     it('should destroy the whole structure when removing the last item', () => {
       dsl.remove(filterId);
-      should(foPairs._cache).be.empty();
+      should(foPairs).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = dsl.register({
         and: [
           filter,
-          {equals: {foo: 'bar'}},
+          { equals: { foo: 'bar' } },
         ],
       });
 
-      const sf = Array.from(filters.get(subscription.id).subfilters)[0];
+      const sf = Array.from(filters.get(id).subfilters)[0];
       dsl.remove(filterId);
 
       should(storage).be.instanceOf(FieldOperand);
@@ -287,14 +279,14 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const subscription = dsl.register('index', 'collection', geofilter);
-      const subfilter = Array.from(filters.get(subscription.id).subfilters)[0];
-      const id = Array.from(subfilter.conditions)[0].id;
+      const id = dsl.register(geofilter);
+      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const condId = Array.from(subfilter.conditions)[0].id;
 
       dsl.remove(filterId);
 
       should(storage).be.instanceOf(FieldOperand);
-      should(storage.fields.get('foo').get(id)).match(new Set([subfilter]));
+      should(storage.fields.get('foo').get(condId)).match(new Set([subfilter]));
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
@@ -310,17 +302,17 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const subscription = dsl.register('index', 'collection', geofilter);
-      const subfilter = Array.from(filters.get(subscription.id).subfilters)[0];
-      const id = Array.from(subfilter.conditions)[0].id;
-      const operand = foPairs.get('index', 'collection', 'notgeospatial');
+      const id = dsl.register(geofilter);
+      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const condId = Array.from(subfilter.conditions)[0].id;
+      const operand = foPairs.get('notgeospatial');
 
       should(operand.fields).have.keys('foo', 'bar');
 
       dsl.remove(filterId);
 
       should(storage).be.instanceOf(FieldOperand);
-      should(storage.fields.get('bar').get(id)).match(new Set([subfilter]));
+      should(storage.fields.get('bar').get(condId)).match(new Set([subfilter]));
     });
   });
 });

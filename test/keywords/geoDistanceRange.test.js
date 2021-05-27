@@ -204,7 +204,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
   describe('#storage', () => {
     it('should store a single geoDistanceRange correctly', () => {
-      const sub = dsl.register('index', 'collection', {
+      const id = dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -212,8 +212,8 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const subfilter = Array.from(filters.get(sub.id).subfilters)[0];
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const storage = foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id))
@@ -221,24 +221,23 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
           to: '10km',
         },
       });
-
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = dsl.register({
         and: [
           { geoDistanceRange: { foo: point, from: '1km', to: '10km' } },
           { equals: { foo: 'bar' } },
         ],
       });
 
-      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
-      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const sf1 = Array.from(filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(filters.get(id2).subfilters)[0];
+      const storage = foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id))
@@ -246,7 +245,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should add another condition to an already existing field', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -254,7 +253,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '10km',
@@ -262,10 +261,10 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
+      const sf1 = Array.from(filters.get(id1).subfilters)[0];
       const cond1 = Array.from(sf1.conditions)[0].id;
-      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const sf2 = Array.from(filters.get(id2).subfilters)[0];
+      const storage = foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
@@ -276,7 +275,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
   describe('#matching', () => {
     it('should match a point inside the circle', () => {
-      const sub = dsl.register('index', 'collection', {
+      const id = dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -284,18 +283,18 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {
+      const result = dsl.test({
         foo: {
           lat: 43.634,
           lon: 3.9,
         },
       });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should not match if a point is outside the outer radius', () => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -303,7 +302,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {
+      const result = dsl.test({
         foo: {
           lat: point.lat,
           lon: 5,
@@ -314,7 +313,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should not match if a point is inside the inner radius', () => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -322,13 +321,13 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {foo: point});
+      const result = dsl.test({ foo: point });
 
       should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document does not contain the searched geopoint', () => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -336,13 +335,13 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {bar: point});
+      const result = dsl.test({ bar: point });
 
       should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -350,9 +349,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {
-        foo: '43.6331979 / 3.8433703',
-      });
+      const result = dsl.test({ foo: '43.6331979 / 3.8433703' });
 
       should(result).be.an.Array().and.be.empty();
     });

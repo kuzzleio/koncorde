@@ -13,7 +13,6 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
 
   - [Introduction](#introduction)
   - [Install](#install)
-  - [Index and collection parameters](#index-and-collection-parameters)
   - [Filter unique identifier](#filter-unique-identifier)
   - [Field syntax](#field-syntax)
   - [Filter operands](#filter-operands)
@@ -94,39 +93,23 @@ const filter = {
     }
 };
 
-// More on index/collection parameters later
-const result = engine.register('index', 'collection', filter);
+const filterId = engine.register(filter);
 
 // The filter identifier depends on a random seed (see below)
 // For now, let's pretend its value is 5db7052792b18cb2
-console.log(`Filter identifier: ${result.id}`);
+console.log(`Filter identifier: ${filterId}`);
 
 // *** Now, let's test data with our engine ***
 
 // Returns: [] (distance is greater than 500m)
-console.log(engine.test('index', 'collection', {
-  position: {
-    lat: 43.6073913,
-    lon: 5.7,
-  },
-}));
+console.log(engine.test({ position: { lat: 43.6073913, lon: 5.7 } }));
 
 // Returns: ['5db7052792b18cb2']
-console.log(engine.test('index', 'collection', {
-  position: {
-    lat: 43.608,
-    lon: 3.905,
-  },
-}));
+console.log(engine.test({ position: { lat: 43.608, lon: 3.905 } }));
 
 
 // Returns: [] (the geopoint is not stored in a "position" field)
-console.log(engine.test('index', 'collection', {
-  point: {
-    lat: 43.608,
-    lon: 3.905,
-  },
-}));
+console.log(engine.test({ point: { lat: 43.608, lon: 3.905 } }));
 ```
 
 ## Install
@@ -141,25 +124,11 @@ npm install --save koncorde
 ```
 
 
-## Index and collection parameters
-
-Though it can be used in a variety of ways, most use cases for a data percolation engine imply to put it on top of some kind of storage database, dealing with large quantities of data.
-And the most common way to store data in a database (relational, NoSQL or whatnot), is in some kind of collection of data, regrouped in data indexes.
-
-Even though this engine can be instantiated multiple times just fine, each instance has a constant overhead cost which may quickly add up.
-
-To allow using this engine on top of databases, with dozens or even hundreds of collections and/or indexes, Koncorde emulates that kind of structure, making it able to handle large numbers of indexed filters, dispatched across a complex storage system.
-
-Using different `index` and `collection` parameters will make Koncorde effectively act as if it was looking for data in a database.
-
-If you do not need different indexes and/or collections, just use constants, as in the above example.
-
 ## Filter unique identifier
 
 Filter identifiers are unique hashes, dependant on the following:
 
 * filters in their [canonicalized form](https://en.wikipedia.org/wiki/Canonicalization)
-* the index and collection parameters (see [above](#index-and-collection-parameters))
 * a seed (see the engine's [constructor](#constructor) documentation)
 
 This means that:
@@ -180,13 +149,14 @@ const seed = Buffer.from(
 const engine = new Koncorde({seed});
 
 // filter1 and filter2 are equivalent
-const filter1 = {
+const filterId1 = engine.register({
   and: [
     { equals: { firstname: 'Grace' } },
     { exists: { field: 'hobby' } },
   ]
-};
-const filter2 = {
+});
+
+const filterId2 = engine.register({
   not: {
     bool: {
       should_not: [
@@ -195,14 +165,11 @@ const filter2 = {
       ],
     },
   },
-};
-
-const subscription1 = engine.register('index', 'collection', filter1);
-const subscription2 = engine.register('index', 'collection', filter2);
+});
 
 // Prints:
 // Filter ID 1: b4ee9ece4d7b1398, Filter ID 2: b4ee9ece4d7b1398, Equals: true
-console.log(`Filter ID 1: ${subscription1.id}, Filter ID 2: ${subscription2.id}, Equals: ${subscription1.id === subscription2.id}`);
+console.log(`Filter ID 1: ${filterId1}, Filter ID 2: ${filterId2}, Equals: ${filterId1 === filterId2}`);
 ```
 
 ## Field syntax

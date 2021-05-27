@@ -70,11 +70,9 @@ describe('DSL.keyword.equals', () => {
 
   describe('#storage', () => {
     it('should store a single condition correctly', () => {
-      const subscription = dsl.register('index', 'collection', {
-        equals: { foo: 'bar' },
-      });
-      const subfilter = getSubfilter(subscription.id);
-      const storage = dsl.storage.foPairs.get('index', 'collection', 'equals');
+      const id = dsl.register({ equals: { foo: 'bar' } });
+      const subfilter = getSubfilter(id);
+      const storage = dsl.storage.foPairs.get('equals');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo'))
@@ -83,16 +81,12 @@ describe('DSL.keyword.equals', () => {
     });
 
     it('should store multiple conditions on the same field correctly', () => {
-      let subscription = dsl.register('index', 'collection', {
-        equals: {foo: 'bar'},
-      });
+      const id1 = dsl.register({ equals: {foo: 'bar'} });
+      const id2 = dsl.register({equals: {foo: 'qux'}});
 
-      const barSubfilter = getSubfilter(subscription.id);
-
-      subscription = dsl.register('index', 'collection', {equals: {foo: 'qux'}});
-
-      const quxSubfilter = getSubfilter(subscription.id);
-      const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
+      const barSubfilter = getSubfilter(id1);
+      const quxSubfilter = getSubfilter(id2);
+      const equals = dsl.storage.foPairs.get('equals');
 
       should(equals).be.an.instanceof(FieldOperand);
       should(equals.fields.get('foo'))
@@ -102,20 +96,17 @@ describe('DSL.keyword.equals', () => {
     });
 
     it('should store multiple subfilters on the same condition correctly', () => {
-      let subscription = dsl.register('index', 'collection', {
-        equals: {foo: 'bar'},
-      });
-      const barSubfilter = getSubfilter(subscription.id);
-
-      subscription = dsl.register('index', 'collection', {
+      const id1 = dsl.register({ equals: {foo: 'bar'} });
+      const id2 = dsl.register({
         and: [
           { equals: { baz: 'qux' } },
           { equals: { foo: 'bar' } }
         ]
       });
 
-      const multiSubfilter = getSubfilter(subscription.id);
-      const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
+      const barSubfilter = getSubfilter(id1);
+      const multiSubfilter = getSubfilter(id2);
+      const equals = dsl.storage.foPairs.get('equals');
 
       should(equals).be.an.instanceof(FieldOperand);
       should(equals.fields.get('foo'))
@@ -127,116 +118,87 @@ describe('DSL.keyword.equals', () => {
 
   describe('#matching', () => {
     it('should match a document with the subscribed keyword', () => {
-      const subscription = dsl.register('index', 'collection', {
-        equals: {foo: 'bar'},
-      });
-      const result = dsl.test('index', 'collection', {foo: 'bar'});
+      const id = dsl.register({ equals: {foo: 'bar'} });
+      const result = dsl.test({foo: 'bar'});
 
       should(result).be.an.Array().and.not.empty();
-      should(result[0]).be.eql(subscription.id);
+      should(result[0]).be.eql(id);
     });
 
     it('should match a document on its provided id', () => {
-      const subscription = dsl.register('index', 'collection', {
-        equals: {_id: 'foo'},
-      });
-      const result = dsl.test('index', 'collection', {foo: 'bar'}, 'foo');
+      const id = dsl.register({ equals: {_id: 'foo'} });
+      const result = dsl.test({foo: 'bar'}, 'foo');
 
       should(result).be.an.Array().and.not.empty();
-      should(result[0]).be.eql(subscription.id);
+      should(result[0]).be.eql(id);
     });
 
     it('should not match if the document contains the field with another value', () => {
-      dsl.register('index', 'collection', {equals: {foo: 'bar'}});
+      dsl.register({ equals: { foo: 'bar' } });
 
-      should(dsl.test('index', 'collection', {foo: 'qux'}))
-        .be.an.Array()
-        .and.be.empty();
+      should(dsl.test({foo: 'qux'})).be.an.Array().and.be.empty();
     });
 
     it('should not match if the document contains another field with the registered value', () => {
-      dsl.register('index', 'collection', {equals: {foo: 'bar'}});
-      should(dsl.test('index', 'collection', {qux: 'bar'}))
-        .be.an.Array()
-        .and.be.empty();
+      dsl.register({ equals: { foo: 'bar' } });
+      should(dsl.test({ qux: 'bar' })).be.an.Array().and.be.empty();
     });
 
     // see https://github.com/kuzzleio/koncorde/issues/13
     it('should skip the matching if the document tested property is not of the same type than the known values', () => {
-      dsl.register('index', 'collection', {equals: {foo: 'bar'}});
+      dsl.register({ equals: { foo: 'bar' } });
 
-      should(dsl.test('index', 'collection', {foo: ['bar']}))
-        .be.an.Array().and.empty();
+      should(dsl.test({ foo: [ 'bar' ] })).be.an.Array().and.empty();
 
-      should(dsl.test('index', 'collection', {foo: {bar: true}}))
-        .be.an.Array().and.empty();
+      should(dsl.test({ foo: { bar: true } })).be.an.Array().and.empty();
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      const subscription = dsl.register('index', 'collection', {
-        equals: {'foo.bar.baz': 'qux'},
-      });
-      const result = dsl.test('index', 'collection', {foo: {bar: {baz: 'qux'}}});
+      const id = dsl.register({ equals: {'foo.bar.baz': 'qux'} });
+      const result = dsl.test({ foo: { bar: { baz: 'qux' } } });
 
       should(result).be.an.Array().and.not.empty();
-      should(result[0]).be.eql(subscription.id);
-    });
-
-    it('should not match if the document is in another index', () => {
-      dsl.register('index', 'collection', {equals: {foo: 'bar'}});
-      should(dsl.test('foobar', 'collection', {foo: 'qux'}))
-        .be.an.Array().and.empty();
-    });
-
-    it('should not match if the document is in another collection', () => {
-      dsl.register('index', 'collection', {equals: {foo: 'bar'}});
-      should(dsl.test('index', 'foobar', {foo: 'qux'}))
-        .be.an.Array().and.empty();
+      should(result[0]).be.eql(id);
     });
 
     it('should match 0 equality', () => {
-      dsl.register('i', 'c', {equals: {a: 0}});
-      should(dsl.test('i', 'c', {a: 0})).be.an.Array().length(1);
+      dsl.register({ equals: { a: 0 } });
+      should(dsl.test({ a: 0 })).be.an.Array().length(1);
     });
 
     it('should match false equality', () => {
-      dsl.register('i', 'c', {equals: {a: false}});
-      should(dsl.test('i', 'c', {a: false})).be.an.Array().length(1);
+      dsl.register({ equals: { a: false } });
+      should(dsl.test({ a: false })).be.an.Array().length(1);
     });
 
     it('should match null equality', () => {
-      dsl.register('i', 'c', {equals: {a: null}});
-      should(dsl.test('i', 'c', {a: null})).be.an.Array().length(1);
+      dsl.register({ equals: { a: null } });
+      should(dsl.test({ a: null })).be.an.Array().length(1);
     });
   });
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      const subscription = dsl.register('index', 'collection', {
-        equals: {foo: 'bar'},
-      });
+      const id = dsl.register({ equals: { foo: 'bar' } });
 
-      dsl.remove(subscription.id);
+      dsl.remove(id);
 
-      should(dsl.storage.foPairs._cache).be.an.Object().and.be.empty();
+      should(dsl.storage.foPairs).be.an.Object().and.be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
-      const sub1 = dsl.register('index', 'collection', {
-        equals: {foo: 'bar'},
-      });
-
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({ equals: { foo: 'bar' } });
+      const id2 = dsl.register({
         and: [
-          {equals: {baz: 'qux'}},
-          {equals: {foo: 'bar'}},
+          { equals: { baz: 'qux' } },
+          { equals: { foo: 'bar' } },
         ],
       });
 
-      dsl.remove(sub1.id);
+      dsl.remove(id1);
 
-      const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
-      const multiSubfilter = getSubfilter(sub2.id);
+      const equals = dsl.storage.foPairs.get('equals');
+      const multiSubfilter = getSubfilter(id2);
 
       should(equals).be.an.instanceof(FieldOperand);
       should(equals.fields.get('foo'))
@@ -246,18 +208,18 @@ describe('DSL.keyword.equals', () => {
     });
 
     it('should remove a value from the list if its last subfilter is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {equals: {foo: 'bar'}});
-      const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
-      const barSubfilter = getSubfilter(sub1.id);
+      const id1 = dsl.register({ equals: { foo: 'bar' } });
+      const id2 = dsl.register({ equals: { foo: 'qux' } });
 
-      const sub2 = dsl.register('index', 'collection', {equals: {foo: 'qux'}});
+      const equals = dsl.storage.foPairs.get('equals');
+      const barSubfilter = getSubfilter(id1);
 
       should(equals.fields.get('foo').get('bar')).eql(new Set([barSubfilter]));
 
       should(equals.fields.get('foo').get('qux'))
-        .eql(new Set([getSubfilter(sub2.id)]));
+        .eql(new Set([getSubfilter(id2)]));
 
-      dsl.remove(sub2.id);
+      dsl.remove(id2);
 
       should(equals).be.an.instanceof(FieldOperand);
       should(equals.fields.get('foo'))
@@ -266,16 +228,16 @@ describe('DSL.keyword.equals', () => {
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {equals: {foo: 'bar'}});
-      const barSubfilter = getSubfilter(sub1.id);
+      const id1 = dsl.register({ equals: { foo: 'bar' } });
+      const id2 = dsl.register({ equals: { baz: 'qux' } });
 
-      const sub2 = dsl.register('index', 'collection', {equals: {baz: 'qux'}});
-      const equals = dsl.storage.foPairs.get('index', 'collection', 'equals');
+      const barSubfilter = getSubfilter(id1);
+      const equals = dsl.storage.foPairs.get('equals');
 
       should(equals.fields.get('baz'))
-        .have.value('qux', new Set([getSubfilter(sub2.id)]));
+        .have.value('qux', new Set([getSubfilter(id2)]));
 
-      dsl.remove(sub2.id);
+      dsl.remove(id2);
 
       should(equals).be.an.instanceof(FieldOperand);
 
@@ -283,19 +245,6 @@ describe('DSL.keyword.equals', () => {
         .have.value('bar', new Set([barSubfilter]));
 
       should(equals.fields).not.have.key('baz');
-    });
-
-    it('should remove a single collection if other collections are registered', () => {
-      dsl.register('index', 'collection', {equals: {foo: 'bar'}});
-      const sub = dsl.register('index', 'collection2', {equals: {foo: 'bar'}});
-
-      should(dsl.storage.foPairs.has('index', 'collection')).be.true();
-      should(dsl.storage.foPairs.has('index', 'collection2')).be.true();
-
-      dsl.remove(sub.id);
-
-      should(dsl.storage.foPairs.has('index', 'collection')).be.true();
-      should(dsl.storage.foPairs.has('index', 'collection2')).be.false();
     });
   });
 });

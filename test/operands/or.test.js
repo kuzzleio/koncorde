@@ -68,55 +68,51 @@ describe('DSL.operands.or', () => {
 
   describe('#matching', () => {
     it('should match a document if at least 1 condition is fulfilled', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = dsl.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      const result = dsl.test('index', 'collection', {
-        foo: 'foo',
-        bar: 'baz',
-        baz: 13,
-      });
+      const result = dsl.test({ foo: 'foo', bar: 'baz', baz: 13 });
 
-      should(result).eql([subscription.id]);
+      should(result).eql([id]);
     });
 
     it('should not match if the document misses all conditions', () => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      should(dsl.test('index', 'collection', {foo: 'foo', bar: 'baz', baz: 42}))
+      should(dsl.test({ foo: 'foo', bar: 'baz', baz: 42 }))
         .be.an.Array().and.empty();
     });
   });
 
   describe('#removal', () => {
     it('should destroy all associated keywords to an OR operand', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = dsl.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      dsl.register('index', 'collection', {exists: {field: 'foo'}});
+      dsl.register({ exists: { field: 'foo' } });
 
-      dsl.remove(subscription.id);
+      dsl.remove(id);
 
-      should(dsl.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
-      should(dsl.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
-      should(dsl.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
-      should(dsl.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
+      should(dsl.storage.foPairs.get('exists')).be.an.Object();
+      should(dsl.storage.foPairs.get('equals')).be.undefined();
+      should(dsl.storage.foPairs.get('notexists')).be.undefined();
+      should(dsl.storage.foPairs.get('range')).be.undefined();
     });
   });
 });

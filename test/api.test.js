@@ -16,7 +16,6 @@ describe('DSL API', () => {
     it('should expose the expected methods', () => {
       should(dsl.validate).be.a.Function();
       should(dsl.register).be.a.Function();
-      should(dsl.exists).be.a.Function();
       should(dsl.getFilterIds).be.a.Function();
       should(dsl.test).be.a.Function();
       should(dsl.remove).be.a.Function();
@@ -45,20 +44,18 @@ describe('DSL API', () => {
 
       {
         // valid params
-        const
-          seed = Buffer.from('01234567890123456789012345678901'),
-          engine = new Dsl({
-            seed,
-            maxMinTerms: 3,
-            regExpEngine: 'js'
-          });
+        const seed = Buffer.from('01234567890123456789012345678901');
+        const engine = new Dsl({
+          seed,
+          maxMinTerms: 3,
+          regExpEngine: 'js',
+        });
 
-        should(engine.config)
-          .eql({
-            seed,
-            maxMinTerms: 3,
-            regExpEngine: 'js'
-          });
+        should(engine.config).eql({
+          seed,
+          maxMinTerms: 3,
+          regExpEngine: 'js',
+        });
       }
 
     });
@@ -66,103 +63,78 @@ describe('DSL API', () => {
 
   describe('#validate', () => {
     it('should resolve to "true" if a filter is valid', () => {
-      should(() => dsl.validate({equals: {foo: 'bar'}})).not.throw();
+      should(() => dsl.validate({ equals: { foo: 'bar' } })).not.throw();
     });
 
     it('should reject if a filter is not valid', () => {
-      should(() => dsl.validate({equals: {foo: 'bar'}, exists: 'qux'})).throw();
+      should(() => dsl.validate({ equals: { foo: 'bar' }, exists: 'qux'}))
+        .throw();
     });
   });
 
   describe('#register', () => {
     it('should reject if a filter is not valid', () => {
-      should(() => dsl.register('i', 'c', {foo: 'bar'})).throw();
+      should(() => dsl.register({ foo: 'bar' })).throw();
     });
 
     it('should resolve to a cluster diff object if the registration succeeds', () => {
-      const result = dsl.register('i', 'c', {
+      const result = dsl.register({
         not: {
           and: [
-            {exists: 'bar'},
-            {equals: {foo: 'bar'}},
+            { exists: 'bar' },
+            { equals: { foo: 'bar' } },
           ],
         },
       });
 
-      should(result).be.an.Object();
-      should(result.diff).be.an.Object().and.match({
-        index: 'i',
-        collection: 'c',
-        filters: [
-          [ { exists: { path: 'bar', array: false, value: null }, not: true } ],
-          [ { equals: { foo: 'bar' }, not: true } ]
-        ]
-      });
-
-      should(result.id).be.a.String();
+      should(result).be.a.String();
     });
 
-    it('should resolve to a "no diff" object if the room already exists', () => {
-      let result = dsl.register('i', 'c', {
+    it('should resolve to the same id for equivalent filters', () => {
+      const id1 = dsl.register({
         not: {
           and: [
-            {exists: 'bar'},
-            {equals: {foo: 'bar'}},
+            { exists: 'bar' },
+            { equals: { foo: 'bar' } },
           ],
         },
       });
 
-      const id = result.id;
-
-      result = dsl.register('i', 'c', {
+      const id2 = dsl.register({
         or: [
-          {not: { exists: 'bar'}},
-          {not: { equals: { foo: 'bar' }}},
+          { not: { exists: 'bar' } },
+          { not: { equals: { foo: 'bar' } } },
         ],
       });
 
-      const bool = {
+      const id3 = dsl.register({
         bool: {
           should_not: [
-            {exists: { field: 'bar' }},
-            {equals: { foo: 'bar' }}
+            { exists: { field: 'bar' } },
+            { equals: { foo: 'bar' } }
           ]
         }
-      };
+      });
 
-      should(result.diff)
-        .eql({
-          index: 'i',
-          collection: 'c',
-          filters: [
-            [ {exists: {path: 'bar', array: false, value: null}, not: true}],
-            [ {equals: {foo: 'bar'}, not: true}],
-          ],
-        });
-      should(result.id).be.eql(id);
-
-      result = dsl.register('i', 'c', bool);
-
-      should(result.id).be.eql(id);
+      should(id1).eql(id2);
+      should(id1).eql(id3);
     });
 
     it('should not recreate an already existing subfilter', () => {
-      let ids = [];
+      const ids = [];
 
-      let subscription = dsl.register('i', 'c', {
+      ids.push(dsl.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {exists: 'bar'},
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
         ],
-      });
+      }));
 
-      ids.push(subscription.id);
+      const id = dsl.register({ equals: { foo: 'bar' } });
 
-      subscription = dsl.register('i', 'c', {equals: {foo: 'bar'}});
+      const sfs = dsl.storage.filters.get(id).subfilters;
 
-      const sfs = dsl.storage.filters.get(subscription.id).subfilters;
-
-      ids.push(subscription.id);
+      ids.push(id);
       should(sfs).instanceOf(Set);
       should(sfs.size).be.eql(1);
 
@@ -176,69 +148,14 @@ describe('DSL API', () => {
     });
   });
 
-  describe('#exists', () => {
-    it('should return true if a filter exists on the provided index and collection', () => {
-      should(dsl.exists('i', 'c')).be.false();
-
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      should(dsl.exists('i', 'c')).be.true();
-    });
-
-    it('should return false if no filter exists on a provided collection', () => {
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      should(dsl.exists('i', 'foo')).be.false();
-    });
-
-    it('should return false if no filter exists on a provided index', () => {
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      should(dsl.exists('foo', 'c')).be.false();
-    });
-  });
-
   describe('#getFilterIds', () => {
-    it('should return an empty array if no filter exist on the provided index and collection', () => {
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      should(dsl.getFilterIds('foo', 'bar')).be.an.Array().and.be.empty();
-    });
+    it('should return the list of registered filter IDs', () => {
+      const ids = [];
 
-    it('should return the list of registered filter IDs on the provided index and collection', () => {
-      let ids = [];
+      ids.push(dsl.register({ equals: { foo: 'bar' } }));
+      ids.push(dsl.register({ exists: 'foo' }));
 
-      let result = dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      ids.push(result.id);
-
-      result = dsl.register('i', 'c', {exists: 'foo'});
-      ids.push(result.id);
-
-      should(dsl.getFilterIds('i', 'c').sort()).match(ids.sort());
-    });
-  });
-
-  describe('#getIndexes', () => {
-    it('should return an empty array if no filter exist on the provided index and collection', () => {
-      should(dsl.getIndexes()).be.an.Array().and.be.empty();
-    });
-
-    it('should return the list of registered indexes on the provided index and collection', () => {
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      dsl.register('i', 'c', {exists: 'foo'});
-      dsl.register('i2', 'c', {exists: 'foo'});
-
-      should(dsl.getIndexes().sort()).match(['i', 'i2']);
-    });
-  });
-
-  describe('#getCollections', () => {
-    it('should return an empty array if no filter exist on the provided index and collection', () => {
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      should(dsl.getCollections('foo')).be.an.Array().and.be.empty();
-    });
-
-    it('should return the list of registered collections on the provided index and collection', () => {
-      dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      dsl.register('i', 'c', {exists: 'foo'});
-      dsl.register('i', 'c2', {exists: 'foo'});
-      should(dsl.getCollections('i').sort()).match(['c', 'c2']);
+      should(dsl.getFilterIds().sort()).match(ids.sort());
     });
   });
 
@@ -248,8 +165,8 @@ describe('DSL API', () => {
     });
 
     it('should return true if the filter exists', () => {
-      const response = dsl.register('i', 'c', {equals: {foo: 'bar'}});
-      should(dsl.hasFilter(response.id)).be.true();
+      const id = dsl.register({ equals: { foo: 'bar' } });
+      should(dsl.hasFilter(id)).be.true();
     });
   });
 
@@ -259,15 +176,15 @@ describe('DSL API', () => {
      index and collection, as all other checks are performed in
      test/api/dsl/keywords unit tests files
      */
-    it('should return an empty array if there is no filter registered on an index or collection', () => {
-      should(dsl.test('i', 'c', {foo: 'bar'})).be.an.Array().and.be.empty();
+    it('should return an empty array if there is no filter registered', () => {
+      should(dsl.test({ foo: 'bar' })).be.an.Array().and.be.empty();
     });
 
     it('should flatten submitted documents', () => {
       const stub = sinon.stub(dsl.matcher, 'match');
 
-      dsl.register('i', 'c', {});
-      dsl.test('i', 'c', {
+      dsl.register({});
+      dsl.test({
         bar: 'bar',
         qux: 'qux',
         obj: {
@@ -282,7 +199,7 @@ describe('DSL API', () => {
         foo: 'bar'
       });
 
-      should(stub.calledWith('i', 'c', {
+      should(stub.calledWith({
         bar: 'bar',
         qux: 'qux',
         obj: {
@@ -312,26 +229,23 @@ describe('DSL API', () => {
       dsl._removeFromTestTables = sinon.spy();
 
       dsl.remove('foo');
-      should(dsl._removeFromTestTables)
-        .have.callCount(0);
+      should(dsl._removeFromTestTables).not.called();
     });
 
     it('should unsubscribe a filter from a multi-filter subfilter', () => {
       const ids = [];
 
-      let subscription = dsl.register('i', 'c', {
+      ids.push(dsl.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {exists: {field: 'bar'}},
+          { equals: { foo: 'bar' } },
+          { exists: { field: 'bar' } },
         ],
-      });
+      }));
 
-      ids.push(subscription.id);
-      subscription = dsl.register('i', 'c', {equals: {foo: 'bar'}});
+      const id = dsl.register({ equals: { foo: 'bar' } });
+      ids.push(id);
 
-      const sfs = dsl.storage.filters.get(subscription.id).subfilters;
-
-      ids.push(subscription.id);
+      const sfs = dsl.storage.filters.get(id).subfilters;
       should(sfs).instanceOf(Set);
       should(sfs.size).be.eql(1);
 
@@ -341,7 +255,7 @@ describe('DSL API', () => {
       const filterIds = Array.from(sf.filters).map(f => f.id);
       should(filterIds.sort()).match(Array.from(ids).sort());
 
-      dsl.remove(subscription.id);
+      dsl.remove(id);
 
       should(sf.filters.size).be.eql(1);
       const fid = Array.from(sf.filters)[0].id;
@@ -354,8 +268,8 @@ describe('DSL API', () => {
       const f = {
         not: {
           and: [
-            {exists: {field: 'bar'}},
-            {equals: {foo: 'bar'}},
+            { exists: { field: 'bar' } },
+            { equals: { foo: 'bar' } },
           ],
         },
       };
@@ -364,21 +278,19 @@ describe('DSL API', () => {
       sinon.stub(dsl.transformer, 'normalize').returns(n);
       sinon.stub(dsl.storage, 'getFilterId');
 
-      dsl.normalize('i', 'c', f);
+      dsl.normalize(f);
 
       should(dsl.transformer.normalize.calledOnce).be.true();
       should(dsl.transformer.normalize.calledWith(f)).be.true();
 
       should(dsl.storage.getFilterId.calledOnce).be.true();
-      should(dsl.storage.getFilterId).calledWith('i', 'c', n);
+      should(dsl.storage.getFilterId).calledWith(n);
     });
   });
 
   describe('#store', () => {
     it('should store the supplied normalized filter', () => {
       const r = {
-        index: 'i',
-        collection: 'c',
         id: 'id',
         normalized: {}
       };
@@ -388,7 +300,7 @@ describe('DSL API', () => {
       dsl.store(r);
 
       should(dsl.storage.store.calledOnce).be.true();
-      should(dsl.storage.store.calledWith(r.index, r.collection, r.normalized, r.id)).be.true();
+      should(dsl.storage.store.calledWith(r.normalized, r.id)).be.true();
     });
   });
 });

@@ -27,13 +27,13 @@ describe('DSL.keyword.geospatial', () => {
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      const sub = dsl.register('index', 'collection', geoFilter);
-      dsl.remove(sub.id);
-      should(foPairs._cache).be.empty();
+      const id = dsl.register(geoFilter);
+      dsl.remove(id);
+      should(foPairs).be.empty();
     });
 
     it('should remove the entire field if its last condition is removed', () => {
-      dsl.register('index', 'collection', {
+      dsl.register({
         geoDistance: {
           bar: {
             lat: 13,
@@ -43,18 +43,18 @@ describe('DSL.keyword.geospatial', () => {
         },
       });
 
-      const sub = dsl.register('index', 'collection', geoFilter);
+      const id = dsl.register(geoFilter);
 
-      dsl.remove(sub.id);
+      dsl.remove(id);
 
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const storage = foPairs.get('geospatial');
 
       should(storage.fields.get('bar')).be.an.Object();
       should(storage.fields.get('foo')).be.undefined();
     });
 
     it('should remove a single condition from a field if other conditions exist', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({
         geoDistance: {
           foo: {
             lat: 13,
@@ -63,34 +63,33 @@ describe('DSL.keyword.geospatial', () => {
           distance: '1km',
         },
       });
+      const id2 = dsl.register(geoFilter);
 
-      const sub2 = dsl.register('index', 'collection', geoFilter);
-
-      const sf = Array.from(filters.get(sub1.id).subfilters)[0];
+      const sf = Array.from(filters.get(id1).subfilters)[0];
       const cond = Array.from(sf.conditions)[0].id;
 
-      dsl.remove(sub2.id);
+      dsl.remove(id2);
 
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const storage = foPairs.get('geospatial');
 
       should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
     });
 
     it('should remove a subfilter from a condition if other subfilters exist', () => {
-      const sub1 = dsl.register('index', 'collection', geoFilter);
-      const sf = Array.from(filters.get(sub1.id).subfilters)[0];
+      const id1 = dsl.register(geoFilter);
+      const sf = Array.from(filters.get(id1).subfilters)[0];
       const cond = Array.from(sf.conditions)[0].id;
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = dsl.register({
         and: [
           geoFilter,
-          {exists: {field: 'bar'}},
+          { exists: { field: 'bar' } },
         ],
       });
 
-      dsl.remove(sub2.id);
+      dsl.remove(id2);
 
-      const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const storage = dsl.storage.foPairs.get('geospatial');
 
       should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
     });

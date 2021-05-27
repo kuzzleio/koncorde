@@ -25,49 +25,32 @@ describe('DSL.keyword.everything', () => {
 
   describe('#storage', () => {
     it('should register an empty filter correctly', () => {
-      const sub = dsl.register('index', 'collection', {});
-      const storeEntry = dsl.storage.foPairs.get(
-        'index',
-        'collection',
-        'everything');
+      const id = dsl.register({});
+      const storeEntry = dsl.storage.foPairs.get('everything');
 
       should(storeEntry).be.instanceof(FieldOperand);
       should(storeEntry.fields).have.value(
         'all',
-        Array.from(dsl.storage.filters.get(sub.id).subfilters));
+        Array.from(dsl.storage.filters.get(id).subfilters));
     });
   });
 
   describe('#matching', () => {
-    it('should match as long as a document is in the right index and collection', () => {
-      const sub = dsl.register('index', 'collection', {});
-      const result = dsl.test('index', 'collection', {foo: 'bar'});
+    it('should match any document', () => {
+      const id = dsl.register({});
+      const result = dsl.test({ foo: 'bar' });
 
       should(result).be.an.Array().and.not.empty();
-      should(result[0]).be.eql(sub.id);
-    });
-
-    it('should not match if the document is in another index', () => {
-      dsl.register('index', 'collection', {});
-      should(dsl.test('foobar', 'collection', {foo: 'bar'}))
-        .be.an.Array()
-        .be.empty();
-    });
-
-    it('should not match if the document is in another collection', () => {
-      dsl.register('index', 'collection', {});
-      should(dsl.test('index', 'foobar', {foo: 'bar'}))
-        .be.an.Array()
-        .be.empty();
+      should(result[0]).be.eql(id);
     });
   });
 
   describe('#removal', () => {
     it('should remove the whole f-o pair on delete', () => {
-      const sub = dsl.register('index', 'collection', {});
-      dsl.remove(sub.id);
+      const id = dsl.register({});
+      dsl.remove(id);
 
-      should(dsl.storage.foPairs._cache).and.be.empty();
+      should(dsl.storage.foPairs).and.be.empty();
     });
   });
 });

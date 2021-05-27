@@ -31,42 +31,29 @@ describe('DSL.keyword.notequals', () => {
 
   describe('#matching', () => {
     it('should not match a document with the subscribed keyword', () => {
-      dsl.register('index', 'collection', {not: {equals: {foo: 'bar'}}});
+      dsl.register({ not: { equals: { foo: 'bar' } } });
 
-      should(dsl.test('index', 'collection', {foo: 'bar'}))
-        .be.an.Array().and.be.empty();
+      should(dsl.test({ foo: 'bar' })).be.an.Array().and.be.empty();
     });
 
     it('should match if the document contains the field with another value', () => {
-      const sub = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            foo: 'bar',
-          },
-        },
-      });
+      const id = dsl.register({ not: { equals: { foo: 'bar' } } });
 
-      const result = dsl.test('index', 'collection', {foo: 'qux'});
+      const result = dsl.test({ foo: 'qux' });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should match if the document do not contain the registered field', () => {
-      const sub = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            foo: 'bar',
-          },
-        },
-      });
+      const id = dsl.register({ not: { equals: { foo: 'bar' } } });
 
-      const result = dsl.test('index', 'collection', {qux: 'bar'});
+      const result = dsl.test({ qux: 'bar' });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      const sub = dsl.register('index', 'collection', {
+      const id = dsl.register({
         not: {
           equals: {
             'foo.bar.baz': 'qux',
@@ -74,7 +61,7 @@ describe('DSL.keyword.notequals', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {
+      const result = dsl.test({
         foo: {
           bar: {
             baz: 'foobar',
@@ -82,93 +69,58 @@ describe('DSL.keyword.notequals', () => {
         },
       });
 
-      should(result).be.eql([sub.id]);
-    });
-
-    it('should not match if the document is in another index', () => {
-      dsl.register('index', 'collection', {not: {equals: {foo: 'bar'}}});
-
-      should(dsl.test('foobar', 'collection', {foo: 'qux'}))
-        .be.an.Array().and.empty();
-    });
-
-    it('should not match if the document is in another collection', () => {
-      dsl.register('index', 'collection', {not: {equals: {foo: 'bar'}}});
-
-      should(dsl.test('index', 'foobar', {foo: 'qux'}))
-        .be.an.Array().and.empty();
+      should(result).be.eql([id]);
     });
 
     it('should match even if another field was hit before', () => {
-      dsl.register('i', 'c', {not: {equals: {a: 'Jennifer Cardini'}}});
-      dsl.register('i', 'c', {not: {equals: {b: 'Shonky'}}});
+      dsl.register({ not: { equals: { a: 'Jennifer Cardini' } } });
+      dsl.register({ not: { equals: { b: 'Shonky' } } });
 
-      should(dsl.test('i', 'c', {a: 'Jennifer Cardini'}))
-        .be.an.Array()
-        .length(1);
+      should(dsl.test({ a: 'Jennifer Cardini' })).be.an.Array().length(1);
     });
 
     it('should match 0 equality', () => {
-      dsl.register('i', 'c', {not: {equals: {a: 0}}});
+      dsl.register({ not: { equals: { a: 0 } } });
 
-      should(dsl.test('i', 'c', {a: 0}))
-        .be.an.Array()
-        .be.empty();
+      should(dsl.test({ a: 0 })).be.an.Array().be.empty();
     });
 
     it('should match false equality', () => {
-      dsl.register('i', 'c', {not: {equals: {a: false}}});
+      dsl.register({ not: { equals: { a: false } } });
 
-      should(dsl.test('i', 'c', {a: false}))
-        .be.an.Array()
-        .be.empty();
+      should(dsl.test({ a: false })).be.an.Array().be.empty();
     });
 
     it('should match null equality', () => {
-      dsl.register('i', 'c', {not: {equals: {a: null}}});
+      dsl.register({ not: { equals: { a: null } } });
 
-      should(dsl.test('i', 'c', {a: null}))
-        .be.an.Array()
-        .be.empty();
+      should(dsl.test({ a: null })).be.an.Array().be.empty();
     });
   });
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      const sub = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            foo: 'bar',
-          },
-        },
-      });
+      const id = dsl.register({ not: { equals: { foo: 'bar' } } });
 
-      dsl.remove(sub.id);
+      dsl.remove(id);
 
-      should(foPairs._cache).be.empty();
+      should(foPairs).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
-      const sub1 = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            foo: 'bar',
-          },
-        },
-      });
-
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({ not: { equals: { foo: 'bar' } } });
+      const id2 = dsl.register({
         and: [
-          {not: {equals: {foo: 'qux'}}},
-          {not: {equals: {foo: 'bar'}}},
+          { not: { equals: { foo: 'qux' } } },
+          { not: { equals: { foo: 'bar' } } },
         ],
       });
 
-      const subfilter = Array.from(filters.get(sub2.id).subfilters)[0];
+      const subfilter = Array.from(filters.get(id2).subfilters)[0];
 
-      dsl.remove(sub1.id);
+      dsl.remove(id1);
 
-      const storage = foPairs.get('index', 'collection', 'notequals');
+      const storage = foPairs.get('notequals');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo')).instanceOf(Map);
@@ -178,26 +130,19 @@ describe('DSL.keyword.notequals', () => {
     });
 
     it('should remove a value from the list if its last subfilter is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            foo: 'bar',
-          },
-        },
-      });
-
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = dsl.register({ not: { equals: { foo: 'bar' } } });
+      const id2 = dsl.register({
         and: [
-          {not: {equals: {foo: 'qux'}}},
-          {not: {equals: {foo: 'bar'}}},
+          { not: { equals: { foo: 'qux' } } },
+          { not: { equals: { foo: 'bar' } } },
         ],
       });
 
 
-      dsl.remove(sub2.id);
+      dsl.remove(id2);
 
-      const storage = foPairs.get('index', 'collection', 'notequals');
-      const barSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      const storage = foPairs.get('notequals');
+      const barSubfilter = Array.from(filters.get(id1).subfilters)[0];
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get('bar')).match(new Set([barSubfilter]));
@@ -205,30 +150,16 @@ describe('DSL.keyword.notequals', () => {
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            foo: 'bar',
-          },
-        },
-      });
+      const id1 = dsl.register({ not: { equals: { foo: 'bar' } } });
+      const id2 = dsl.register({ not: { equals: { baz: 'qux' } } });
 
-      const sub2 = dsl.register('index', 'collection', {
-        not: {
-          equals: {
-            baz: 'qux',
-          },
-        },
-      });
+      const barSubfilter = Array.from(filters.get(id1).subfilters)[0];
+      const storage = foPairs.get('notequals');
 
-      const barSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
-      const operand = foPairs.get('index', 'collection', 'notequals');
+      should(storage.fields).have.keys('foo', 'baz');
 
-      should(operand.fields).have.keys('foo', 'baz');
+      dsl.remove(id2);
 
-      dsl.remove(sub2.id);
-
-      const storage = foPairs.get('index', 'collection', 'notequals');
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get('bar')).match(new Set([barSubfilter]));
       should(storage.fields.get('baz')).be.undefined();
