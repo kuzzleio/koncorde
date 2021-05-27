@@ -12,7 +12,7 @@ const {
 
 const Koncorde = require('.');
 
-const max = 100000;
+const max = 10000;
 const engine = MersenneTwister19937.autoSeed();
 const rgen = {
   int: randomIntegerEngine(-10000, 10000),
@@ -62,7 +62,7 @@ function test (name, generator, document) {
   const filterEndTime = (Date.now() - filterStartTime) / 1000;
   console.log(`\tIndexation: time = ${filterEndTime}s, mem = +${Math.round((v8.getHeapStatistics().total_heap_size - baseHeap) / 1024 / 1024)}MB`);
 
-  matching(name, document);
+  matching(document);
 }
 
 function run () {

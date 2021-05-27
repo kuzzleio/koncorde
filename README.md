@@ -1369,44 +1369,44 @@ The following results are obtained running `node benchmark.js` at the root of th
 
 ```
 > Benchmarking keyword: equals
-  Indexation: time = 0.357s, mem = +42MB
-  Matching x 1,738,037 ops/sec ±0.28% (94 runs sampled)
-  Filters removal: time = 0.022s
+  Indexation: time = 0.267s, mem = +39MB
+  Matching x 2,980,015 ops/sec ±0.52% (91 runs sampled)
+  Filters removal: time = 0.018s
 
 > Benchmarking keyword: exists
-  Indexation: time = 0.374s, mem = +23MB
-  Matching x 1,526,909 ops/sec ±0.72% (97 runs sampled)
-  Filters removal: time = 0.026s
+  Indexation: time = 0.293s, mem = +22MB
+  Matching x 2,707,492 ops/sec ±0.42% (94 runs sampled)
+  Filters removal: time = 0.027s
 
 > Benchmarking keyword: geoBoundingBox
-  Indexation: time = 0.674s, mem = +-26MB
-  Matching x 878,760 ops/sec ±0.45% (93 runs sampled)
-  Filters removal: time = 0.095s
-
-> Benchmarking keyword: geoDistance
-  Indexation: time = 1.094s, mem = +12MB
-  Matching x 727,164 ops/sec ±0.60% (95 runs sampled)
-  Filters removal: time = 0.104s
-
-> Benchmarking keyword: geoDistanceRange
-  Indexation: time = 1.53s, mem = +-16MB
-  Matching x 872,478 ops/sec ±0.50% (96 runs sampled)
-  Filters removal: time = 0.095s
-
-> Benchmarking keyword: geoPolygon (10 vertices)
-  Indexation: time = 1.039s, mem = +21MB
-  Matching x 33,889 ops/sec ±0.34% (96 runs sampled)
+  Indexation: time = 0.714s, mem = +-5MB
+  Matching x 1,253,699 ops/sec ±0.83% (96 runs sampled)
   Filters removal: time = 0.105s
 
+> Benchmarking keyword: geoDistance
+  Indexation: time = 1.08s, mem = +3MB
+  Matching x 1,216,696 ops/sec ±0.47% (94 runs sampled)
+  Filters removal: time = 0.108s
+
+> Benchmarking keyword: geoDistanceRange
+  Indexation: time = 1.573s, mem = +21MB
+  Matching x 1,065,547 ops/sec ±1.53% (93 runs sampled)
+  Filters removal: time = 0.088s
+
+> Benchmarking keyword: geoPolygon (10 vertices)
+  Indexation: time = 1.024s, mem = +-41MB
+  Matching x 30,108 ops/sec ±0.59% (94 runs sampled)
+  Filters removal: time = 0.097s
+
 > Benchmarking keyword: in (5 random values)
-  Indexation: time = 1.089s, mem = +17MB
-  Matching x 1,498,878 ops/sec ±0.43% (95 runs sampled)
-  Filters removal: time = 0.057s
+  Indexation: time = 1.067s, mem = +68MB
+  Matching x 2,614,679 ops/sec ±0.62% (91 runs sampled)
+  Filters removal: time = 0.05s
 
 > Benchmarking keyword: range (random bounds)
-  Indexation: time = 0.304s, mem = +14MB
-  Matching x 35,926 ops/sec ±0.37% (95 runs sampled)
-  Filters removal: time = 0.071s
+  Indexation: time = 0.235s, mem = +1MB
+  Matching x 41,379 ops/sec ±0.33% (96 runs sampled)
+  Filters removal: time = 0.08s
 ```
 
-_(results obtained with node v12.12.0)_
+_(results obtained with node v16.2.0)_
