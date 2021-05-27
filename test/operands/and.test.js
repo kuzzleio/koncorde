@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 const Koncorde = require('../../');
 
 describe('koncorde.operands.and', () => {
@@ -11,27 +10,60 @@ describe('koncorde.operands.and', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(koncorde.validate({and: []})).be.rejectedWith(BadRequestError);
+      return should(koncorde.validate({and: []}))
+        .be.rejectedWith('Attribute "and" cannot be empty');
     });
 
     it('should reject non-array content', () => {
-      return should(koncorde.validate({and: {foo: 'bar'}})).be.rejectedWith(BadRequestError);
+      return should(koncorde.validate({and: {foo: 'bar'}}))
+        .be.rejectedWith('Attribute "and" must be an array');
     });
 
     it('should reject if one of the content is not an object', () => {
-      return should(koncorde.validate({and: [{equals: {foo: 'bar'}}, [{exists: {field: 'foo'}}]]})).be.rejectedWith(BadRequestError);
+      const filter = {
+        and: [
+          {equals: {foo: 'bar'}},
+          [ {exists: {field: 'foo'}} ],
+        ],
+      };
+
+      return should(koncorde.validate(filter))
+        .be.rejectedWith('"and" operand can only contain non-empty objects');
     });
 
     it('should reject if one of the content object does not refer to a valid keyword', () => {
-      return should(koncorde.validate({and: [{equals: {foo: 'bar'}}, {foo: 'bar'}]})).be.rejectedWith(BadRequestError);
+      const filter = {
+        and: [
+          {equals: {foo: 'bar'}},
+          {foo: 'bar'},
+        ],
+      };
+
+      return should(koncorde.validate(filter))
+        .be.rejectedWith('Unknown DSL keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
-      return should(koncorde.validate({and: [{equals: {foo: 'bar'}}, {exists: {foo: 'bar'}}]})).be.rejectedWith(BadRequestError);
+      const filter = {
+        and: [
+          {equals: {foo: 'bar'}},
+          {exists: {foo: 'bar'}},
+        ],
+      };
+
+      return should(koncorde.validate(filter))
+        .be.rejectedWith('"exists" requires the following attribute: field');
     });
 
     it('should validate a well-formed "and" operand', () => {
-      return should(koncorde.validate({and: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})).be.fulfilledWith();
+      const filter = {
+        and: [
+          {equals: {foo: 'bar'}},
+          {exists: {field: 'bar'}},
+        ],
+      };
+
+      return should(koncorde.validate(filter)).be.fulfilled();
     });
   });
 

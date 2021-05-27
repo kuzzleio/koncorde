@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 const FieldOperand = require('../../lib/storage/objects/fieldOperand');
 const RegexpCondition = require('../../lib/storage/objects/regexpCondition');
 const DSL = require('../../');
@@ -13,31 +12,42 @@ describe('DSL.keyword.regexp', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({regexp: {}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({regexp: {}}))
+        .be.rejectedWith('"regexp" must be a non-empty object');
     });
 
     it('should reject filters with more than 1 field', () => {
-      return should(dsl.validate({regexp: {foo: {value: 'foo'}, bar: {value: 'foo'}}})).be.rejectedWith(BadRequestError);
+      const filter = {foo: {value: 'foo'}, bar: {value: 'foo'}};
+
+      return should(dsl.validate({regexp: filter}))
+        .be.rejectedWith('"regexp" can contain only one attribute');
     });
 
     it('should reject filters with an empty field object', () => {
-      return should(dsl.validate({regexp: {foo: {}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({regexp: {foo: {}}}))
+        .be.rejectedWith('regexp.foo must be either a string or a non-empty object');
     });
 
     it('should reject filters with other fields defined other than the accepted ones', () => {
-      return should(dsl.validate({regexp: {foo: {value: 'foo', flags: 'ig', bar: 'qux'}}})).be.rejectedWith(BadRequestError);
+      const filter = {foo: {value: 'foo', flags: 'ig', bar: 'qux'}};
+
+      return should(dsl.validate({regexp: filter}))
+        .be.rejectedWith('Keyword "regexp" can only contain the following attributes: flags, value');
     });
 
     it('should reject filters if the "value" attribute is not defined', () => {
-      return should(dsl.validate({regexp: {foo: {flags: 'ig'}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({regexp: {foo: {flags: 'ig'}}}))
+        .be.rejectedWith('"regexp" requires the following attribute: value');
     });
 
     it('should reject filters with a non-string "flags" attribute', () => {
-      return should(dsl.validate({regexp: {foo: {value: 'foo', flags: 42}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({regexp: {foo: {value: 'foo', flags: 42}}}))
+        .be.rejectedWith('Attribute "flags" in "regexp" must be a string');
     });
 
     it('should reject filters with an invalid regular expression value', () => {
-      return should(dsl.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}}))
+        .be.rejectedWith(/^Cannot parse regexp expression/);
     });
 
     it('should reject filters with invalid flags (js engine only)', () => {
@@ -50,7 +60,7 @@ describe('DSL.keyword.regexp', () => {
           }
         }
       }))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith(/^Cannot parse regexp expression/);
     });
 
     it('should validate a well-formed regular expression filter w/ flags', () => {
@@ -80,7 +90,7 @@ describe('DSL.keyword.regexp', () => {
           foo: '++'
         }
       }))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith(/^Cannot parse regexp expression/);
     });
   });
 

@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 
 const DSL = require('../../');
 const NormalizedExists = require('../../lib/transform/normalizedExists');
@@ -13,11 +12,22 @@ describe('DSL.operands.bool', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({bool: {}})).be.rejectedWith(BadRequestError);
+      return should(dsl.validate({bool: {}}))
+        .be.rejectedWith('"bool" must be a non-empty object');
     });
 
     it('should reject filters with unrecognized bool attributes', () => {
-      return should(dsl.validate({bool: {must: [{exists: {foo: 'bar'}}], foo: 'bar'}})).be.rejectedWith(BadRequestError);
+      const filter = {
+        bool: {
+          must: [
+            {exists: {foo: 'bar'}},
+          ],
+          foo: 'bar',
+        },
+      };
+
+      return should(dsl.validate(filter))
+        .be.rejectedWith('"bool" operand accepts only the following attributes: must, must_not, should, should_not');
     });
   });
 

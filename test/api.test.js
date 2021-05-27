@@ -1,7 +1,6 @@
 require('reify');
 
 const should = require('should').noConflict();
-const { BadRequestError } = require('kuzzle-common-objects');
 
 const Dsl = require('../');
 const sinon = require('sinon');
@@ -70,14 +69,14 @@ describe('DSL API', () => {
       return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith();
     });
 
-    it('should resolve to a BadRequestError if a filter is not valid', () => {
-      return should(dsl.validate({equals: {foo: 'bar'}, exists: 'qux'})).be.rejectedWith(BadRequestError);
+    it('should reject if a filter is not valid', () => {
+      return should(dsl.validate({equals: {foo: 'bar'}, exists: 'qux'})).be.rejected();
     });
   });
 
   describe('#register', () => {
-    it('should resolve to a BadRequestError if a filter is not valid', () => {
-      return should(dsl.register('i', 'c', {foo: 'bar'})).be.rejectedWith(BadRequestError);
+    it('should reject if a filter is not valid', () => {
+      return should(dsl.register('i', 'c', {foo: 'bar'})).be.rejected();
     });
 
     it('should resolve to a cluster diff object if the registration succeeds', () => {

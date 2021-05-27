@@ -1,5 +1,4 @@
 const should = require('should/as-function');
-const { BadRequestError } = require('kuzzle-common-objects');
 
 const FieldOperand = require('../../lib/storage/objects/fieldOperand');
 const Koncorde = require('../../');
@@ -15,66 +14,71 @@ describe('Koncorde.keyword.exists', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       return should(koncorde.validate({exists: {}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('"exists" must be a non-empty object');
     });
 
     it('should reject filters with more than 1 field', () => {
       return should(koncorde.validate({exists: {field: 'foo', bar: 'bar'}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('"exists" can contain only one attribute');
+    });
+
+    it('should reject filters in object-form without a "field" attribute', () => {
+      return should(koncorde.validate({exists: {foo: 'bar'}}))
+        .be.rejectedWith('"exists" requires the following attribute: field');
     });
 
     it('should reject filters with array argument', () => {
       return should(koncorde.validate({exists: {field: ['bar']}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with number argument', () => {
       return should(koncorde.validate({exists: {field: 42}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with object argument', () => {
       return should(koncorde.validate({exists: {field: {}}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with undefined argument', () => {
       return should(koncorde.validate({exists: {field: undefined}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('"exists" requires the following attribute: field');
     });
 
     it('should reject filters with null argument', () => {
       return should(koncorde.validate({exists: {field: null}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with boolean argument', () => {
       return should(koncorde.validate({exists: {field: true}}))
-        .be.rejectedWith(BadRequestError);
+        .be.rejectedWith('Attribute "field" in "exists" must be a string');
     });
 
     it('should validate filters with a string argument', () => {
       return should(koncorde.validate({exists: {field: 'bar'}}))
-        .be.fulfilledWith();
+        .be.fulfilled();
     });
 
     it('should reject filters with an empty string argument', () => {
-      return should(koncorde.validate({exists: {field: ''}})).be.rejectedWith(
-        BadRequestError, {message: 'exists: cannot test empty field name'});
+      return should(koncorde.validate({exists: {field: ''}}))
+        .be.rejectedWith('exists: cannot test empty field name');
     });
 
     it('should validate filters written in simplified form', () => {
-      return should(koncorde.validate({exists: 'bar'})).fulfilledWith();
+      return should(koncorde.validate({exists: 'bar'})).fulfilled();
     });
 
     it('should reject a filter in simplified form with an empty value', () => {
-      return should(koncorde.validate({exists: ''})).rejectedWith(
-        BadRequestError, {message: 'exists: cannot test empty field name'});
+      return should(koncorde.validate({exists: ''}))
+        .rejectedWith('exists: cannot test empty field name');
     });
 
     it('should reject incorrectly formatted array search filters', () => {
-      return should(koncorde.validate({exists: 'foo[\'bar\']'})).rejectedWith(
-        BadRequestError, {message: '[exists] Invalid array value "\'bar\'"'});
+      return should(koncorde.validate({exists: 'foo[\'bar\']'}))
+        .rejectedWith('[exists] Invalid array value "\'bar\'"');
     });
   });
 
