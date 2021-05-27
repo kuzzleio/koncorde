@@ -95,39 +95,38 @@ const filter = {
 };
 
 // More on index/collection parameters later
-engine.register('index', 'collection', filter)
-    .then(result => {
-        // The filter identifier depends on a random seed (see below)
-        // For now, let's pretend its value is 5db7052792b18cb2
-        console.log(`Filter identifier: ${result.id}`);
+const result = engine.register('index', 'collection', filter);
 
-        // *** Now, let's test data with our engine ***
+// The filter identifier depends on a random seed (see below)
+// For now, let's pretend its value is 5db7052792b18cb2
+console.log(`Filter identifier: ${result.id}`);
 
-        // Returns: [] (distance is greater than 500m)
-        console.log(engine.test('index', 'collection', {
-            position: {
-                lat: 43.6073913,
-                lon: 5.7
-            }
-        }));
+// *** Now, let's test data with our engine ***
 
-        // Returns: ['5db7052792b18cb2']
-        console.log(engine.test('index', 'collection', {
-            position: {
-                lat: 43.608,
-                lon: 3.905
-            }
-        }));
+// Returns: [] (distance is greater than 500m)
+console.log(engine.test('index', 'collection', {
+  position: {
+    lat: 43.6073913,
+    lon: 5.7,
+  },
+}));
+
+// Returns: ['5db7052792b18cb2']
+console.log(engine.test('index', 'collection', {
+  position: {
+    lat: 43.608,
+    lon: 3.905,
+  },
+}));
 
 
-        // Returns: [] (the geopoint is not stored in a "position" field)
-        console.log(engine.test('index', 'collection', {
-            point: {
-                lat: 43.608,
-                lon: 3.905
-            }
-        }));
-    });
+// Returns: [] (the geopoint is not stored in a "position" field)
+console.log(engine.test('index', 'collection', {
+  point: {
+    lat: 43.608,
+    lon: 3.905,
+  },
+}));
 ```
 
 ## Install
@@ -175,42 +174,35 @@ In the following example, we provide a fixed random seed. Replaying this example
 ```js
 const Koncorde = require('koncorde');
 
-const
-    seed = Buffer.from('ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 'hex'),
-    engine = new Koncorde({seed});
+const seed = Buffer.from(
+  'ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 
+  'hex');
+const engine = new Koncorde({seed});
 
 // filter1 and filter2 are equivalent
-const
-    filter1 = {
-        and:[
-            {equals: {firstname: 'Grace'}},
-            {exists: {field: 'hobby'}}
-        ]
+const filter1 = {
+  and: [
+    { equals: { firstname: 'Grace' } },
+    { exists: { field: 'hobby' } },
+  ]
+};
+const filter2 = {
+  not: {
+    bool: {
+      should_not: [
+        { in: { firstname: [ 'Grace' ] } },
+        { exists: { field: 'hobby' } },
+      ],
     },
-    filter2 = {
-        not: {
-            bool: {
-                should_not: [
-                    {in: {firstname: ['Grace']}},
-                    {exists: {field: 'hobby'}}
-                ]
-            }
-        }
-    };
+  },
+};
 
-let filterId1;
-
-engine.register('index', 'collection', filter1)
-    .then(result => {
-        filterId1 = result.id;
-        return engine.register('index', 'collection', filter2);
-    })
-    .then(result => {
-        console.log(`Filter ID 1: ${filterId1}, Filter ID 2: ${result.id}, Equals: ${filterId1 === result.id}`);
-    });
+const subscription1 = engine.register('index', 'collection', filter1);
+const subscription2 = engine.register('index', 'collection', filter2);
 
 // Prints:
 // Filter ID 1: b4ee9ece4d7b1398, Filter ID 2: b4ee9ece4d7b1398, Equals: true
+console.log(`Filter ID 1: ${subscription1.id}, Filter ID 2: ${subscription2.id}, Equals: ${subscription1.id === subscription2.id}`);
 ```
 
 ## Field syntax
@@ -1280,8 +1272,7 @@ An `array` of index names.
 
 ### `normalize`
 
-Returns a promise resolved if the provided filter are well-formed.
-The resolved object contains the provided filter in its canonical form, along with the corresponding filter unique identifier.
+Returns an object containing the provided filter in its canonical form, along with the corresponding filter unique identifier.
 
 This method does not modify the internal storage. To save a filter, the [store](#store) method must be called afterward.
 If you do not need the filter unique identifier prior to save a filter in the engine, then consider using the all-in-one [register](#register) method instead.
@@ -1298,7 +1289,7 @@ If you do not need the filter unique identifier prior to save a filter in the en
 
 #### Returns
 
-A `promise` resolving to an object containing the following attributes:
+An object containing the following attributes:
 
 * `index`: data index name
 * `collection`: data collection name
@@ -1323,7 +1314,7 @@ Registers a filter to the engine instance. This method is equivalent to executin
 
 #### Returns
 
-A `promise` resolving to an object containing the following attributes:
+An object containing the following attributes:
 
 * `id`: the filter unique identifier
 * `diff`: `false` if the filter already exists in the engine. Otherwise, contains an object with the canonical version of the provided filter
@@ -1341,10 +1332,6 @@ Removes all references to a given filter from the engine.
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filterId`|`string`| Filter unique ID. Obtained by using `register`|
-
-#### Returns
-
-A `promise` resolved once the filter has been completely removed from the engine.
 
 ---
 
@@ -1405,7 +1392,7 @@ Tests the provided filter without storing it in the engine, to check whether it 
 
 #### Returns
 
-A resolved promise if the provided filter is valid, or a rejected one with the appropriate error object otherwise.
+Throws with an appropriate error if the provided filter is invalid.
 
 ---
 

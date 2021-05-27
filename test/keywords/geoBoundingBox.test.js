@@ -5,6 +5,8 @@ const DSL = require('../../');
 
 describe('DSL.keyword.geoBoundingBox', () => {
   let dsl;
+  let filters;
+  let foPairs;
   let standardize;
   const bbox = {
     topLeft: { lat: 43.6331979, lon: 3.8433703 },
@@ -25,6 +27,8 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
   beforeEach(() => {
     dsl = new DSL();
+    filters = dsl.storage.filters;
+    foPairs = dsl.storage.foPairs;
     standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
   });
 
@@ -195,126 +199,156 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
   describe('#storage', () => {
     it('should store a single geoBoundingBox correctly', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(subscription => {
-          const
-            subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sub = dsl.register('index', 'collection', {
+        geoBoundingBox: { foo: bbox },
+      });
+      const subfilter = Array.from(filters.get(sub.id).subfilters)[0];
+      const storage = foPairs.get('index', 'collection', 'geospatial');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo')).have.value(
-            Array.from(subfilter.conditions)[0].id,
-            new Set([subfilter]));
-        });
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo')).have.value(
+        Array.from(subfilter.conditions)[0].id,
+        new Set([subfilter]));
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      let sf1;
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(subscription => {
-          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          return dsl.register('index', 'collection', {and: [{geoBoundingBox: {foo: bbox}}, {equals: {foo: 'bar'}}]});
-        })
-        .then(subscription => {
-          const
-            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sub1 = dsl.register('index', 'collection', {
+        geoBoundingBox: { foo: bbox },
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo')).have.value(
-            Array.from(sf1.conditions)[0].id,
-            new Set([sf1, sf2]));
-        });
+      const sub2 = dsl.register('index', 'collection', {
+        and: [
+          { geoBoundingBox: { foo: bbox } },
+          { equals: { foo: 'bar' } },
+        ],
+      });
+
+      const storage = foPairs.get('index', 'collection', 'geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+
+      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
+      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      should(storage.fields.get('foo')).have.value(
+        Array.from(sf1.conditions)[0].id,
+        new Set([sf1, sf2]));
     });
 
     it('should add another condition to an already existing field', () => {
-      let cond1, sf1;
+      const sub1 = dsl.register('index', 'collection', {
+        geoBoundingBox: {foo: bbox},
+      });
 
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(subscription => {
-          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          cond1 = Array.from(sf1.conditions)[0].id;
-          return dsl.register('index', 'collection', {geoBoundingBox: {foo: {topLeft: 'dr5r9ydj2y73', bottomRight: 'drj7teegpus6'}}});
-        })
-        .then(subscription => {
-          const
-            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sub2 = dsl.register('index', 'collection', {
+        geoBoundingBox: {
+          foo: {
+            bottomRight: 'drj7teegpus6',
+            topLeft: 'dr5r9ydj2y73',
+          },
+        },
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
-          should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
-        });
+      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
+      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      const cond1 = Array.from(sf1.conditions)[0].id;
+      const cond2 = Array.from(sf2.conditions)[0].id;
+
+      const storage = foPairs.get('index', 'collection', 'geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
+      should(storage.fields.get('foo').get(cond2)).match(new Set([sf2]));
     });
   });
 
   describe('#matching', () => {
     it('should match a point inside the bbox', () => {
-      return dsl
-        .register('index', 'collection', { geoBoundingBox: { foo: bbox } })
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {
-            foo: {
-              latLon: [ 43.6073913, 3.9109057 ]
-            }
-          });
+      const sub = dsl.register('index', 'collection', {
+        geoBoundingBox: { foo: bbox },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: {
+          latLon: [ 43.6073913, 3.9109057 ]
+        }
+      });
+
+      should(result).eql([sub.id]);
     });
 
     it('should convert points to float before trying to match them', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {latLon: ['43.6073913', '3.9109057']}});
+      const sub = dsl.register('index', 'collection', {
+        geoBoundingBox: { foo: bbox },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: {
+          latLon: ['43.6073913', '3.9109057'],
+        },
+      });
+
+      should(result).eql([sub.id]);
     });
 
     it('should match a point exactly on a bbox corner', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: bbox.topLeft});
+      const sub = dsl.register('index', 'collection', {
+        geoBoundingBox: { foo: bbox },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {foo: bbox.topLeft});
+
+      should(result).eql([sub.id]);
     });
 
     it('should match a point on one of the bbox border', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {lat: bbox.topLeft.lat, lon: 3.9}});
+      const sub = dsl.register('index', 'collection', {
+        geoBoundingBox: { foo: bbox },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: {
+          lat: bbox.topLeft.lat,
+          lon: 3.9,
+        },
+      });
+
+      should(result).eql([sub.id]);
     });
 
     it('should not match if a point is outside the bbox', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {foo: {lat: bbox.topLeft.lat + 10e-6, lon: 3.9}});
+      dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}});
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: {
+          lat: bbox.topLeft.lat + 10e-6,
+          lon: 3.9,
+        },
+      });
+
+      should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document does not contain a geopoint', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {bar: {lat: bbox.topLeft.lat + 10e-6, lon: 3.9}});
+      dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}});
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = dsl.test('index', 'collection', {
+        bar: {
+          lat: bbox.topLeft.lat + 10e-6,
+          lon: 3.9,
+        },
+      });
+
+      should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      return dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {foo: '43.6331979 / 3.8433703'});
+      dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}});
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: '43.6331979 / 3.8433703',
+      });
+
+      should(result).be.an.Array().and.be.empty();
     });
   });
 });

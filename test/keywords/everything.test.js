@@ -11,66 +11,63 @@ describe('DSL.keyword.everything', () => {
 
   describe('#validation', () => {
     it('should validate an empty filter', () => {
-      return should(dsl.validate({})).be.fulfilledWith();
+      should(() => dsl.validate({})).not.throw();
     });
 
     it('should validate a null filter', () => {
-      return should(dsl.validate(null)).be.fulfilledWith();
+      should(() => dsl.validate(null)).not.throw();
     });
 
     it('should validate an undefined filter', () => {
-      return should(dsl.validate(null)).be.fulfilledWith();
+      should(() => dsl.validate(null)).not.throw();
     });
   });
 
   describe('#storage', () => {
     it('should register an empty filter correctly', () => {
-      return dsl.register('index', 'collection', {})
-        .then(subscription => {
-          const storeEntry = dsl.storage.foPairs
-            .get('index', 'collection', 'everything');
+      const sub = dsl.register('index', 'collection', {});
+      const storeEntry = dsl.storage.foPairs.get(
+        'index',
+        'collection',
+        'everything');
 
-          should(storeEntry).be.instanceof(FieldOperand);
-          should(storeEntry.fields).have.value(
-            'all',
-            Array.from(dsl.storage.filters.get(subscription.id).subfilters));
-        });
+      should(storeEntry).be.instanceof(FieldOperand);
+      should(storeEntry.fields).have.value(
+        'all',
+        Array.from(dsl.storage.filters.get(sub.id).subfilters));
     });
   });
 
   describe('#matching', () => {
     it('should match as long as a document is in the right index and collection', () => {
-      return dsl.register('index', 'collection', {})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: 'bar'});
+      const sub = dsl.register('index', 'collection', {});
+      const result = dsl.test('index', 'collection', {foo: 'bar'});
 
-          should(result).be.an.Array().and.not.empty();
-          should(result[0]).be.eql(subscription.id);
-        });
+      should(result).be.an.Array().and.not.empty();
+      should(result[0]).be.eql(sub.id);
     });
 
     it('should not match if the document is in another index', () => {
-      return dsl.register('index', 'collection', {})
-        .then(() => {
-          should(dsl.test('foobar', 'collection', {foo: 'bar'}))
-            .be.an.Array()
-            .be.empty();
-        });
+      dsl.register('index', 'collection', {});
+      should(dsl.test('foobar', 'collection', {foo: 'bar'}))
+        .be.an.Array()
+        .be.empty();
     });
 
     it('should not match if the document is in another collection', () => {
-      return dsl.register('index', 'collection', {})
-        .then(() => should(dsl.test('index', 'foobar', {foo: 'bar'}))
-          .be.an.Array()
-          .be.empty());
+      dsl.register('index', 'collection', {});
+      should(dsl.test('index', 'foobar', {foo: 'bar'}))
+        .be.an.Array()
+        .be.empty();
     });
   });
 
   describe('#removal', () => {
     it('should remove the whole f-o pair on delete', () => {
-      return dsl.register('index', 'collection', {})
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => should(dsl.storage.foPairs._cache).and.be.empty());
+      const sub = dsl.register('index', 'collection', {});
+      dsl.remove(sub.id);
+
+      should(dsl.storage.foPairs._cache).and.be.empty();
     });
   });
 });

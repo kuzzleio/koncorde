@@ -10,13 +10,13 @@ describe('koncorde.operands.and', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(koncorde.validate({and: []}))
-        .be.rejectedWith('Attribute "and" cannot be empty');
+      should(() => koncorde.validate({and: []}))
+        .throw('Attribute "and" cannot be empty');
     });
 
     it('should reject non-array content', () => {
-      return should(koncorde.validate({and: {foo: 'bar'}}))
-        .be.rejectedWith('Attribute "and" must be an array');
+      should(() => koncorde.validate({and: {foo: 'bar'}}))
+        .throw('Attribute "and" must be an array');
     });
 
     it('should reject if one of the content is not an object', () => {
@@ -27,8 +27,8 @@ describe('koncorde.operands.and', () => {
         ],
       };
 
-      return should(koncorde.validate(filter))
-        .be.rejectedWith('"and" operand can only contain non-empty objects');
+      should(() => koncorde.validate(filter))
+        .throw('"and" operand can only contain non-empty objects');
     });
 
     it('should reject if one of the content object does not refer to a valid keyword', () => {
@@ -39,8 +39,8 @@ describe('koncorde.operands.and', () => {
         ],
       };
 
-      return should(koncorde.validate(filter))
-        .be.rejectedWith('Unknown DSL keyword: foo');
+      should(() => koncorde.validate(filter))
+        .throw('Unknown DSL keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
@@ -51,8 +51,8 @@ describe('koncorde.operands.and', () => {
         ],
       };
 
-      return should(koncorde.validate(filter))
-        .be.rejectedWith('"exists" requires the following attribute: field');
+      should(() => koncorde.validate(filter))
+        .throw('"exists" requires the following attribute: field');
     });
 
     it('should validate a well-formed "and" operand', () => {
@@ -63,7 +63,7 @@ describe('koncorde.operands.and', () => {
         ],
       };
 
-      return should(koncorde.validate(filter)).be.fulfilled();
+      should(koncorde.validate(filter)).not.throw();
     });
   });
 
@@ -73,23 +73,19 @@ describe('koncorde.operands.and', () => {
         and: [
           { equals: { name: 'bar' } },
           { exists: 'skills.languages["javascript"]' },
-          // { range: { baz: { lt: 42 } } }
         ]
       };
 
-      return koncorde.register('index', 'collection', filters)
-        .then(subscription => {
-          const result = koncorde.test(
-            'index',
-            'collection',
-            {
-              name: 'bar',
-              // baz: 13,
-              skills: { languages: ['c++', 'javascript', 'c#'] }
-            });
-
-          should(result).eql([subscription.id]);
+      const subscription = koncorde.register('index', 'collection', filters);
+      const result = koncorde.test(
+        'index',
+        'collection',
+        {
+          name: 'bar',
+          skills: { languages: ['c++', 'javascript', 'c#'] }
         });
+
+      should(result).eql([subscription.id]);
     });
 
     it('should not match if the document misses at least 1 condition', () => {
@@ -97,42 +93,40 @@ describe('koncorde.operands.and', () => {
         and: [
           { equals: { name: 'bar' } },
           { exists: 'skills.languages["javascript"]' },
-          // { range: { baz: { lt: 42 } } }
         ]
       };
 
-      return koncorde.register('index', 'collection', filters)
-        .then(() => {
-          const result = koncorde.test(
-            'index',
-            'collection',
-            {
-              name: 'qux',
-              // baz: 13,
-              skills: { languages: ['ruby', 'php', 'elm', 'javascript'] }
-            });
-
-          should(result).be.an.Array().and.empty();
+      koncorde.register('index', 'collection', filters);
+      const result = koncorde.test(
+        'index',
+        'collection',
+        {
+          name: 'qux',
+          skills: { languages: ['ruby', 'php', 'elm', 'javascript'] },
         });
+
+      should(result).be.an.Array().and.empty();
     });
   });
 
   describe('#removal', () => {
     it('should destroy all associated keywords to an AND operand', () => {
-      let id;
+      const subscription = koncorde.register('index', 'collection', {
+        and: [
+          {equals: {foo: 'bar'}},
+          {missing: {field: 'bar'}},
+          {range: {baz: {lt: 42}}},
+        ],
+      });
 
-      return koncorde.register('index', 'collection', {and: [{equals: {foo: 'bar'}}, {missing: {field: 'bar'}}, {range: {baz: {lt: 42}}}]})
-        .then(subscription => {
-          id = subscription.id;
-          return koncorde.register('index', 'collection', {exists: {field: 'foo'}});
-        })
-        .then(() => koncorde.remove(id))
-        .then(() => {
-          should(koncorde.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
-          should(koncorde.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
-          should(koncorde.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
-          should(koncorde.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
-        });
+      koncorde.register('index', 'collection', {exists: {field: 'foo'}});
+
+      koncorde.remove(subscription.id);
+
+      should(koncorde.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
+      should(koncorde.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
+      should(koncorde.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
+      should(koncorde.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
     });
   });
 });

@@ -5,86 +5,88 @@ const Koncorde = require('../../');
 const NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('Koncorde.keyword.exists', () => {
-  let koncorde;
+  let dsl;
+  let filters;
 
   beforeEach(() => {
-    koncorde = new Koncorde();
+    dsl = new Koncorde();
+    filters = dsl.storage.filters;
   });
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(koncorde.validate({exists: {}}))
-        .be.rejectedWith('"exists" must be a non-empty object');
+      should(() => dsl.validate({exists: {}}))
+        .throw('"exists" must be a non-empty object');
     });
 
     it('should reject filters with more than 1 field', () => {
-      return should(koncorde.validate({exists: {field: 'foo', bar: 'bar'}}))
-        .be.rejectedWith('"exists" can contain only one attribute');
+      should(() => dsl.validate({exists: {field: 'foo', bar: 'bar'}}))
+        .throw('"exists" can contain only one attribute');
     });
 
     it('should reject filters in object-form without a "field" attribute', () => {
-      return should(koncorde.validate({exists: {foo: 'bar'}}))
-        .be.rejectedWith('"exists" requires the following attribute: field');
+      should(() => dsl.validate({exists: {foo: 'bar'}}))
+        .throw('"exists" requires the following attribute: field');
     });
 
     it('should reject filters with array argument', () => {
-      return should(koncorde.validate({exists: {field: ['bar']}}))
-        .be.rejectedWith('Attribute "field" in "exists" must be a string');
+      should(() => dsl.validate({exists: {field: ['bar']}}))
+        .throw('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with number argument', () => {
-      return should(koncorde.validate({exists: {field: 42}}))
-        .be.rejectedWith('Attribute "field" in "exists" must be a string');
+      should(() => dsl.validate({exists: {field: 42}}))
+        .throw('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with object argument', () => {
-      return should(koncorde.validate({exists: {field: {}}}))
-        .be.rejectedWith('Attribute "field" in "exists" must be a string');
+      should(() => dsl.validate({exists: {field: {}}}))
+        .throw('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with undefined argument', () => {
-      return should(koncorde.validate({exists: {field: undefined}}))
-        .be.rejectedWith('"exists" requires the following attribute: field');
+      should(() => dsl.validate({exists: {field: undefined}}))
+        .throw('"exists" requires the following attribute: field');
     });
 
     it('should reject filters with null argument', () => {
-      return should(koncorde.validate({exists: {field: null}}))
-        .be.rejectedWith('Attribute "field" in "exists" must be a string');
+      should(() => dsl.validate({exists: {field: null}}))
+        .throw('Attribute "field" in "exists" must be a string');
     });
 
     it('should reject filters with boolean argument', () => {
-      return should(koncorde.validate({exists: {field: true}}))
-        .be.rejectedWith('Attribute "field" in "exists" must be a string');
+      should(() => dsl.validate({exists: {field: true}}))
+        .throw('Attribute "field" in "exists" must be a string');
     });
 
     it('should validate filters with a string argument', () => {
-      return should(koncorde.validate({exists: {field: 'bar'}}))
-        .be.fulfilled();
+      should(() => dsl.validate({exists: {field: 'bar'}}))
+        .not.throw();
     });
 
     it('should reject filters with an empty string argument', () => {
-      return should(koncorde.validate({exists: {field: ''}}))
-        .be.rejectedWith('exists: cannot test empty field name');
+      should(() => dsl.validate({exists: {field: ''}}))
+        .throw('exists: cannot test empty field name');
     });
 
     it('should validate filters written in simplified form', () => {
-      return should(koncorde.validate({exists: 'bar'})).fulfilled();
+      should(() => dsl.validate({exists: 'bar'})).not.throw();
     });
 
     it('should reject a filter in simplified form with an empty value', () => {
-      return should(koncorde.validate({exists: ''}))
-        .rejectedWith('exists: cannot test empty field name');
+      should(() => dsl.validate({exists: ''}))
+        .throw('exists: cannot test empty field name');
     });
 
     it('should reject incorrectly formatted array search filters', () => {
-      return should(koncorde.validate({exists: 'foo[\'bar\']'}))
-        .rejectedWith('[exists] Invalid array value "\'bar\'"');
+      should(() => dsl.validate({exists: 'foo[\'bar\']'}))
+        .throw('[exists] Invalid array value "\'bar\'"');
     });
   });
 
   describe('#standardization', () => {
     it('should return the normalized filter (from old syntax)', () => {
-      const result = koncorde.transformer.standardizer.standardize({
+      const result = dsl.transformer.standardizer.standardize({
         exists: { field: 'bar' },
       });
 
@@ -92,7 +94,7 @@ describe('Koncorde.keyword.exists', () => {
     });
 
     it('should return the normalized filter (from simplified syntax)', () => {
-      const result = koncorde.transformer.standardizer.standardize({
+      const result = dsl.transformer.standardizer.standardize({
         exists: 'bar',
       });
       should(result).match({exists: new NormalizedExists('bar', false, null)});
@@ -112,7 +114,7 @@ describe('Koncorde.keyword.exists', () => {
       ];
 
       for (const value of values) {
-        const result = koncorde.transformer.standardizer.standardize({
+        const result = dsl.transformer.standardizer.standardize({
           exists: `foo.bar[${value}]`,
         });
 
@@ -129,7 +131,7 @@ describe('Koncorde.keyword.exists', () => {
     });
 
     it('should not interpret unclosed brackets as an array value', () => {
-      const res = koncorde.transformer.standardizer.standardize({
+      const res = dsl.transformer.standardizer.standardize({
         exists: 'foo[bar'
       });
 
@@ -139,7 +141,7 @@ describe('Koncorde.keyword.exists', () => {
     });
 
     it('should properly interpret escaped brackets as an object field name', () => {
-      const res = koncorde.transformer.standardizer.standardize({
+      const res = dsl.transformer.standardizer.standardize({
         exists: 'foo.ba\\[true\\]'
       });
 
@@ -151,359 +153,282 @@ describe('Koncorde.keyword.exists', () => {
 
   describe('#storage', () => {
     it('should store a single condition correctly', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          const
-            subfilter = koncorde.storage.filters.get(subscription.id).subfilters,
-            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      const sub = dsl.register('index', 'collection', {exists: 'foo'});
+      const subfilter = dsl.storage.filters.get(sub.id).subfilters;
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters).eql(subfilter);
-          should(storage.fields.get('foo').values).instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(0);
-        });
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').subfilters).eql(subfilter);
+      should(storage.fields.get('foo').values).instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(0);
     });
 
     it('should store multiple subfilters on the same condition correctly', () => {
-      const filters = koncorde.storage.filters;
-      let barSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo'});
+      const sub2 = dsl.register('index', 'collection', {
+        and: [
+          {equals: {bar: 'qux'}},
+          {exists: 'foo'}
+        ]
+      });
 
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          barSubfilter = Array.from(filters.get(subscription.id).subfilters)[0];
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          return koncorde.register('index', 'collection', {
-            and: [
-              {equals: {bar: 'qux'}},
-              {exists: 'foo'}
-            ]
-          });
-        })
-        .then(subscription => {
-          const
-            quxSubfilter = Array.from(
-              filters.get(subscription.id).subfilters)[0],
-            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      should(storage).be.instanceOf(FieldOperand);
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters)
-            .eql(new Set([barSubfilter, quxSubfilter]));
-          should(storage.fields.get('foo').values).instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(0);
-        });
+      const barSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      const quxSubfilter = Array.from(filters.get(sub2.id).subfilters)[0];
+      should(storage.fields.get('foo').subfilters)
+        .eql(new Set([barSubfilter, quxSubfilter]));
+
+      should(storage.fields.get('foo').values).instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(0);
     });
 
     it('should store a single array search correctly', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo["bar"]'})
-        .then(subscription => {
-          const
-            subfilter = Array.from(
-              koncorde.storage.filters.get(subscription.id).subfilters)[0],
-            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      const sub = dsl.register('index', 'collection', {exists: 'foo["bar"]'});
+      const subfilter = Array.from(filters.get(sub.id).subfilters)[0];
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters.size).eql(0);
-          should(storage.fields.get('foo').values).instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(1);
-          should(storage.fields.get('foo').values.get('bar'))
-            .eql(new Set([subfilter]));
-        });
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').subfilters.size).eql(0);
+      should(storage.fields.get('foo').values).instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(1);
+      should(storage.fields.get('foo').values.get('bar'))
+        .eql(new Set([subfilter]));
     });
 
     it('should multiple array searches correctly', () => {
-      let barSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo["bar"]'});
 
-      return koncorde.register('index', 'collection', {exists: 'foo["bar"]'})
-        .then(subscription => {
-          barSubfilter = Array.from(
-            koncorde.storage.filters.get(subscription.id).subfilters)[0];
+      const sub2 = dsl.register('index', 'collection', {
+        and: [
+          {exists: 'qux["bar"]'},
+          {exists: 'foo["bar"]'}
+        ]
+      });
 
-          return koncorde.register('index', 'collection', {
-            and: [
-              {exists: 'qux["bar"]'},
-              {exists: 'foo["bar"]'}
-            ]
-          });
-        })
-        .then(subscription => {
-          const
-            quxSubfilter = Array.from(
-              koncorde.storage.filters.get(subscription.id).subfilters)[0],
-            storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters.size).eql(0);
-          should(storage.fields.get('foo').values).instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(1);
-          should(storage.fields.get('foo').values.get('bar'))
-            .eql(new Set([barSubfilter, quxSubfilter]));
-          should(storage.fields.get('qux').values.get('bar'))
-            .eql(new Set([quxSubfilter]));
-        });
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').subfilters.size).eql(0);
+      should(storage.fields.get('foo').values).instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(1);
+
+      const barSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      const quxSubfilter = Array.from(filters.get(sub2.id).subfilters)[0];
+      should(storage.fields.get('foo').values.get('bar'))
+        .eql(new Set([barSubfilter, quxSubfilter]));
+
+      should(storage.fields.get('qux').values.get('bar'))
+        .eql(new Set([quxSubfilter]));
     });
   });
 
   describe('#matching', () => {
     it('should match a document with the subscribed field', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          const result = koncorde.test('index', 'collection', {foo: 'bar'});
+      const sub = dsl.register('index', 'collection', {exists: 'foo'});
+      const result = dsl.test('index', 'collection', {foo: 'bar'});
 
-          should(result).eql([subscription.id]);
-        });
+      should(result).eql([sub.id]);
     });
 
     it('should not match if the document does not contain the searched field', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(() => {
-          should(koncorde.test('index', 'collection', {fooo: 'baz'}))
-            .be.an.Array().and.empty();
-        });
+      dsl.register('index', 'collection', {exists: 'foo'});
+      should(dsl.test('index', 'collection', {fooo: 'baz'}))
+        .be.an.Array().and.empty();
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo.bar.baz'})
-        .then(subscription => {
-          const result = koncorde.test(
-            'index', 'collection', {foo: {bar: {baz: 'qux'}}});
+      const sub = dsl.register('index', 'collection', {exists: 'foo.bar.baz'});
+      const result = dsl.test('index', 'collection', {foo: {bar: {baz: 'qux'}}});
 
-          should(result).eql([subscription.id]);
-        });
+      should(result).eql([sub.id]);
     });
 
     it('should not match if the document is in another index', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(() => {
-          should(koncorde.test('foobar', 'collection', {foo: 'qux'}))
-            .be.an.Array().and.empty();
-        });
+      dsl.register('index', 'collection', {exists: 'foo'});
+      should(dsl.test('foobar', 'collection', {foo: 'qux'}))
+        .be.an.Array().and.empty();
     });
 
     it('should not match if the document is in another collection', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(() => {
-          should(koncorde.test('index', 'foobar', {foo: 'qux'}))
-            .be.an.Array().and.empty();
-        });
+      dsl.register('index', 'collection', {exists: 'foo'});
+      should(dsl.test('index', 'foobar', {foo: 'qux'}))
+        .be.an.Array().and.empty();
     });
 
     it('should match if a searched value is in the document', () => {
-      const
-        values = ['"foo"', '"bar"', 3.14, 42, false, true, null],
-        promises = values.map(
-          v => koncorde.register('i', 'c', {exists: `foo[${v}]`}));
+      const values = ['"foo"', '"bar"', 3.14, 42, false, true, null];
+      const subscriptions = values
+        .map(v => dsl.register('i', 'c', {exists: `foo[${v}]`}));
 
-      return Promise.all(promises)
-        .then(subscriptions => {
-          for (let i = 0; i < subscriptions.length; i++) {
-            const expected = typeof values[i] === 'string' ?
-              values[i].replace(/"/g, '') :
-              values[i];
+      for (let i = 0; i < subscriptions.length; i++) {
+        const expected = typeof values[i] === 'string'
+          ? values[i].replace(/"/g, '')
+          : values[i];
 
-            should(koncorde.test('i', 'c', {foo: ['hello', expected, 'world']}))
-              .eql([subscriptions[i].id]);
-          }
-        });
+        should(dsl.test('i', 'c', {foo: ['hello', expected, 'world']}))
+          .eql([subscriptions[i].id]);
+      }
     });
 
     it('should not match if an array search is not of the right type', () => {
-      return koncorde.register('i', 'c', {exists: 'foo[null]'})
-        .then(subscription => {
-          should(koncorde.test('i', 'c', {foo: [null]})).eql([subscription.id]);
-          should(koncorde.test('i', 'c', {foo: ['null']})).empty();
-        });
+      const sub = dsl.register('i', 'c', {exists: 'foo[null]'});
+      should(dsl.test('i', 'c', {foo: [null]})).eql([sub.id]);
+      should(dsl.test('i', 'c', {foo: ['null']})).empty();
     });
 
     it('(see issue #24) should handle duplicates gracefully', () => {
-      const filters = {
+      dsl.register('index', 'collection', {
         and: [
           { equals: { name: 'Leo' } },
-          { exists: 'skills.languages["javascript"]' }
-        ]
-      };
+          { exists: 'skills.languages["javascript"]' },
+        ],
+      });
 
-      return koncorde.register('index', 'collection', filters)
-        .then(() => {
-          const matches = koncorde.test('index', 'collection', {
-            name: 'Bob',
-            skills: {
-              languages: ['pascal', 'javascript', 'python', 'javascript']
-            }
-          });
+      const matches = dsl.test('index', 'collection', {
+        name: 'Bob',
+        skills: {
+          languages: ['pascal', 'javascript', 'python', 'javascript']
+        }
+      });
 
-          should(matches).be.an.Array().and.empty();
-        });
+      should(matches).be.an.Array().and.empty();
     });
   });
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => koncorde.remove(subscription.id))
-        .then(() => should(koncorde.storage.foPairs._cache).be.empty());
+      const sub = dsl.register('index', 'collection', {exists: 'foo'});
+
+      dsl.remove(sub.id);
+      should(dsl.storage.foPairs._cache).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
-      let
-        idToRemove,
-        multiSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo'});
 
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          idToRemove = subscription.id;
+      const sub2 = dsl.register('index', 'collection', {
+        and: [
+          {equals: {foo: 'qux'}},
+          {exists: {field: 'foo'}},
+        ],
+      });
 
-          return koncorde.register('index', 'collection', {
-            and: [
-              {equals: {foo: 'qux'}},
-              {exists: {field: 'foo'}}
-            ]
-          });
-        })
-        .then(subscription => {
-          multiSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
 
-          return koncorde.remove(idToRemove);
-        })
-        .then(() => {
-          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      dsl.remove(sub1.id);
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters)
-            .match(new Set([multiSubfilter]));
-          should(storage.fields.get('foo').values).be.instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(0);
-        });
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
+
+      should(storage).be.instanceOf(FieldOperand);
+
+      const multiSubfilter = Array.from(filters.get(sub2.id).subfilters)[0];
+      should(storage.fields.get('foo').subfilters)
+        .match(new Set([multiSubfilter]));
+
+      should(storage.fields.get('foo').values).be.instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(0);
     });
 
     it('should remove a single subfilter from a multi-filter array condition', () => {
-      let
-        storage,
-        idToRemove,
-        singleSubfilter,
-        multiSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo["bar"]'});
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-      return koncorde.register('index', 'collection', {exists: 'foo["bar"]'})
-        .then(subscription => {
-          idToRemove = subscription.id;
-          storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
-          singleSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
+      const sub2 = dsl.register('index', 'collection', {
+        and: [
+          {equals: {foo: 'qux'}},
+          {exists: {field: 'foo["bar"]'}},
+        ],
+      });
 
-          return koncorde.register('index', 'collection', {
-            and: [
-              {equals: {foo: 'qux'}},
-              {exists: {field: 'foo["bar"]'}}
-            ]
-          });
-        })
-        .then(subscription => {
-          multiSubfilter = Array.from(
-            koncorde.storage.filters.get(subscription.id).subfilters)[0];
-          should(storage.fields.get('foo').values.get('bar'))
-            .match(new Set([singleSubfilter, multiSubfilter]));
-          should(storage.fields.get('foo').subfilters.size).eql(0);
-          return koncorde.remove(idToRemove);
-        })
-        .then(() => {
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters.size).eql(0);
-          should(storage.fields.get('foo').values.get('bar'))
-            .match(new Set([multiSubfilter]));
-        });
+      const singleSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      const multiSubfilter = Array.from(filters.get(sub2.id).subfilters)[0];
+      should(storage.fields.get('foo').values.get('bar'))
+        .match(new Set([singleSubfilter, multiSubfilter]));
+
+      should(storage.fields.get('foo').subfilters.size).eql(0);
+
+      dsl.remove(sub1.id);
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').subfilters.size).eql(0);
+      should(storage.fields.get('foo').values.get('bar'))
+        .match(new Set([multiSubfilter]));
     });
 
     it('should remove a field from the list if its last subfilter is removed', () => {
-      let
-        fooSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo'});
+      const sub2 = dsl.register('index', 'collection', {exists: 'bar'});
+      const operand = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          fooSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
+      should(operand.fields).have.keys('foo', 'bar');
+      dsl.remove(sub2.id);
 
-          return koncorde.register('index', 'collection', {exists: 'bar'});
-        })
-        .then(subscription => {
-          const operand = koncorde.storage.foPairs
-            .get('index', 'collection', 'exists');
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(operand.fields).have.keys('foo', 'bar');
-          return koncorde.remove(subscription.id);
-        })
-        .then(() => {
-          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      should(storage).be.instanceOf(FieldOperand);
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters)
-            .match(new Set([fooSubfilter]));
-          should(storage.fields.get('foo').values).be.instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(0);
-          should(storage.fields.get('bar')).be.undefined();
-        });
+      const fooSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      should(storage.fields.get('foo').subfilters)
+        .match(new Set([fooSubfilter]));
+
+      should(storage.fields.get('foo').values).be.instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(0);
+      should(storage.fields.get('bar')).be.undefined();
     });
 
     it('should remove a field from the list if its last array search value is removed', () => {
-      let
-        fooSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo'});
+      const sub2 = dsl.register('index', 'collection', {exists: 'bar["foo"]'});
 
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          fooSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
+      dsl.remove(sub2.id);
 
-          return koncorde.register('index', 'collection', {exists: 'bar["foo"]'});
-        })
-        .then(subscription => koncorde.remove(subscription.id))
-        .then(() => {
-          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters).match(new Set([fooSubfilter]));
-          should(storage.fields.get('foo').values).be.instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(0);
-          should(storage.fields.get('bar')).be.undefined();
-        });
+      should(storage).be.instanceOf(FieldOperand);
+
+      const fooSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      should(storage.fields.get('foo').subfilters).match(new Set([fooSubfilter]));
+
+      should(storage.fields.get('foo').values).be.instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(0);
+      should(storage.fields.get('bar')).be.undefined();
     });
 
     it('should keep a field if a field existence test remains', () => {
-      let
-        fooSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo'});
+      const sub2 = dsl.register('index', 'collection', {exists: 'foo["bar"]'});
 
-      return koncorde.register('index', 'collection', {exists: 'foo'})
-        .then(subscription => {
-          fooSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
+      dsl.remove(sub2.id);
 
-          return koncorde.register('index', 'collection', {exists: 'foo["bar"]'});
-        })
-        .then(subscription => koncorde.remove(subscription.id))
-        .then(() => {
-          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters).match(new Set([fooSubfilter]));
-          should(storage.fields.get('foo').values).be.instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(0);
-        });
+      should(storage).be.instanceOf(FieldOperand);
+
+      const fooSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      should(storage.fields.get('foo').subfilters).match(new Set([fooSubfilter]));
+
+      should(storage.fields.get('foo').values).be.instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(0);
     });
 
     it('should keep a field if an array search test remains', () => {
-      let
-        fooSubfilter;
+      const sub1 = dsl.register('index', 'collection', {exists: 'foo["bar"]'});
+      const sub2 = dsl.register('index', 'collection', {exists: 'foo'});
 
-      return koncorde.register('index', 'collection', {exists: 'foo["bar"]'})
-        .then(subscription => {
-          fooSubfilter = Array.from(koncorde.storage.filters.get(subscription.id).subfilters)[0];
+      dsl.remove(sub2.id);
 
-          return koncorde.register('index', 'collection', {exists: 'foo'});
-        })
-        .then(subscription => koncorde.remove(subscription.id))
-        .then(() => {
-          const storage = koncorde.storage.foPairs.get('index', 'collection', 'exists');
+      const storage = dsl.storage.foPairs.get('index', 'collection', 'exists');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').subfilters.size).eql(0);
-          should(storage.fields.get('foo').values).be.instanceOf(Map);
-          should(storage.fields.get('foo').values.size).eql(1);
-          should(storage.fields.get('foo').values.get('bar'))
-            .eql(new Set([fooSubfilter]));
-        });
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').subfilters.size).eql(0);
+      should(storage.fields.get('foo').values).be.instanceOf(Map);
+      should(storage.fields.get('foo').values.size).eql(1);
+
+      const fooSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      should(storage.fields.get('foo').values.get('bar'))
+        .eql(new Set([fooSubfilter]));
     });
   });
 });

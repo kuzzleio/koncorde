@@ -12,8 +12,8 @@ describe('DSL.operands.bool', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({bool: {}}))
-        .be.rejectedWith('"bool" must be a non-empty object');
+      should(() => dsl.validate({bool: {}}))
+        .throw('"bool" must be a non-empty object');
     });
 
     it('should reject filters with unrecognized bool attributes', () => {
@@ -26,8 +26,8 @@ describe('DSL.operands.bool', () => {
         },
       };
 
-      return should(dsl.validate(filter))
-        .be.rejectedWith('"bool" operand accepts only the following attributes: must, must_not, should, should_not');
+      should(() => dsl.validate(filter))
+        .throw('"bool" operand accepts only the following attributes: must, must_not, should, should_not');
     });
   });
 
@@ -83,20 +83,26 @@ describe('DSL.operands.bool', () => {
       const result = dsl.transformer.standardizer.standardize(bool);
       should(result).match({
         and: [
-          {or: [
-            {equals: {firstName: 'Grace'}},
-            {equals: {firstName: 'Ada'}}
-          ]},
-          {or: [
-            {equals: {hobby: 'computer'}},
-            {exists: new NormalizedExists('lastName', false, null)}
-          ]},
-          {and: [
-            {range: {age: {gte: 36, lt: 85}}},
-            {not: {equals: {city: 'NYC'}}},
-            {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}}
-          ]}
-        ]
+          {
+            or: [
+              {equals: {firstName: 'Grace'}},
+              {equals: {firstName: 'Ada'}},
+            ],
+          },
+          {
+            or: [
+              {equals: {hobby: 'computer'}},
+              {exists: new NormalizedExists('lastName', false, null)},
+            ],
+          },
+          {
+            and: [
+              {range: {age: {gte: 36, lt: 85}}},
+              {not: {equals: {city: 'NYC'}}},
+              {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}},
+            ],
+          },
+        ],
       });
     });
   });

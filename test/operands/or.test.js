@@ -10,13 +10,13 @@ describe('DSL.operands.or', () => {
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({or: []}))
-        .be.rejectedWith('Attribute "or" cannot be empty');
+      should(() => dsl.validate({or: []}))
+        .throw('Attribute "or" cannot be empty');
     });
 
     it('should reject non-array content', () => {
-      return should(dsl.validate({or: {foo: 'bar'}}))
-        .be.rejectedWith('Attribute "or" must be an array');
+      should(() => dsl.validate({or: {foo: 'bar'}}))
+        .throw('Attribute "or" must be an array');
     });
 
     it('should reject if one of the content is not an object', () => {
@@ -27,8 +27,8 @@ describe('DSL.operands.or', () => {
         ],
       };
 
-      return should(dsl.validate(filter))
-        .be.rejectedWith('"or" operand can only contain non-empty objects');
+      should(() => dsl.validate(filter))
+        .throw('"or" operand can only contain non-empty objects');
     });
 
     it('should reject if one of the content object does not refer to a valid keyword', () => {
@@ -39,8 +39,7 @@ describe('DSL.operands.or', () => {
         ],
       };
 
-      return should(dsl.validate(filter))
-        .be.rejectedWith('Unknown DSL keyword: foo');
+      should(() => dsl.validate(filter)).throw('Unknown DSL keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
@@ -51,49 +50,73 @@ describe('DSL.operands.or', () => {
         ],
       };
 
-      return should(dsl.validate(filter))
-        .be.rejectedWith('"exists" requires the following attribute: field');
+      should(() => dsl.validate(filter))
+        .throw('"exists" requires the following attribute: field');
     });
 
     it('should validate a well-formed "or" operand', () => {
-      return should(dsl.validate({or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})).be.fulfilledWith();
+      const filters = {
+        or: [
+          {equals: {foo: 'bar'}},
+          {exists: {field: 'bar'}},
+        ],
+      };
+
+      should(() => dsl.validate(filters)).not.throw();
     });
   });
 
   describe('#matching', () => {
     it('should match a document if at least 1 condition is fulfilled', () => {
-      return dsl.register('index', 'collection', {or: [{equals: {foo: 'bar'}}, {missing: {field: 'bar'}}, {range: {baz: {lt: 42}}}]})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: 'foo', bar: 'baz', baz: 13});
+      const subscription = dsl.register('index', 'collection', {
+        or: [
+          {equals: {foo: 'bar'}},
+          {missing: {field: 'bar'}},
+          {range: {baz: {lt: 42}}},
+        ],
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = dsl.test('index', 'collection', {
+        foo: 'foo',
+        bar: 'baz',
+        baz: 13,
+      });
+
+      should(result).eql([subscription.id]);
     });
 
     it('should not match if the document misses all conditions', () => {
-      return dsl.register('index', 'collection', {or: [{equals: {foo: 'bar'}}, {missing: {field: 'bar'}}, {range: {baz: {lt: 42}}}]})
-        .then(() => {
-          should(dsl.test('index', 'collection', {foo: 'foo', bar: 'baz', baz: 42})).be.an.Array().and.empty();
-        });
+      dsl.register('index', 'collection', {
+        or: [
+          {equals: {foo: 'bar'}},
+          {missing: {field: 'bar'}},
+          {range: {baz: {lt: 42}}},
+        ],
+      });
+
+      should(dsl.test('index', 'collection', {foo: 'foo', bar: 'baz', baz: 42}))
+        .be.an.Array().and.empty();
     });
   });
 
   describe('#removal', () => {
     it('should destroy all associated keywords to an OR operand', () => {
-      let id;
+      const subscription = dsl.register('index', 'collection', {
+        or: [
+          {equals: {foo: 'bar'}},
+          {missing: {field: 'bar'}},
+          {range: {baz: {lt: 42}}},
+        ],
+      });
 
-      return dsl.register('index', 'collection', {or: [{equals: {foo: 'bar'}}, {missing: {field: 'bar'}}, {range: {baz: {lt: 42}}}]})
-        .then(subscription => {
-          id = subscription.id;
-          return dsl.register('index', 'collection', {exists: {field: 'foo'}});
-        })
-        .then(() => dsl.remove(id))
-        .then(() => {
-          should(dsl.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
-          should(dsl.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
-          should(dsl.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
-          should(dsl.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
-        });
+      dsl.register('index', 'collection', {exists: {field: 'foo'}});
+
+      dsl.remove(subscription.id);
+
+      should(dsl.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
+      should(dsl.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
+      should(dsl.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
+      should(dsl.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
     });
   });
 });
