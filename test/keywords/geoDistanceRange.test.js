@@ -1,12 +1,11 @@
 const should = require('should/as-function');
 
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const Koncorde = require('../../');
 
-describe('DSL.keyword.geoDistanceRange', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.geoDistanceRange', () => {
+  let koncorde;
+  let engine;
   let standardize;
   const point = { lat: 43.6331979, lon: 3.8433703 };
   const distanceStandardized = {
@@ -23,11 +22,10 @@ describe('DSL.keyword.geoDistanceRange', () => {
   };
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
-    standardize = dsl.transformer.standardizer.standardize
-      .bind(dsl.transformer.standardizer);
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
+    standardize = koncorde.transformer.standardizer.standardize
+      .bind(koncorde.transformer.standardizer);
   });
 
   describe('#validation/standardization', () => {
@@ -204,7 +202,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
   describe('#storage', () => {
     it('should store a single geoDistanceRange correctly', () => {
-      const id = dsl.register({
+      const id = koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -212,8 +210,8 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const subfilter = Array.from(filters.get(id).subfilters)[0];
-      const storage = foPairs.get('geospatial');
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id))
@@ -221,23 +219,23 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      const id1 = dsl.register({
+      const id1 = koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
           to: '10km',
         },
       });
-      const id2 = dsl.register({
+      const id2 = koncorde.register({
         and: [
           { geoDistanceRange: { foo: point, from: '1km', to: '10km' } },
           { equals: { foo: 'bar' } },
         ],
       });
 
-      const sf1 = Array.from(filters.get(id1).subfilters)[0];
-      const sf2 = Array.from(filters.get(id2).subfilters)[0];
-      const storage = foPairs.get('geospatial');
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id))
@@ -245,7 +243,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should add another condition to an already existing field', () => {
-      const id1 = dsl.register({
+      const id1 = koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -253,7 +251,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const id2 = dsl.register({
+      const id2 = koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '10km',
@@ -261,10 +259,10 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const sf1 = Array.from(filters.get(id1).subfilters)[0];
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
       const cond1 = Array.from(sf1.conditions)[0].id;
-      const sf2 = Array.from(filters.get(id2).subfilters)[0];
-      const storage = foPairs.get('geospatial');
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
@@ -275,7 +273,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
 
   describe('#matching', () => {
     it('should match a point inside the circle', () => {
-      const id = dsl.register({
+      const id = koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -283,7 +281,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test({
+      const result = koncorde.test({
         foo: {
           lat: 43.634,
           lon: 3.9,
@@ -294,7 +292,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should not match if a point is outside the outer radius', () => {
-      dsl.register({
+      koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -302,7 +300,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test({
+      const result = koncorde.test({
         foo: {
           lat: point.lat,
           lon: 5,
@@ -313,7 +311,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
     });
 
     it('should not match if a point is inside the inner radius', () => {
-      dsl.register({
+      koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -321,13 +319,13 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test({ foo: point });
+      const result = koncorde.test({ foo: point });
 
       should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document does not contain the searched geopoint', () => {
-      dsl.register({
+      koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -335,13 +333,13 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test({ bar: point });
+      const result = koncorde.test({ bar: point });
 
       should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      dsl.register({
+      koncorde.register({
         geoDistanceRange: {
           foo: point,
           from: '1km',
@@ -349,7 +347,7 @@ describe('DSL.keyword.geoDistanceRange', () => {
         },
       });
 
-      const result = dsl.test({ foo: '43.6331979 / 3.8433703' });
+      const result = koncorde.test({ foo: '43.6331979 / 3.8433703' });
 
       should(result).be.an.Array().and.be.empty();
     });

@@ -2,7 +2,7 @@ const should = require('should/as-function');
 
 const Canonical = require('../../lib/transform/canonical');
 
-describe('api/dsl/transform/canonical', () => {
+describe('api/koncorde/transform/canonical', () => {
   let canonical;
 
   beforeEach(() => {

@@ -40,7 +40,7 @@ describe('koncorde.operands.and', () => {
       };
 
       should(() => koncorde.validate(filter))
-        .throw('Unknown DSL keyword: foo');
+        .throw('Unknown Koncorde keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
@@ -116,10 +116,12 @@ describe('koncorde.operands.and', () => {
 
       koncorde.remove(id);
 
-      should(koncorde.storage.foPairs.get('exists')).be.an.Object();
-      should(koncorde.storage.foPairs.get('equals')).be.undefined();
-      should(koncorde.storage.foPairs.get('notexists')).be.undefined();
-      should(koncorde.storage.foPairs.get('range')).be.undefined();
+      const engine = koncorde.engines.get(null);
+
+      should(engine.foPairs.get('exists')).be.an.Object();
+      should(engine.foPairs.get('equals')).be.undefined();
+      should(engine.foPairs.get('notexists')).be.undefined();
+      should(engine.foPairs.get('range')).be.undefined();
     });
   });
 });

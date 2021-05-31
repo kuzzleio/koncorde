@@ -1,12 +1,11 @@
 const should = require('should/as-function');
 
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const Koncorde = require('../../');
 
-describe('DSL.keyword.geoPolygon', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.geoPolygon', () => {
+  let koncorde;
+  let engine;
   let standardize;
   const polygon = {
     points: [
@@ -40,10 +39,9 @@ describe('DSL.keyword.geoPolygon', () => {
   };
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
-    standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
+    standardize = koncorde.transformer.standardizer.standardize.bind(koncorde.transformer.standardizer);
   });
 
   describe('#validation/standardization', () => {
@@ -115,10 +113,10 @@ describe('DSL.keyword.geoPolygon', () => {
 
   describe('#storage', () => {
     it('should store a single geoPolygon correctly', () => {
-      const id = dsl.register({ geoPolygon: { foo: polygon } });
+      const id = koncorde.register({ geoPolygon: { foo: polygon } });
 
-      const subfilter = Array.from(filters.get(id).subfilters)[0];
-      const storage = foPairs.get('geospatial');
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id))
@@ -126,17 +124,17 @@ describe('DSL.keyword.geoPolygon', () => {
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      const id1 = dsl.register({ geoPolygon: { foo: polygon } });
-      const id2 = dsl.register({
+      const id1 = koncorde.register({ geoPolygon: { foo: polygon } });
+      const id2 = koncorde.register({
         and: [
           { geoPolygon: { foo: polygon } },
           { equals: { foo: 'bar' } },
         ],
       });
 
-      const sf1 = Array.from(filters.get(id1).subfilters)[0];
-      const sf2 = Array.from(filters.get(id2).subfilters)[0];
-      const storage = foPairs.get('geospatial');
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id))
@@ -144,8 +142,8 @@ describe('DSL.keyword.geoPolygon', () => {
     });
 
     it('should add another condition to an already existing field', () => {
-      const id1 = dsl.register({ geoPolygon: { foo: polygon } });
-      const id2 = dsl.register({
+      const id1 = koncorde.register({ geoPolygon: { foo: polygon } });
+      const id2 = koncorde.register({
         geoBoundingBox: {
           foo: {
             bottomRight: 'drj7teegpus6',
@@ -154,10 +152,10 @@ describe('DSL.keyword.geoPolygon', () => {
         },
       });
 
-      const sf1 = Array.from(filters.get(id1).subfilters)[0];
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
       const cond1 = Array.from(sf1.conditions)[0].id;
-      const sf2 = Array.from(filters.get(id2).subfilters)[0];
-      const storage = foPairs.get('geospatial');
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
@@ -168,9 +166,9 @@ describe('DSL.keyword.geoPolygon', () => {
 
   describe('#matching', () => {
     it('should match a point inside the polygon', () => {
-      const id = dsl.register({ geoPolygon: { foo: polygon } });
+      const id = koncorde.register({ geoPolygon: { foo: polygon } });
 
-      const result = dsl.test({
+      const result = koncorde.test({
         foo: {
           latLon: [ 43.6073913, 3.9109057 ],
         },
@@ -180,16 +178,16 @@ describe('DSL.keyword.geoPolygon', () => {
     });
 
     it('should match a point exactly on a polygon corner', () => {
-      const id = dsl.register({ geoPolygon: { foo: polygon } });
+      const id = koncorde.register({ geoPolygon: { foo: polygon } });
 
-      const result = dsl.test({ foo: { latLon: polygon.points[0] } });
+      const result = koncorde.test({ foo: { latLon: polygon.points[0] } });
 
       should(result).eql([id]);
     });
 
     it('should not match if a point is outside the bbox', () => {
-      dsl.register({ geoPolygon: { foo: polygon } });
-      const result = dsl.test({
+      koncorde.register({ geoPolygon: { foo: polygon } });
+      const result = koncorde.test({
         foo: {
           lat: polygon.points[0][0] + 10e-6,
           lon: polygon.points[0][1] + 10e-6,
@@ -200,17 +198,17 @@ describe('DSL.keyword.geoPolygon', () => {
     });
 
     it('should return an empty array if the document does not contain a geopoint', () => {
-      dsl.register({ geoPolygon: { foo: polygon } });
+      koncorde.register({ geoPolygon: { foo: polygon } });
 
-      const result = dsl.test({ bar: { latLon: polygon.points[0] } });
+      const result = koncorde.test({ bar: { latLon: polygon.points[0] } });
 
       should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      dsl.register({ geoPolygon: { foo: polygon } });
+      koncorde.register({ geoPolygon: { foo: polygon } });
 
-      const result = dsl.test({ foo: '43.6331979 / 3.8433703' });
+      const result = koncorde.test({ foo: '43.6331979 / 3.8433703' });
 
       should(result).be.an.Array().and.be.empty();
     });

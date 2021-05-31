@@ -1,7 +1,7 @@
 const should = require('should/as-function');
 
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const Koncorde = require('../../');
 
 /**
  * Tests not geoBoundingBox, not geoDistance, not geoDistanceRange
@@ -11,20 +11,18 @@ const DSL = require('../../');
  * are already tested in the normal keyword unit tests
  */
 
-describe('DSL.keyword.notgeospatial', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.notgeospatial', () => {
+  let koncorde;
+  let engine;
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
   });
 
   describe('#storage', () => {
     it('should store a single geospatial keyword correctly', () => {
-      const id = dsl.register({
+      const id = koncorde.register({
         not: {
           geoDistance: {
             foo: {
@@ -36,8 +34,8 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      const storage = foPairs.get('notgeospatial');
-      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const storage = engine.foPairs.get('notgeospatial');
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
       const condId = Array.from(subfilter.conditions)[0].id;
 
       should(storage).be.instanceOf(FieldOperand);
@@ -48,7 +46,7 @@ describe('DSL.keyword.notgeospatial', () => {
     });
 
     it('should add another condition to an already tested field', () => {
-      const id1 = dsl.register({
+      const id1 = koncorde.register({
         not: {
           geoDistance: {
             foo: {
@@ -60,7 +58,7 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      const id2 = dsl.register({
+      const id2 = koncorde.register({
         not: {
           geoBoundingBox: {
             foo: {
@@ -73,11 +71,11 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      const subfilter1 = Array.from(filters.get(id1).subfilters)[0];
-      const subfilter2 = Array.from(filters.get(id2).subfilters)[0];
+      const subfilter1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const subfilter2 = Array.from(engine.filters.get(id2).subfilters)[0];
       const condId1 = Array.from(subfilter1.conditions)[0].id;
       const condId2 = Array.from(subfilter2.conditions)[0].id;
-      const storage = foPairs.get('notgeospatial');
+      const storage = engine.foPairs.get('notgeospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.custom.index).be.an.Object();
@@ -100,17 +98,17 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const id1 = dsl.register(filter);
-      const id2 = dsl.register({
+      const id1 = koncorde.register(filter);
+      const id2 = koncorde.register({
         and: [
           { equals: {bar: 'baz' } },
           filter,
         ],
       });
 
-      const storage = foPairs.get('notgeospatial');
-      const subfilter = Array.from(filters.get(id1).subfilters)[0];
-      const subfilter2 = Array.from(filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('notgeospatial');
+      const subfilter = Array.from(engine.filters.get(id1).subfilters)[0];
+      const subfilter2 = Array.from(engine.filters.get(id2).subfilters)[0];
       const id = Array.from(subfilter.conditions)[0].id;
 
       should(storage).be.instanceOf(FieldOperand);
@@ -129,7 +127,7 @@ describe('DSL.keyword.notgeospatial', () => {
     let polygonId;
 
     beforeEach(() => {
-      dsl.register({
+      koncorde.register({
         not: {
           geoBoundingBox: {
             foo: {
@@ -142,7 +140,7 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       });
 
-      distanceId = dsl.register({
+      distanceId = koncorde.register({
         not: {
           geoDistance: {
             foo: {
@@ -154,7 +152,7 @@ describe('DSL.keyword.notgeospatial', () => {
         }
       });
 
-      distanceRangeId = dsl.register({
+      distanceRangeId = koncorde.register({
         not: {
           geoDistanceRange: {
             foo: {
@@ -167,7 +165,7 @@ describe('DSL.keyword.notgeospatial', () => {
         }
       });
 
-      polygonId = dsl.register({
+      polygonId = koncorde.register({
         not: {
           geoPolygon: {
             foo: {
@@ -189,7 +187,7 @@ describe('DSL.keyword.notgeospatial', () => {
     });
 
     it('should match shapes not containing the provided point', () => {
-      let result = dsl.test({
+      let result = koncorde.test({
         foo: {
           lat: 43.6073913,
           lon: 3.9109057,
@@ -200,18 +198,18 @@ describe('DSL.keyword.notgeospatial', () => {
     });
 
     it('should return an empty array if the provided point is invalid', () => {
-      should(dsl.test({ foo: { lat: 'foo', lon: 'bar' } }))
+      should(koncorde.test({ foo: { lat: 'foo', lon: 'bar' } }))
         .be.an.Array().and.be.empty();
     });
 
     it('should return all subscriptions if the document does not contain the registered field', () => {
-      should(dsl.test({ bar: { lat: 43.6073913, lon: 3.9109057 } }))
+      should(koncorde.test({ bar: { lat: 43.6073913, lon: 3.9109057 } }))
         .be.an.Array()
         .and.has.length(4);
     });
 
     it('should reject a shape if the point is right on its border', () => {
-      const result = dsl.test({
+      const result = koncorde.test({
         foo: {
           lat: 43.5810609,
           lon: 3.8433703,
@@ -241,25 +239,25 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      filterId = dsl.register(filter);
-      storage = foPairs.get('notgeospatial');
+      filterId = koncorde.register(filter);
+      storage = engine.foPairs.get('notgeospatial');
     });
 
     it('should destroy the whole structure when removing the last item', () => {
-      dsl.remove(filterId);
-      should(foPairs).be.empty();
+      koncorde.remove(filterId);
+      should(engine.foPairs).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
-      const id = dsl.register({
+      const id = koncorde.register({
         and: [
           filter,
           { equals: { foo: 'bar' } },
         ],
       });
 
-      const sf = Array.from(filters.get(id).subfilters)[0];
-      dsl.remove(filterId);
+      const sf = Array.from(engine.filters.get(id).subfilters)[0];
+      koncorde.remove(filterId);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(Array.from(sf.conditions)[1].id))
@@ -279,11 +277,11 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const id = dsl.register(geofilter);
-      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const id = koncorde.register(geofilter);
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
       const condId = Array.from(subfilter.conditions)[0].id;
 
-      dsl.remove(filterId);
+      koncorde.remove(filterId);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(condId)).match(new Set([subfilter]));
@@ -302,14 +300,14 @@ describe('DSL.keyword.notgeospatial', () => {
         },
       };
 
-      const id = dsl.register(geofilter);
-      const subfilter = Array.from(filters.get(id).subfilters)[0];
+      const id = koncorde.register(geofilter);
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
       const condId = Array.from(subfilter.conditions)[0].id;
-      const operand = foPairs.get('notgeospatial');
+      const operand = engine.foPairs.get('notgeospatial');
 
       should(operand.fields).have.keys('foo', 'bar');
 
-      dsl.remove(filterId);
+      koncorde.remove(filterId);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('bar').get(condId)).match(new Set([subfilter]));

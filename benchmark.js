@@ -120,10 +120,10 @@ function run () {
     },
     { point: [0, 0] });
 
-  test('geoPolygon (10 vertices)',
+  test('geoPolygon (5 vertices)',
     () => {
       const polygon = georandom
-        .polygon(1)
+        .polygon(1, 5)
         .features[0]
         .geometry.coordinates[0].map(c => [c[1], c[0]]);
 

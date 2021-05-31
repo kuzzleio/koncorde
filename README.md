@@ -5,9 +5,7 @@
 
 # Koncorde
 
-Supersonic real-time data percolation engine, featuring a set of [terms](https://docs.kuzzle.io/koncorde/1/essentials/terms/) and [operands](https://docs.kuzzle.io/koncorde/1/essentials/operands/) to build fine-grained filters, including geofencing capabilities.
-
-This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-hostable backend, to handle real-time notifications and data validations.
+Supersonic reverse-matching engine.
 
 **Table of contents:**
 
@@ -51,12 +49,17 @@ This is the engine used by [Kuzzle](http://kuzzle.io/), an open-source and self-
 
 ## Introduction
 
-This library is a real-time data percolation engine:
+This module is a reverse-matching engine.
 
-* an arbitrary number of filters can be registered and indexed
-* whenever data are submitted to this engine, it returns the list of registered filters matching them
+Instead of indexing data and searching for them using filters, Koncorde does the opposite: it indexes search filters, and returns the corresponding ones when presented with data.
 
-In other words, this is the reverse of a search engine, where data are indexed, and filters are used to retrieve the matching data.
+* an arbitrary large number of filters can be registered and indexed;
+* whenever data are submitted to Koncorde, it returns the list of indexed filters matching them.
+
+Koncorde can be used in a variety of ways. For instance:
+
+* as a base of a notification system, where indexed filters are used as user subscriptions: Koncorde tells which JSON objects verify what subscriptions, making it easy to send events to listening users; 
+* to verify if JSON objects comply to filters used as validation rules.
 
 **Example:**
 
@@ -114,8 +117,8 @@ console.log(engine.test({ point: { lat: 43.608, lon: 3.905 } }));
 
 ## Install
 
-This library can only be used with NodeJS version 6.x or higher.
-Both a C and a C++ compilers are needed to install the following dependencies: [Espresso Logic Minimizer](https://www.npmjs.com/package/espresso-logic-minimizer) and [Boost Geospatial Index](https://www.npmjs.com/package/boost-geospatial-index)
+This library can only be used with NodeJS version 12.x or higher.
+Both a C and a C++ compilers are needed to install its dependencies: Koncorde cannot be used in a browser.
 
 To install:
 
@@ -130,6 +133,7 @@ Filter identifiers are unique hashes, dependant on the following:
 
 * filters in their [canonicalized form](https://en.wikipedia.org/wiki/Canonicalization)
 * a seed (see the engine's [constructor](#constructor) documentation)
+* (OPTIONAL) the index scope (see [Indexes](#indexes))
 
 This means that:
 
@@ -146,7 +150,7 @@ const Koncorde = require('koncorde');
 const seed = Buffer.from(
   'ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 
   'hex');
-const engine = new Koncorde({seed});
+const engine = new Koncorde({ seed });
 
 // filter1 and filter2 are equivalent
 const filterId1 = engine.register({
@@ -168,9 +172,18 @@ const filterId2 = engine.register({
 });
 
 // Prints:
-// Filter ID 1: b4ee9ece4d7b1398, Filter ID 2: b4ee9ece4d7b1398, Equals: true
+// Filter ID 1: 9505a284900033238b609b77e575c51f, Filter ID 2: 9505a284900033238b609b77e575c51f, Equals: true
 console.log(`Filter ID 1: ${filterId1}, Filter ID 2: ${filterId2}, Equals: ${filterId1 === filterId2}`);
 ```
+
+## Indexes
+
+By default, Koncorde stores filters in an unnamed index.
+
+Multiple indexes can be used to store and match filters in an independant way, using the `index` option.  
+
+This option can be used to organize filters in different, independant search scopes.
+
 
 ## Field syntax
 
@@ -794,46 +807,6 @@ The following filter will match the second document only:
 }
 ```
 
-### ids
-
-This filter returns only documents having their unique document ID listed in the provided list.
-
-#### Syntax
-
-`ids: <array of strings>`
-
-#### Example
-
-Given the following documents:
-
-```javascript
-{
-  _id: 'a',
-  firstName: 'Grace',
-  lastName: 'Hopper'
-},
-{
-  _id: 'b',
-  firstName: 'Ada',
-  lastName: 'Lovelace'
-},
-{
-  _id: 'c',
-  firstName: 'Marie',
-  lastName: 'Curie'
-}
-```
-
-The following filter validates first document:
-
-```javascript
-{
-  ids: {
-    values: ['a']
-  }
-}
-```
-
 ### in
 
 Like [equals](#equals), but accepts an array of possible scalar values to be tested.
@@ -1041,6 +1014,7 @@ The following filter validates the first document:
 }
 ```
 
+
 ## API
 
 ### `constructor`
@@ -1059,9 +1033,9 @@ Instantiates a new Koncorde engine.
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performance and memory consumption impacts before increasing this value. If set to 0, no limit is applied. |
+|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performances and memory consumption impacts before increasing this value. If set to 0, no limit is applied. |
 |`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed. |
-| `regExpEngine` | `String` | `re2` | Set the engine to either [re2](https://github.com/google/re2) or [js](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp). The former is not fully compatible with PCREs, while the latter is vulnerable to [catastrophic backtracking](https://www.regular-expressions.info/catastrophic.html), making it unsafe if regular expressions are provided by outside clients |
+| `regExpEngine` | `String` | `re2` | Set the engine to either [re2](https://github.com/google/re2) or [js](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp). The former is not fully compatible with PCREs, while the latter is vulnerable to [catastrophic backtracking](https://www.regular-expressions.info/catastrophic.html), making it unsafe if regular expressions are provided by end-users. |
 
 ---
 
@@ -1167,57 +1141,18 @@ A `Coordinate` object containing the following properties: `lat` (latitude, type
 
 ---
 
-### `exists`
-
-Returns a boolean indicating if filters exist for a given index-collection pair
-
-**exists(index, collection)**
-
-#### Arguments
-
-| Name | Type | Description                      |
-|------|------|----------------------------------|
-|`index`|`string`| Data index name |
-|`collection`|`string`| Data collection name |
-
-
-#### Returns
-
-Returns `true` if at least one filter exists on the provided index-collection pair, returns `false` otherwise
-
----
-
-### `getCollections`
-
-Returns the list of collections associated to an index registered in this Koncorde instance
-
-**getCollections(index)**
-
-#### Arguments
-
-| Name | Type | Description                      |
-|------|------|----------------------------------|
-|`index`|`string`| Data index name |
-
-#### Returns
-
-An `array` of collection names.
-
----
-
 ### `getFilterIds`
 
-Returns the list of filter identifiers registered on a given index-collection pair
+Returns the list of registered filter identifiers.
 
-**getFilterIds(index, collection)**
+**getFilterIds([index])**
 
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`index`|`string`| Data index name |
-|`collection`|`string`| Data collection name |
+|`index`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided  |
 
 #### Returns
 
@@ -1227,7 +1162,7 @@ An `array` of filter unique identifiers corresponding to filters registered on t
 
 ### `getIndexes`
 
-Returns the list of indexes registered in this Koncorde instance
+Returns the list of named indexes registered in this Koncorde instance
 
 **getIndexes()**
 
@@ -1237,68 +1172,78 @@ An `array` of index names.
 
 ---
 
+### `hasFilterId`
+
+Tells whether a filter identifier is known by Koncorde.
+
+**hasFilterId(filterId, [index])**
+
+| Name | Type | Description                      |
+|------|------|----------------------------------|
+|`filterId`|`string`| Filter unique identifier |
+|`index`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided  |
+
+
+---
+
 ### `normalize`
 
-Returns an object containing the provided filter in its canonical form, along with the corresponding filter unique identifier.
+Verifies and normalizes a search filter.
 
 This method does not modify the internal storage. To save a filter, the [store](#store) method must be called afterward.
+
 If you do not need the filter unique identifier prior to save a filter in the engine, then consider using the all-in-one [register](#register) method instead.
 
-**normalize(index, collection, filter)**
+**normalize(filters, [index])**
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`index`|`string`| Data index name |
-|`collection`|`string`| Data collection name |
-|`filter`|`object`| A filter in [Koncorde format](https://docs.kuzzle.io/koncorde/1) |
+|`filter`|`object`| Search filters in Koncorde format |
+|`[index]`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided  |
 
 #### Returns
 
 An object containing the following attributes:
 
-* `index`: data index name
-* `collection`: data collection name
+* `id`: filter unique identifier
+* `index`: index name
 * `normalized`: an object containing the canonical form of the supplied filter
-* `id`: the filter unique identifier
 
 ---
 
 ### `register`
 
-Registers a filter to the engine instance. This method is equivalent to executing [normalize](#normalize) + [store](#store).
+Registers a search filter in Koncorde. This method is equivalent to executing [normalize](#normalize) + [store](#store).
 
-**register(index, collection, filter)**
+**register(filter, [index])**
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`index`|`string`| Data index name |
-|`collection`|`string`| Data collection name |
-|`filter`|`object`| A filter in [Koncorde format](https://docs.kuzzle.io/koncorde/1) |
+|`filter`|`object`| Search filters in Koncorde format |
+|`[index]`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided |
 
 #### Returns
 
-An object containing the following attributes:
-
-* `id`: the filter unique identifier
-* `diff`: `false` if the filter already exists in the engine. Otherwise, contains an object with the canonical version of the provided filter
+A string representing the filter identifier.
 
 ---
 
 ### `remove`
 
-Removes all references to a given filter from the engine.
+Removes a filter from an index.
 
-**remove(filterId)**
+**remove(filterId, [index])**
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filterId`|`string`| Filter unique ID. Obtained by using `register`|
+|`[index]` | `string` | (OPTIONAL) Index name. Uses the default one if none is provided |
 
 ---
 
@@ -1318,8 +1263,7 @@ Stores a normalized filter (obtained with [normalize](#normalize)).
 
 An `Object` containing the following attributes:
 
-* `id`: the filter unique identifier
-* `diff`: `false` if the filter already exists in the engine. Otherwise, contains an object with the canonical version of the provided filter
+A string representing the filter identifier.
 
 ---
 
@@ -1327,16 +1271,16 @@ An `Object` containing the following attributes:
 
 Test data against filters registered in the engine, returning matching filter identifiers, if any.
 
-**test(index, collection, data, [id])**
+This method only tests filters in the targeted index: if no index name is provided, only filters pertaining to the default index will be tested.
+
+**test(data, [index])**
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`index`|`string`| Data index name |
-|`collection`|`string`| Data collection name |
 |`data`|`object`| Data to test against filters |
-|`id`|`string`| If applicable, data unique ID (to use with the [ids](https://docs.kuzzle.io/koncorde/1/essentials/terms/#ids)) filter term |
+|`index`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided |
 
 
 #### Returns
@@ -1355,7 +1299,7 @@ Tests the provided filter without storing it in the engine, to check whether it 
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`filter`|`object`| A filter in [Koncorde format](https://docs.kuzzle.io/koncorde/1) |
+|`filter`|`object`| A filter in Koncorde format |
 
 #### Returns
 
@@ -1368,45 +1312,47 @@ Throws with an appropriate error if the provided filter is invalid.
 The following results are obtained running `node benchmark.js` at the root of the projet.
 
 ```
+Filter count per tested keyword: 10000
+
 > Benchmarking keyword: equals
-  Indexation: time = 0.267s, mem = +39MB
-  Matching x 2,980,015 ops/sec ±0.52% (91 runs sampled)
+  Indexation: time = 0.255s, mem = +39MB
+  Matching x 10,320,209 ops/sec ±0.70% (95 runs sampled)
   Filters removal: time = 0.018s
 
 > Benchmarking keyword: exists
-  Indexation: time = 0.293s, mem = +22MB
-  Matching x 2,707,492 ops/sec ±0.42% (94 runs sampled)
-  Filters removal: time = 0.027s
+  Indexation: time = 0.285s, mem = +20MB
+  Matching x 5,047,932 ops/sec ±0.23% (97 runs sampled)
+  Filters removal: time = 0.021s
 
 > Benchmarking keyword: geoBoundingBox
-  Indexation: time = 0.714s, mem = +-5MB
-  Matching x 1,253,699 ops/sec ±0.83% (96 runs sampled)
-  Filters removal: time = 0.105s
+  Indexation: time = 0.685s, mem = +-8MB
+  Matching x 1,322,528 ops/sec ±0.52% (94 runs sampled)
+  Filters removal: time = 0.092s
 
 > Benchmarking keyword: geoDistance
-  Indexation: time = 1.08s, mem = +3MB
-  Matching x 1,216,696 ops/sec ±0.47% (94 runs sampled)
-  Filters removal: time = 0.108s
+  Indexation: time = 1.052s, mem = +3MB
+  Matching x 1,656,882 ops/sec ±0.65% (96 runs sampled)
+  Filters removal: time = 0.094s
 
 > Benchmarking keyword: geoDistanceRange
-  Indexation: time = 1.573s, mem = +21MB
-  Matching x 1,065,547 ops/sec ±1.53% (93 runs sampled)
-  Filters removal: time = 0.088s
+  Indexation: time = 1.551s, mem = +20MB
+  Matching x 1,344,257 ops/sec ±2.83% (90 runs sampled)
+  Filters removal: time = 0.101s
 
-> Benchmarking keyword: geoPolygon (10 vertices)
-  Indexation: time = 1.024s, mem = +-41MB
-  Matching x 30,108 ops/sec ±0.59% (94 runs sampled)
-  Filters removal: time = 0.097s
+> Benchmarking keyword: geoPolygon (5 vertices)
+  Indexation: time = 0.818s, mem = +-74MB
+  Matching x 112,091 ops/sec ±0.54% (97 runs sampled)
+  Filters removal: time = 0.098s
 
 > Benchmarking keyword: in (5 random values)
-  Indexation: time = 1.067s, mem = +68MB
-  Matching x 2,614,679 ops/sec ±0.62% (91 runs sampled)
-  Filters removal: time = 0.05s
+  Indexation: time = 0.974s, mem = +90MB
+  Matching x 3,579,507 ops/sec ±2.93% (92 runs sampled)
+  Filters removal: time = 0.058s
 
 > Benchmarking keyword: range (random bounds)
-  Indexation: time = 0.235s, mem = +1MB
-  Matching x 41,379 ops/sec ±0.33% (96 runs sampled)
-  Filters removal: time = 0.08s
+  Indexation: time = 0.266s, mem = +-67MB
+  Matching x 53,100 ops/sec ±0.36% (95 runs sampled)
+  Filters removal: time = 0.076s
 ```
 
 _(results obtained with node v16.2.0)_

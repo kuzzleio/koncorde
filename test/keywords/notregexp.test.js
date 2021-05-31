@@ -1,26 +1,24 @@
 const should = require('should/as-function');
 const sinon = require('sinon');
 
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const RegexpCondition = require('../../lib/storage/objects/regexpCondition');
-const DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const RegexpCondition = require('../../lib/engine/objects/regexpCondition');
+const Koncorde = require('../../');
 
-describe('DSL.keyword.notregexp', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.notregexp', () => {
+  let koncorde;
+  let engine;
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
   });
 
   describe('#storage', () => {
     it('should invoke regexp storage function', () => {
-      const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
+      const spy = sinon.spy(engine.storeOperand, 'regexp');
 
-      const id = dsl.register({
+      const id = koncorde.register({
         not: {
           regexp: {
             foo: {
@@ -31,11 +29,11 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      const storage = foPairs.get('notregexp');
+      const storage = engine.foPairs.get('notregexp');
       const condition = new RegexpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
-        Array.from(filters.get(id).subfilters)[0],
+        Array.from(engine.filters.get(id).subfilters)[0],
         'i');
 
       should(spy.called).be.true();
@@ -46,10 +44,12 @@ describe('DSL.keyword.notregexp', () => {
     });
 
     it('should invoke regexp storage function (js engine)', () => {
-      dsl = new DSL({ regExpEngine: 'js' });
-      const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
+      koncorde = new Koncorde({ regExpEngine: 'js' });
+      engine = koncorde.engines.get(null);
 
-      const id = dsl.register({
+      const spy = sinon.spy(engine.storeOperand, 'regexp');
+
+      const id = koncorde.register({
         not: {
           regexp: {
             foo: {
@@ -60,11 +60,11 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      const storage = dsl.storage.foPairs.get('notregexp');
+      const storage = engine.foPairs.get('notregexp');
       const condition = new RegexpCondition(
         { regExpEngine: 'js' },
         '^\\w{2}oba\\w$',
-        Array.from(dsl.storage.filters.get(id).subfilters)[0],
+        Array.from(engine.filters.get(id).subfilters)[0],
         'i');
 
       should(spy.called).be.true();
@@ -77,7 +77,7 @@ describe('DSL.keyword.notregexp', () => {
 
   describe('#matching', () => {
     it('should not match a document if its registered field matches the regexp', () => {
-      dsl.register({
+      koncorde.register({
         not: {
           regexp: {
             foo: {
@@ -88,11 +88,11 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      should(dsl.test({ foo: 'foobar' })).be.an.Array().and.be.empty();
+      should(koncorde.test({ foo: 'foobar' })).be.an.Array().and.be.empty();
     });
 
     it('should match a document if its registered field does not match the regexp', () => {
-      const id = dsl.register({
+      const id = koncorde.register({
         not: {
           regexp: {
             foo: {
@@ -103,13 +103,13 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      const result = dsl.test({ foo: 'bar' });
+      const result = koncorde.test({ foo: 'bar' });
 
       should(result).eql([id]);
     });
 
     it('should match if the document does not contain the registered field', () => {
-      dsl.register({
+      koncorde.register({
         not: {
           regexp: {
             foo: {
@@ -120,11 +120,11 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      should(dsl.test({ bar: 'qux' })).be.an.Array().and.have.length(1);
+      should(koncorde.test({ bar: 'qux' })).be.an.Array().and.have.length(1);
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      const id = dsl.register({
+      const id = koncorde.register({
         not: {
           regexp: {
             'foo.bar.baz': {
@@ -135,7 +135,7 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      const result = dsl.test({ foo: { bar: { baz: 'bar' } } });
+      const result = koncorde.test({ foo: { bar: { baz: 'bar' } } });
 
       should(result).eql([id]);
     });
@@ -143,9 +143,9 @@ describe('DSL.keyword.notregexp', () => {
 
   describe('#removal', () => {
     it('should invoke regexp removal function', () => {
-      const spy = sinon.spy(dsl.storage.removeOperand, 'regexp');
+      const spy = sinon.spy(engine.removeOperand, 'regexp');
 
-      const id = dsl.register({
+      const id = koncorde.register({
         not: {
           regexp: {
             foo: {
@@ -156,10 +156,10 @@ describe('DSL.keyword.notregexp', () => {
         },
       });
 
-      dsl.remove(id);
+      koncorde.remove(id);
 
       should(spy.called).be.true();
-      should(dsl.storage.foPairs).be.empty();
+      should(engine.foPairs).be.empty();
     });
   });
 });
