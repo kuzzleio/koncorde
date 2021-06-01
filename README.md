@@ -7,37 +7,39 @@
 
 Supersonic reverse-matching engine.
 
-**Table of contents:**
+**Table of Contents**
 
+- [Koncorde](#koncorde)
   - [Introduction](#introduction)
   - [Install](#install)
   - [Filter unique identifier](#filter-unique-identifier)
+  - [Indexes](#indexes)
   - [Field syntax](#field-syntax)
+    - [Nested properties](#nested-properties)
+    - [Array values](#array-values)
   - [Filter operands](#filter-operands)
-    - [`and`](#and)
-    - [`bool`](#bool)
-    - [`not`](#not)
-    - [`or`](#or)
+    - [and](#and)
+    - [bool](#bool)
+    - [not](#not)
+    - [or](#or)
   - [Filter terms](#filter-terms)
-    - [`equals`](#equals)
-    - [`exists`](#exists)
-    - [`geoBoundingBox`](#geoBoundingBox)
-    - [`geoDistance`](#geoDistance)
-    - [`geoDistanceRange`](#geoDistanceRange)
-    - [`geoPolygon`](#geoPolygon)
-    - [`ids`](#ids)
-    - [`in`](#in)
-    - [`missing`](#missing)
-    - [`range`](#range)
-    - [`regexp`](#regexp)
+    - [equals](#equals)
+    - [exists](#exists)
+    - [geoBoundingBox](#geoboundingbox)
+    - [geoDistance](#geodistance)
+    - [geoDistanceRange](#geodistancerange)
+    - [geoPolygon](#geopolygon)
+    - [in](#in)
+    - [missing](#missing)
+    - [range](#range)
+    - [regexp](#regexp)
   - [API](#api)
     - [`constructor`](#constructor)
     - [`convertDistance`](#convertdistance)
     - [`convertGeopoint`](#convertgeopoint)
-    - [`exists`](#exists-1)
-    - [`getCollections`](#getcollections)
     - [`getFilterIds`](#getfilterids)
     - [`getIndexes`](#getindexes)
+    - [`hasFilterId`](#hasfilterid)
     - [`normalize`](#normalize)
     - [`register`](#register)
     - [`remove`](#remove)
@@ -537,7 +539,7 @@ And this filter validates the second document:
 
 Filter documents containing a geographical point confined within a provided bounding box:
 
-![Illustration of geoBoundingBox](http://docs.kuzzle.io/assets/images/geolocation/geoBoundingBox.png)
+![Illustration of geoBoundingBox](https://docs.kuzzle.io/geolocation/geoBoundingBox.png)
 
 A bounding box is a 2D box that can be defined using either of the following formats:
 
@@ -628,7 +630,7 @@ The following filter will match the second document only:
 
 Filter documents containing a geographical point, whose position is within a distance radius centered around a provided point of origin:
 
-![Illustration of geoDistance](http://docs.kuzzle.io/assets/images/geolocation/geoDistance.png)
+![Illustration of geoDistance](https://docs.kuzzle.io/geolocation/geoDistance.png)
 
 A `geoDistance` filter contains the following properties:
 
@@ -687,7 +689,7 @@ The following filter will match the second document only:
 
 Filter documents containing a geographical point, whose position is within a distance range from a given point of origin:
 
-![Illustration of geoDistanceRange](http://docs.kuzzle.io/assets/images/geolocation/geoDistanceRange.png)
+![Illustration of geoDistanceRange](https://docs.kuzzle.io/geolocation/geoDistanceRange.png)
 
 A `geoDistanceRange` filter contains the following properties:
 
@@ -746,7 +748,7 @@ The following filter will match the second document only:
 
 Filter documents containing a geographical point, confined within a polygon of an arbitrary number of sides:
 
-![Illustration of geoPolygon](http://docs.kuzzle.io/assets/images/geolocation/geoPolygon.png)
+![Illustration of geoPolygon](https://docs.kuzzle.io/geolocation/geoPolygon.png)
 
 A `geoPolygon` filter is described using an array of [geopoints](https://docs.kuzzle.io/koncorde/1/essentials/geofencing/#geopoints) (at least 3).
 
