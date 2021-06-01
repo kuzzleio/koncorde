@@ -160,6 +160,14 @@ describe('Koncorde API', () => {
 
       should(koncorde.getFilterIds().sort()).match(ids.sort());
     });
+
+    it('should return an empty array if the default index is empty', () => {
+      should(koncorde.getFilterIds()).be.an.Array().and.be.empty();
+    });
+
+    it('should return an empty array if the named index does not exist', () => {
+      should(koncorde.getFilterIds('foobar')).be.an.Array().and.be.empty();
+    });
   });
 
   describe('#hasFilterId', () => {
@@ -174,13 +182,10 @@ describe('Koncorde API', () => {
   });
 
   describe('#test', () => {
-    /*
-     we only check the special case of no registered filter on the provided
-     index and collection, as all other checks are performed in
-     test/api/koncorde/keywords unit tests files
-     */
-    it('should return an empty array if there is no filter registered', () => {
-      should(koncorde.test({ foo: 'bar' })).be.an.Array().and.be.empty();
+    it('should return an empty array if the named index does not exist', () => {
+      should(koncorde.test({ foo: 'bar' }, 'foobar'))
+        .be.an.Array()
+        .and.be.empty();
     });
 
     it('should flatten submitted documents', () => {
@@ -228,11 +233,14 @@ describe('Koncorde API', () => {
   });
 
   describe('#remove', () => {
-    it('should do nothing if the filter id does not exist', () => {
-      koncorde._removeFromTestTables = sinon.spy();
+    it('should do nothing if the target index does not exist', () => {
+      should(koncorde.engines).have.key(null);
+      should(koncorde.engines.size).eql(1);
 
-      koncorde.remove('foo');
-      should(koncorde._removeFromTestTables).not.called();
+      should(() => koncorde.remove('foo', 'bar')).not.throw();
+
+      should(koncorde.engines).have.key(null);
+      should(koncorde.engines.size).eql(1);
     });
 
     it('should unsubscribe a filter from a multi-filter subfilter', () => {
@@ -263,6 +271,65 @@ describe('Koncorde API', () => {
       should(sf.filters.size).be.eql(1);
       const fid = Array.from(sf.filters)[0].id;
       should(fid).match(ids[0]);
+    });
+
+    it('should unsubscribe from a named index', () => {
+      const id1 = koncorde.register({ equals: { foo: 'bar' } }, 'foobar');
+      const id2 = koncorde.register({ equals: { foo: 'qux' } }, 'foobar');
+
+      should(koncorde.getFilterIds('foobar')).match([ id1, id2 ]);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      // wrong index
+      koncorde.remove(id1);
+
+      should(koncorde.getFilterIds('foobar').length).eql(2);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      koncorde.remove(id1, 'foobar');
+
+      should(koncorde.getFilterIds('foobar')).match([ id2 ]);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+    });
+
+    it('should remove an index when the last filter in it is deleted', () => {
+      const id1 = koncorde.register({ equals: { foo: 'bar' } }, 'foobar');
+      const id2 = koncorde.register({ equals: { foo: 'qux' } }, 'foobar');
+
+      should(koncorde.getFilterIds('foobar')).match([ id1, id2 ]);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      // wrong index
+      koncorde.remove(id1);
+
+      should(koncorde.getFilterIds('foobar').length).eql(2);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      koncorde.remove(id1, 'foobar');
+      koncorde.remove(id2, 'foobar');
+
+      should(koncorde.engines).have.keys(null);
+      should(koncorde.engines.size).eql(1);
+    });
+
+    it('should never remove the default index', () => {
+      const id = koncorde.register({ equals: { foo: 'bar' } });
+
+      should(koncorde.getFilterIds()).match([ id ]);
+      should(koncorde.engines).have.keys(null);
+      should(koncorde.engines.size).eql(1);
+
+      // wrong index
+      koncorde.remove(id);
+
+      should(koncorde.getFilterIds().length).eql(0);
+      should(koncorde.engines).have.keys(null);
+      should(koncorde.engines.size).eql(1);
     });
   });
 
@@ -344,6 +411,20 @@ describe('Koncorde API', () => {
       koncorde.store(r);
 
       should(koncorde.engines).have.key('foo');
+    });
+  });
+
+  describe('#getIndexes', () => {
+    it('should always return the default index, and rename it', () => {
+      should(koncorde.getIndexes()).match(['(default)']);
+    });
+
+    it('should return the list of named indexes alongwith the default one', () => {
+      koncorde.register({}, 'foo');
+      koncorde.register({}, 'bar');
+      koncorde.register({}, 'qux');
+
+      should(koncorde.getIndexes()).match(['(default)', 'foo', 'bar', 'qux']);
     });
   });
 });
