@@ -1,7 +1,7 @@
 const should = require('should/as-function');
 
 const Coordinates = require('../lib/util/coordinate');
-const convert = require('../lib/util/convertGeopoint');
+const { convertGeopoint: convert } = require('../lib/util/convertGeopoint');
 
 describe('#geopoint conversions', () => {
   const coords = new Coordinates(43.6021299, 3.8989713);

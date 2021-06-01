@@ -1,7 +1,7 @@
 const should = require('should/as-function');
 const FieldOperand = require('../../lib/engine/objects/fieldOperand');
-const RegexpCondition = require('../../lib/engine/objects/regexpCondition');
-const Koncorde = require('../../');
+const { RegExpCondition } = require('../../lib/engine/objects/regexpCondition');
+const { Koncorde } = require('../../');
 
 describe('Koncorde.keyword.regexp', () => {
   let koncorde;
@@ -163,7 +163,7 @@ describe('Koncorde.keyword.regexp', () => {
       });
 
       const storage = engine.foPairs.get('regexp');
-      const regexp = new RegexpCondition(
+      const regexp = new RegExpCondition(
         { regExpEngine: 're2' },
         'foo',
         Array.from(engine.filters.get(id).subfilters)[0],
@@ -191,13 +191,13 @@ describe('Koncorde.keyword.regexp', () => {
         },
       });
 
-      const cond1 = new RegexpCondition(
+      const cond1 = new RegExpCondition(
         { regExpEngine: 're2' },
         'foo',
         Array.from(engine.filters.get(id1).subfilters)[0],
         'i');
       const storage = engine.foPairs.get('regexp');
-      const cond2 = new RegexpCondition(
+      const cond2 = new RegExpCondition(
         { regExpEngine: 're2' },
         'bar',
         Array.from(engine.filters.get(id2).subfilters)[0]);
@@ -228,7 +228,7 @@ describe('Koncorde.keyword.regexp', () => {
       });
 
       const storage = engine.foPairs.get('regexp');
-      const cond = new RegexpCondition(
+      const cond = new RegExpCondition(
         { regExpEngine: 're2' },
         'foo',
         Array.from(engine.filters.get(id1).subfilters)[0],
@@ -336,7 +336,7 @@ describe('Koncorde.keyword.regexp', () => {
         ],
       });
 
-      const cond = new RegexpCondition(
+      const cond = new RegExpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
         Array.from(engine.filters.get(id2).subfilters)[0],
@@ -362,7 +362,7 @@ describe('Koncorde.keyword.regexp', () => {
 
       const id2 = koncorde.register({ regexp: { foo: { value: '^$' } } });
 
-      const cond = new RegexpCondition(
+      const cond = new RegExpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
         Array.from(engine.filters.get(id1).subfilters)[0],
@@ -396,7 +396,7 @@ describe('Koncorde.keyword.regexp', () => {
         },
       });
 
-      const cond = new RegexpCondition(
+      const cond = new RegExpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
         Array.from(engine.filters.get(id1).subfilters)[0],

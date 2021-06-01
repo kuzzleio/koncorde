@@ -19,11 +19,15 @@
  * limitations under the License.
  */
 
+
 import IntervalTree from 'node-interval-tree';
 
-const RegexpCondition = require('./objects/regexpCondition');
-const RangeCondition = require('./objects/rangeCondition');
-const BoostSpatialIndex = require('boost-geospatial-index');
+import { RegExpCondition } from './objects/regexpCondition';
+import { RangeCondition } from './objects/rangeCondition';
+import * as BoostSpatialIndexImport from 'boost-geospatial-index';
+import { JSONObject } from '../types/JSONObject';
+
+const BoostSpatialIndex = BoostSpatialIndexImport.default;
 
 /**
  * Exposes a sets of methods meant to store operands in
@@ -31,7 +35,9 @@ const BoostSpatialIndex = require('boost-geospatial-index');
  *
  * @class OperandsStorage
  * */
-class OperandsStorage {
+export class OperandsStorage {
+  public config: JSONObject;
+
   constructor (config) {
     this.config = config;
   }
@@ -234,7 +240,7 @@ class OperandsStorage {
    */
   regexp (operand, subfilter, condition) {
     const fieldName = Object.keys(condition.value)[0];
-    const value = new RegexpCondition(
+    const value = new RegExpCondition(
       this.config,
       condition.value[fieldName].value,
       subfilter,
@@ -342,5 +348,3 @@ function storeGeoshape (index, type, id, shape) {
       break;
   }
 }
-
-module.exports = OperandsStorage;

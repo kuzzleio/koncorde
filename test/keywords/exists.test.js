@@ -1,7 +1,7 @@
 const should = require('should/as-function');
 
 const FieldOperand = require('../../lib/engine/objects/fieldOperand');
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 const NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('Koncorde.keyword.exists', () => {

@@ -1,6 +1,6 @@
 const should = require('should/as-function');
 const sinon = require('sinon');
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 
 describe('Koncorde.keyword.missing', () => {
   let koncorde;

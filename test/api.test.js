@@ -1,10 +1,8 @@
-require('reify');
-
 const should = require('should').noConflict();
 const sinon = require('sinon');
 
-const Koncorde = require('../');
-const hash = require('../lib/util/hash');
+const { Koncorde } = require('../');
+const { hash } = require('../lib/util/hash');
 
 describe('Koncorde API', () => {
   let koncorde;

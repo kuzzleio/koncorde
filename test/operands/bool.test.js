@@ -1,6 +1,6 @@
 const should = require('should/as-function');
 
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 const NormalizedExists = require('../../lib/transform/normalizedExists');
 
 describe('Koncorde.operands.bool', () => {
