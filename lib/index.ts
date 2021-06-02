@@ -45,7 +45,7 @@ export interface KoncordeOptions {
   maxMinTerms: number;
   regExpEngine: string;
   seed: ArrayBuffer;
-};
+}
 
 export class Koncorde {
   private engines: Map<string, Engine>;
