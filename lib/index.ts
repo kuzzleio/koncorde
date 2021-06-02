@@ -29,10 +29,31 @@ import { hash } from './util/hash';
 import { JSONObject } from './types/JSONObject';
 
 
+/**
+ * Describes a search filter normalized by Koncorde.
+ * Returned by Koncorde.normalize(), and usable with Koncorde.store().
+ */
 class NormalizedFilter {
-  public filter: any;
+  /**
+   * Normalized filter.
+   *
+   * @type {JSONObject[][]}
+   */
+  public filter: JSONObject[][];
+
+  /**
+   * Filter unique identifier.
+   *
+   * @type {string}
+   */
   public id: string;
-  public index: string|null;
+
+  /**
+   * Target index name.
+   *
+   * @type {string}
+   */
+  public index: string;
 
   constructor (normalized: any, id: string, index: string|null) {
     this.filter = normalized;
