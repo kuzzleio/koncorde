@@ -20,7 +20,7 @@
  */
 
 
-import IntervalTree from 'node-interval-tree';
+import IntervalTree from '@flatten-js/interval-tree'
 
 import { RegExpCondition } from './objects/regexpCondition';
 import { RangeCondition } from './objects/rangeCondition';
@@ -172,8 +172,7 @@ export class OperandsStorage {
     else {
       field.conditions.set(condition.id, rangeCondition);
       field.tree.insert(
-        rangeCondition.low,
-        rangeCondition.high,
+        [ rangeCondition.low, rangeCondition.high ],
         rangeCondition);
     }
   }
@@ -221,11 +220,15 @@ export class OperandsStorage {
       field.conditions.set(condition.id, rangeCondition);
 
       if (rangeCondition.low !== -Infinity) {
-        field.tree.insert(-Infinity, rangeCondition.low, rangeCondition);
+        field.tree.insert(
+          [ -Infinity, rangeCondition.low ],
+          rangeCondition);
       }
 
       if (rangeCondition.high !== Infinity) {
-        field.tree.insert(rangeCondition.high, Infinity, rangeCondition);
+        field.tree.insert(
+          [ rangeCondition.high, Infinity ],
+          rangeCondition);
       }
     }
 
