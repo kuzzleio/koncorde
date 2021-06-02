@@ -20,7 +20,7 @@
  */
 
 
-import IntervalTree from '@flatten-js/interval-tree'
+import IntervalTree from '@flatten-js/interval-tree';
 
 import { RegExpCondition } from './objects/regexpCondition';
 import { RangeCondition } from './objects/rangeCondition';
