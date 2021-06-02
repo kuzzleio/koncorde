@@ -41,9 +41,39 @@ class NormalizedFilter {
   }
 }
 
+/**
+ * Koncorde configuration
+ */
 export interface KoncordeOptions {
+  /**
+   * The maximum number of conditions a filter can hold after being
+   * canonicalized. It is advised to test performances and memory consumption
+   * impacts before increasing this value. If set to 0, no limit is applied.
+   *
+   * (default: 256)
+   *
+   * @type {number}
+   */
   maxMinTerms: number;
+
+  /**
+   * Set the regex engine to either re2 or js.
+   * The former is not fully compatible with PCREs, while the latter is
+   * vulnerable to catastrophic backtracking, making it unsafe if regular
+   * expressions are provided by end-users.
+   *
+   * (default: re2)
+   *
+   * @type {string}
+   */
   regExpEngine: string;
+
+  /**
+   * 32 bytes buffer containing a fixed random seed, to make filter
+   * unique identifiers predictable.
+   *
+   * @type {ArrayBuffer}
+   */
   seed: ArrayBuffer;
 }
 
