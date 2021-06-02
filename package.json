@@ -48,6 +48,7 @@
     "re2": "^1.16.0"
   },
   "devDependencies": {
+    "@types/node": "^15.6.1",
     "@typescript-eslint/eslint-plugin": "^4.26.0",
     "@typescript-eslint/parser": "^4.26.0",
     "benchmark": "^2.1.4",
