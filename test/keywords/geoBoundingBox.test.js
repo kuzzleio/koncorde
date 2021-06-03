@@ -33,12 +33,20 @@ describe('Koncorde.keyword.geoBoundingBox', () => {
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
       should(() => standardize({geoBoundingBox: {}}))
-        .throw('"geoBoundingBox" must be a non-empty object');
+        .throw({
+          keyword: 'geoBoundingBox',
+          message: '"geoBoundingBox": expected object to have exactly 1 property, got 0',
+          path: 'geoBoundingBox',
+        });
     });
 
     it('should reject a filter with multiple field attributes', () => {
       should(() => standardize({geoBoundingBox: {foo: bbox, bar: bbox}}))
-        .throw('"geoBoundingBox" can contain only one attribute');
+        .throw({
+          keyword: 'geoBoundingBox',
+          message: '"geoBoundingBox": expected object to have exactly 1 property, got 2',
+          path: 'geoBoundingBox',
+        });
     });
 
     it('should validate a {top, left, bottom, right} bbox', () => {
@@ -179,7 +187,11 @@ describe('Koncorde.keyword.geoBoundingBox', () => {
       };
 
       should(() => standardize({geoBoundingBox: {foo: box}}))
-        .throw('Unrecognized geo-point format in "geoBoundingBox.foo');
+        .throw({
+          keyword: 'geoBoundingBox',
+          message: '"geoBoundingBox.foo": unrecognized geo-point format',
+          path: 'geoBoundingBox.foo',
+        });
     });
 
     it('should reject a non-convertible bbox point string', () => {
@@ -191,7 +203,11 @@ describe('Koncorde.keyword.geoBoundingBox', () => {
       };
 
       should(() => standardize({geoBoundingBox: {foo: box}}))
-        .throw(`Invalid geoBoundingBox format: ${JSON.stringify(box)}`);
+        .throw({
+          keyword: 'geoBoundingBox',
+          message: /^"geoBoundingBox.foo": unrecognized geoBoundingBox format/,
+          path: 'geoBoundingBox.foo',
+        });
     });
   });
 

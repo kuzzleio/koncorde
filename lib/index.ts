@@ -135,7 +135,7 @@ export class Koncorde {
    * Checks if the provided filter is valid
    *
    * @param {Object} filter
-   * @throws
+   * @throws {KoncordeParseError}
    */
   validate (filter: JSONObject): void {
     this.transformer.check(filter);
@@ -150,6 +150,7 @@ export class Koncorde {
    * @param {Object} filter
    * @param {String} [index] - Index name
    * @return {String}
+   * @throws {KoncordeParseError}
    */
   register (filter: JSONObject, index: string = null): string {
     const normalized = this.normalize(filter, index);
@@ -165,6 +166,7 @@ export class Koncorde {
    * @param  {Object} filter
    * @param  {String} [index] name
    * @return {NormalizedFilter}
+   * @throws {KoncordeParseError}
    */
   normalize(filter: JSONObject, index: string = null): NormalizedFilter {
     if (index !== null && typeof index !== 'string') {

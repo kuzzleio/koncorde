@@ -16,47 +16,83 @@ describe('Koncorde.keyword.exists', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       should(() => koncorde.validate({exists: {}}))
-        .throw('"exists" must be a non-empty object');
+        .throw({
+          keyword: 'exists',
+          message: '"exists": expected object to have exactly 1 property, got 0',
+          path: 'exists',
+        });
     });
 
     it('should reject filters with more than 1 field', () => {
       should(() => koncorde.validate({exists: {field: 'foo', bar: 'bar'}}))
-        .throw('"exists" can contain only one attribute');
+        .throw({
+          keyword: 'exists',
+          message: '"exists": expected object to have exactly 1 property, got 2',
+          path: 'exists',
+        });
     });
 
     it('should reject filters in object-form without a "field" attribute', () => {
       should(() => koncorde.validate({exists: {foo: 'bar'}}))
-        .throw('"exists" requires the following attribute: field');
+        .throw({
+          keyword: 'exists',
+          message: '"exists": the property "field" is missing',
+          path: 'exists',
+        });
     });
 
     it('should reject filters with array argument', () => {
       should(() => koncorde.validate({exists: {field: ['bar']}}))
-        .throw('Attribute "field" in "exists" must be a string');
+        .throw({
+          keyword: 'exists',
+          message: '"exists.field": must be a string',
+          path: 'exists.field',
+        });
     });
 
     it('should reject filters with number argument', () => {
       should(() => koncorde.validate({exists: {field: 42}}))
-        .throw('Attribute "field" in "exists" must be a string');
+        .throw({
+          keyword: 'exists',
+          message: '"exists.field": must be a string',
+          path: 'exists.field',
+        });
     });
 
     it('should reject filters with object argument', () => {
       should(() => koncorde.validate({exists: {field: {}}}))
-        .throw('Attribute "field" in "exists" must be a string');
+        .throw({
+          keyword: 'exists',
+          message: '"exists.field": must be a string',
+          path: 'exists.field',
+        });
     });
 
     it('should reject filters with undefined argument', () => {
       should(() => koncorde.validate({exists: {field: undefined}}))
-        .throw('"exists" requires the following attribute: field');
+        .throw({
+          keyword: 'exists',
+          message: '"exists": the property "field" is missing',
+          path: 'exists',
+        });
     });
 
     it('should reject filters with null argument', () => {
       should(() => koncorde.validate({exists: {field: null}}))
-        .throw('Attribute "field" in "exists" must be a string');
+        .throw({
+          keyword: 'exists',
+          message: '"exists.field": must be a string',
+          path: 'exists.field',
+        });
     });
 
     it('should reject filters with boolean argument', () => {
       should(() => koncorde.validate({exists: {field: true}}))
-        .throw('Attribute "field" in "exists" must be a string');
+        .throw({
+          keyword: 'exists',
+          message: '"exists.field": must be a string',
+          path: 'exists.field',
+        });
     });
 
     it('should validate filters with a string argument', () => {
@@ -66,7 +102,11 @@ describe('Koncorde.keyword.exists', () => {
 
     it('should reject filters with an empty string argument', () => {
       should(() => koncorde.validate({exists: {field: ''}}))
-        .throw('exists: cannot test empty field name');
+        .throw({
+          keyword: 'exists',
+          message: '"exists.field": cannot be empty',
+          path: 'exists.field',
+        });
     });
 
     it('should validate filters written in simplified form', () => {
@@ -75,12 +115,20 @@ describe('Koncorde.keyword.exists', () => {
 
     it('should reject a filter in simplified form with an empty value', () => {
       should(() => koncorde.validate({exists: ''}))
-        .throw('exists: cannot test empty field name');
+        .throw({
+          keyword: 'exists',
+          message: '"exists": cannot test empty field name',
+          path: 'exists',
+        });
     });
 
     it('should reject incorrectly formatted array search filters', () => {
       should(() => koncorde.validate({exists: 'foo[\'bar\']'}))
-        .throw('[exists] Invalid array value "\'bar\'"');
+        .throw({
+          keyword: 'exists',
+          message: '"exists": contains an invalid array value ("\'bar\'")',
+          path: 'exists',
+        });
     });
   });
 

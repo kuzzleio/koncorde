@@ -13,7 +13,11 @@ describe('Koncorde.operands.bool', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       should(() => koncorde.validate({bool: {}}))
-        .throw('"bool" must be a non-empty object');
+        .throw({
+          keyword: 'bool',
+          message: '"bool": must be a non-empty object',
+          path: 'bool',
+        });
     });
 
     it('should reject filters with unrecognized bool attributes', () => {
@@ -27,7 +31,11 @@ describe('Koncorde.operands.bool', () => {
       };
 
       should(() => koncorde.validate(filter))
-        .throw('"bool" operand accepts only the following attributes: must, must_not, should, should_not');
+        .throw({
+          keyword: 'bool',
+          message: '"bool": "foo" is not an allowed attribute (allowed: must,must_not,should,should_not)',
+          path: 'bool',
+        });
     });
   });
 

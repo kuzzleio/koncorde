@@ -31,14 +31,22 @@ describe('Koncorde.keyword.geoDistanceRange', () => {
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
       should(() => standardize({geoDistanceRange: {}}))
-        .throw('"geoDistanceRange" must be a non-empty object');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange": expected object to have exactly 3 properties, got 0',
+          path: 'geoDistanceRange',
+        });
     });
 
     it('should reject a filter with multiple field attributes', () => {
       const filter = {foo: point, bar: point, from: '1km', to: '10km'};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('"geoDistanceRange" keyword must (only) contain a document field and the following attributes: "from", "to"');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange": expected object to have exactly 3 properties, got 4',
+          path: 'geoDistanceRange',
+        });
     });
 
     it('should validate a {lat, lon} point', () => {
@@ -145,7 +153,11 @@ describe('Koncorde.keyword.geoDistanceRange', () => {
       const filter = {foo: p, from: '1km', to: '10km'};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('geoDistanceRange.foo: unrecognized point format');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange.foo": unrecognized point format',
+          path: 'geoDistanceRange.foo',
+        });
     });
 
     it('should reject an invalid latLon argument type', () => {
@@ -153,7 +165,11 @@ describe('Koncorde.keyword.geoDistanceRange', () => {
       const filter = {foo: p, from: '1km', to: '10km'};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('geoDistanceRange.foo: unrecognized point format');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange.foo": unrecognized point format',
+          path: 'geoDistanceRange.foo',
+        });
     });
 
     it('should reject an invalid latLon argument string', () => {
@@ -161,21 +177,33 @@ describe('Koncorde.keyword.geoDistanceRange', () => {
       const filter = {foo: p, from: '1km', to: '10km'};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('geoDistanceRange.foo: unrecognized point format');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange.foo": unrecognized point format',
+          path: 'geoDistanceRange.foo',
+        });
     });
 
     it('should reject a filter with a non-string from value', () => {
       const filter = {foo: point, from: 42, to: '10km'};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('Attribute "from" in "geoDistanceRange" must be a string');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange.from": must be a string',
+          path: 'geoDistanceRange.from',
+        });
     });
 
     it('should reject a filter with a non-string to value', () => {
       const filter = {foo: point, from: '1km', to: 42};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('Attribute "to" in "geoDistanceRange" must be a string');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange.to": must be a string',
+          path: 'geoDistanceRange.to',
+        });
     });
 
     it('should reject a filter with incorrect from value', () => {
@@ -196,7 +224,11 @@ describe('Koncorde.keyword.geoDistanceRange', () => {
       const filter = {foo: point, from: '10 km', to: '1km'};
 
       should(() => standardize({geoDistanceRange: filter}))
-        .throw('geoDistanceRange.foo: inner radius must be smaller than outer radius');
+        .throw({
+          keyword: 'geoDistanceRange',
+          message: '"geoDistanceRange": inner radius must be smaller than outer radius',
+          path: 'geoDistanceRange',
+        });
     });
   });
 
