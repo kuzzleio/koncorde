@@ -1,12 +1,11 @@
 const should = require('should/as-function');
 
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const Koncorde = require('../../');
 
-describe('DSL.keyword.geoBoundingBox', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.geoBoundingBox', () => {
+  let koncorde;
+  let engine;
   let standardize;
   const bbox = {
     topLeft: { lat: 43.6331979, lon: 3.8433703 },
@@ -26,10 +25,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
   };
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
-    standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
+    standardize = koncorde.transformer.standardizer.standardize.bind(koncorde.transformer.standardizer);
   });
 
   describe('#validation/standardization', () => {
@@ -199,11 +197,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
   describe('#storage', () => {
     it('should store a single geoBoundingBox correctly', () => {
-      const sub = dsl.register('index', 'collection', {
-        geoBoundingBox: { foo: bbox },
-      });
-      const subfilter = Array.from(filters.get(sub.id).subfilters)[0];
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const id = koncorde.register({ geoBoundingBox: { foo: bbox } });
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo')).have.value(
@@ -212,34 +208,28 @@ describe('DSL.keyword.geoBoundingBox', () => {
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      const sub1 = dsl.register('index', 'collection', {
-        geoBoundingBox: { foo: bbox },
-      });
-
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({ geoBoundingBox: { foo: bbox } });
+      const id2 = koncorde.register({
         and: [
           { geoBoundingBox: { foo: bbox } },
           { equals: { foo: 'bar' } },
         ],
       });
 
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
 
-      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
-      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
       should(storage.fields.get('foo')).have.value(
         Array.from(sf1.conditions)[0].id,
         new Set([sf1, sf2]));
     });
 
     it('should add another condition to an already existing field', () => {
-      const sub1 = dsl.register('index', 'collection', {
-        geoBoundingBox: {foo: bbox},
-      });
-
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({ geoBoundingBox: {foo: bbox} });
+      const id2 = koncorde.register({
         geoBoundingBox: {
           foo: {
             bottomRight: 'drj7teegpus6',
@@ -248,12 +238,12 @@ describe('DSL.keyword.geoBoundingBox', () => {
         },
       });
 
-      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
-      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
       const cond1 = Array.from(sf1.conditions)[0].id;
       const cond2 = Array.from(sf2.conditions)[0].id;
 
-      const storage = foPairs.get('index', 'collection', 'geospatial');
+      const storage = engine.foPairs.get('geospatial');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
@@ -263,62 +253,54 @@ describe('DSL.keyword.geoBoundingBox', () => {
 
   describe('#matching', () => {
     it('should match a point inside the bbox', () => {
-      const sub = dsl.register('index', 'collection', {
-        geoBoundingBox: { foo: bbox },
-      });
+      const id = koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {
+      const result = koncorde.test({
         foo: {
-          latLon: [ 43.6073913, 3.9109057 ]
-        }
+          latLon: [ 43.6073913, 3.9109057 ],
+        },
       });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should convert points to float before trying to match them', () => {
-      const sub = dsl.register('index', 'collection', {
-        geoBoundingBox: { foo: bbox },
-      });
+      const id = koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {
+      const result = koncorde.test({
         foo: {
           latLon: ['43.6073913', '3.9109057'],
         },
       });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should match a point exactly on a bbox corner', () => {
-      const sub = dsl.register('index', 'collection', {
-        geoBoundingBox: { foo: bbox },
-      });
+      const id = koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {foo: bbox.topLeft});
+      const result = koncorde.test({ foo: bbox.topLeft });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should match a point on one of the bbox border', () => {
-      const sub = dsl.register('index', 'collection', {
-        geoBoundingBox: { foo: bbox },
-      });
+      const id = koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {
+      const result = koncorde.test({
         foo: {
           lat: bbox.topLeft.lat,
           lon: 3.9,
         },
       });
 
-      should(result).eql([sub.id]);
+      should(result).eql([id]);
     });
 
     it('should not match if a point is outside the bbox', () => {
-      dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}});
+      koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {
+      const result = koncorde.test({
         foo: {
           lat: bbox.topLeft.lat + 10e-6,
           lon: 3.9,
@@ -329,9 +311,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
     });
 
     it('should return an empty array if the document does not contain a geopoint', () => {
-      dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}});
+      koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {
+      const result = koncorde.test({
         bar: {
           lat: bbox.topLeft.lat + 10e-6,
           lon: 3.9,
@@ -342,11 +324,9 @@ describe('DSL.keyword.geoBoundingBox', () => {
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      dsl.register('index', 'collection', {geoBoundingBox: {foo: bbox}});
+      koncorde.register({ geoBoundingBox: { foo: bbox } });
 
-      const result = dsl.test('index', 'collection', {
-        foo: '43.6331979 / 3.8433703',
-      });
+      const result = koncorde.test({ foo: '43.6331979 / 3.8433703' });
 
       should(result).be.an.Array().and.be.empty();
     });

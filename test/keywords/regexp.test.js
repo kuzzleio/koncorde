@@ -1,63 +1,61 @@
 const should = require('should/as-function');
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const RegexpCondition = require('../../lib/storage/objects/regexpCondition');
-const DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const RegexpCondition = require('../../lib/engine/objects/regexpCondition');
+const Koncorde = require('../../');
 
-describe('DSL.keyword.regexp', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.regexp', () => {
+  let koncorde;
+  let engine;
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
   });
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      should(() => dsl.validate({regexp: {}}))
+      should(() => koncorde.validate({regexp: {}}))
         .throw('"regexp" must be a non-empty object');
     });
 
     it('should reject filters with more than 1 field', () => {
       const filter = {foo: {value: 'foo'}, bar: {value: 'foo'}};
 
-      should(() => dsl.validate({regexp: filter}))
+      should(() => koncorde.validate({regexp: filter}))
         .throw('"regexp" can contain only one attribute');
     });
 
     it('should reject filters with an empty field object', () => {
-      should(() => dsl.validate({regexp: {foo: {}}}))
+      should(() => koncorde.validate({regexp: {foo: {}}}))
         .throw('regexp.foo must be either a string or a non-empty object');
     });
 
     it('should reject filters with other fields defined other than the accepted ones', () => {
       const filter = {foo: {value: 'foo', flags: 'ig', bar: 'qux'}};
 
-      should(() => dsl.validate({regexp: filter}))
+      should(() => koncorde.validate({regexp: filter}))
         .throw('Keyword "regexp" can only contain the following attributes: flags, value');
     });
 
     it('should reject filters if the "value" attribute is not defined', () => {
-      should(() => dsl.validate({regexp: {foo: {flags: 'ig'}}}))
+      should(() => koncorde.validate({regexp: {foo: {flags: 'ig'}}}))
         .throw('"regexp" requires the following attribute: value');
     });
 
     it('should reject filters with a non-string "flags" attribute', () => {
-      should(() => dsl.validate({regexp: {foo: {value: 'foo', flags: 42}}}))
+      should(() => koncorde.validate({regexp: {foo: {value: 'foo', flags: 42}}}))
         .throw('Attribute "flags" in "regexp" must be a string');
     });
 
     it('should reject filters with an invalid regular expression value', () => {
-      should(() => dsl.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}}))
+      should(() => koncorde.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}}))
         .throw(/^Cannot parse regexp expression/);
     });
 
     it('should reject filters with invalid flags (js engine only)', () => {
-      dsl = new DSL({ regExpEngine: 'js' });
+      koncorde = new Koncorde({ regExpEngine: 'js' });
 
-      should(() => dsl.validate({
+      should(() => koncorde.validate({
         regexp: {
           foo: {
             value: 'a',
@@ -69,7 +67,7 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should validate a well-formed regular expression filter w/ flags', () => {
-      const res = dsl.normalize('foo', 'bar', {
+      const normalized = koncorde.normalize({
         regexp: {
           foo: {
             value: 'foo',
@@ -78,13 +76,30 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      should(res.normalized).match([[{regexp:{foo:{flags:'i',value:'foo'}}}]]);
+      should(normalized.filter).match([
+        [
+          {
+            regexp: {
+              foo: {
+                flags:'i',
+                value:'foo',
+              },
+            },
+          },
+        ],
+      ]);
     });
 
     it('should validate a well-formed regular expression filter without flags', () => {
-      const res = dsl.normalize('foo', 'bar', {regexp: {foo: {value: 'foo'}}});
+      const normalized = koncorde.normalize({
+        regexp: {
+          foo: {
+            value: 'foo',
+          },
+        },
+      });
 
-      should(res.normalized).match([
+      should(normalized.filter).match([
         [
           {
             regexp: {
@@ -99,9 +114,9 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should accept a simplified form', () => {
-      const res = dsl.normalize('foo', 'bar', {regexp: {foo: '^bar'}});
+      const normalized = koncorde.normalize({ regexp: { foo: '^bar' } });
 
-      should(res.normalized).match([
+      should(normalized.filter).match([
         [
           {
             regexp: {
@@ -116,7 +131,7 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should reject an invalid simple form regex', () => {
-      should(() => dsl.validate({ regexp: { foo: '++' } }))
+      should(() => koncorde.validate({ regexp: { foo: '++' } }))
         .throw(/^Cannot parse regexp expression/);
     });
   });
@@ -132,13 +147,13 @@ describe('DSL.keyword.regexp', () => {
         },
       };
 
-      should(dsl.transformer.standardizer.standardize(filter)).match(filter);
+      should(koncorde.transformer.standardizer.standardize(filter)).match(filter);
     });
   });
 
   describe('#storage', () => {
     it('should store a single condition correctly', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         regexp: {
           foo: {
             value: 'foo',
@@ -147,11 +162,11 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      const storage = foPairs.get('index', 'collection', 'regexp');
+      const storage = engine.foPairs.get('regexp');
       const regexp = new RegexpCondition(
         { regExpEngine: 're2' },
         'foo',
-        Array.from(filters.get(subscription.id).subfilters)[0],
+        Array.from(engine.filters.get(id).subfilters)[0],
         'i');
 
       should(storage).be.instanceOf(FieldOperand);
@@ -159,7 +174,7 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should store multiple conditions on the same field correctly', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({
         regexp: {
           foo: {
             value: 'foo',
@@ -168,7 +183,7 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = koncorde.register({
         regexp: {
           foo: {
             value: 'bar',
@@ -179,13 +194,13 @@ describe('DSL.keyword.regexp', () => {
       const cond1 = new RegexpCondition(
         { regExpEngine: 're2' },
         'foo',
-        Array.from(filters.get(sub1.id).subfilters)[0],
+        Array.from(engine.filters.get(id1).subfilters)[0],
         'i');
-      const storage = foPairs.get('index', 'collection', 'regexp');
+      const storage = engine.foPairs.get('regexp');
       const cond2 = new RegexpCondition(
         { regExpEngine: 're2' },
         'bar',
-        Array.from(filters.get(sub2.id).subfilters)[0]);
+        Array.from(engine.filters.get(id2).subfilters)[0]);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').size).eql(2);
@@ -204,22 +219,22 @@ describe('DSL.keyword.regexp', () => {
       };
 
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register(filter);
+      const id2 = koncorde.register({
         and: [
           filter,
-          {equals: {foo: 'bar'}},
+          { equals: { foo: 'bar' } },
         ],
       });
 
-      const storage = foPairs.get('index', 'collection', 'regexp');
-      const sub1 = dsl.register('index', 'collection', filter);
+      const storage = engine.foPairs.get('regexp');
       const cond = new RegexpCondition(
         { regExpEngine: 're2' },
         'foo',
-        Array.from(filters.get(sub1.id).subfilters)[0],
+        Array.from(engine.filters.get(id1).subfilters)[0],
         'i');
 
-      cond.subfilters.add(Array.from(filters.get(sub2.id).subfilters)[0]);
+      cond.subfilters.add(Array.from(engine.filters.get(id2).subfilters)[0]);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').size).eql(1);
@@ -229,7 +244,7 @@ describe('DSL.keyword.regexp', () => {
 
   describe('#matching', () => {
     it('should match a document if its registered field matches the regexp', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         regexp: {
           foo: {
             value: '^\\w{2}oba\\w$',
@@ -238,12 +253,11 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 'FOOBAR'}))
-        .eql([subscription.id]);
+      should(koncorde.test({ foo: 'FOOBAR' })).eql([id]);
     });
 
     it('should not match a document if its registered field does not match the regexp', () => {
-      dsl.register('index', 'collection', {
+      koncorde.register({
         regexp: {
           foo: {
             value: '^\\w{2}oba\\w$',
@@ -252,12 +266,11 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 'Saskatchewan'}))
-        .be.an.Array().and.be.empty();
+      should(koncorde.test({ foo: 'Saskatchewan' })).be.an.Array().and.be.empty();
     });
 
     it('should not match if the document does not contain the registered field', () => {
-      dsl.register('index', 'collection', {
+      koncorde.register({
         regexp: {
           foo: {
             value: '^\\w{2}oba\\w$',
@@ -266,12 +279,11 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {bar: 'qux'}))
-        .be.an.Array().and.empty();
+      should(koncorde.test({ bar: 'qux' })).be.an.Array().and.empty();
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         regexp: {
           'foo.bar.baz': {
             value: '^\\w{2}oba\\w$',
@@ -280,46 +292,19 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      const result = dsl.test('index', 'collection', {
+      const result = koncorde.test({
         foo: {
           bar: {baz: 'FOOBAR'},
         },
       });
 
-      should(result).eql([subscription.id]);
-    });
-
-    it('should not match if the document is in another index', () => {
-      dsl.register('index', 'collection', {
-        regexp: {
-          foo: {
-            value: '^\\w{2}oba\\w$',
-            flags: 'i',
-          },
-        },
-      });
-
-      should(dsl.test('foobar', 'collection', {foo: 'qux'}))
-        .be.an.Array().and.empty();
-    });
-
-    it('should not match if the document is in another collection', () => {
-      dsl.register('index', 'collection', {
-        regexp: {
-          foo: {
-            value: '^\\w{2}oba\\w$',
-            flags: 'i',
-          },
-        },
-      });
-
-      should(dsl.test('index', 'foobar', {foo: 'qux'})).be.an.Array().and.empty();
+      should(result).eql([id]);
     });
   });
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         regexp: {
           foo: {
             value: '^\\w{2}oba\\w$',
@@ -328,9 +313,9 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      dsl.remove(subscription.id);
+      koncorde.remove(id);
 
-      should(foPairs._cache).be.empty();
+      should(engine.foPairs).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
@@ -343,8 +328,8 @@ describe('DSL.keyword.regexp', () => {
         },
       };
 
-      const sub1 = dsl.register('index', 'collection', filter);
-      const sub2 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register(filter);
+      const id2 = koncorde.register({
         and: [
           filter,
           {equals: {foo: 'bar'}},
@@ -354,19 +339,19 @@ describe('DSL.keyword.regexp', () => {
       const cond = new RegexpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
-        Array.from(filters.get(sub2.id).subfilters)[0],
+        Array.from(engine.filters.get(id2).subfilters)[0],
         'i');
 
-      dsl.remove(sub1.id);
+      koncorde.remove(id1);
 
-      const storage = foPairs.get('index', 'collection', 'regexp');
+      const storage = engine.foPairs.get('regexp');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
     });
 
     it('should remove a value from the list if its last subfilter is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({
         regexp: {
           foo: {
             value: '^\\w{2}oba\\w$',
@@ -375,21 +360,17 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
-        regexp: {
-          foo: {value: '^$'},
-        },
-      });
+      const id2 = koncorde.register({ regexp: { foo: { value: '^$' } } });
 
       const cond = new RegexpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
-        Array.from(filters.get(sub1.id).subfilters)[0],
+        Array.from(engine.filters.get(id1).subfilters)[0],
         'i');
 
-      dsl.remove(sub2.id);
+      koncorde.remove(id2);
 
-      const storage = foPairs.get('index', 'collection', 'regexp');
+      const storage = engine.foPairs.get('regexp');
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond.stringValue)).match(cond);
@@ -397,7 +378,7 @@ describe('DSL.keyword.regexp', () => {
     });
 
     it('should remove a field from the list if its last value to test is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({
         regexp: {
           foo: {
             value: '^\\w{2}oba\\w$',
@@ -406,7 +387,7 @@ describe('DSL.keyword.regexp', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = koncorde.register({
         regexp: {
           bar: {
             value: '^\\w{2}oba\\w$',
@@ -418,15 +399,14 @@ describe('DSL.keyword.regexp', () => {
       const cond = new RegexpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
-        Array.from(filters.get(sub1.id).subfilters)[0],
+        Array.from(engine.filters.get(id1).subfilters)[0],
         'i');
 
-      const operand = foPairs.get('index', 'collection', 'regexp');
-      should (operand.fields).have.keys('foo', 'bar');
+      const storage = engine.foPairs.get('regexp');
 
-      dsl.remove(sub2.id);
+      should (storage.fields).have.keys('foo', 'bar');
 
-      const storage = foPairs.get('index', 'collection', 'regexp');
+      koncorde.remove(id2);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').get(cond.stringValue)).match(cond);

@@ -1,23 +1,21 @@
 const should = require('should/as-function');
 
-const FieldOperand = require('../../lib/storage/objects/fieldOperand');
-const DSL = require('../../');
-const RangeCondition = require('../../lib/storage/objects/rangeCondition');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const Koncorde = require('../../');
+const RangeCondition = require('../../lib/engine/objects/rangeCondition');
 
-describe('DSL.keyword.notrange', () => {
-  let dsl;
-  let filters;
-  let foPairs;
+describe('Koncorde.keyword.notrange', () => {
+  let koncorde;
+  let engine;
 
   beforeEach(() => {
-    dsl = new DSL();
-    filters = dsl.storage.filters;
-    foPairs = dsl.storage.foPairs;
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
   });
 
   describe('#storage', () => {
     it('should store a single condition correctly', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: {
@@ -27,8 +25,8 @@ describe('DSL.keyword.notrange', () => {
           },
         },
       });
-      const subfilter = Array.from(filters.get(subscription.id).subfilters)[0];
-      const store = foPairs.get('index', 'collection', 'notrange');
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
+      const store = engine.foPairs.get('notrange');
 
       should(store).be.instanceOf(FieldOperand);
       should(store.fields.get('foo').conditions.size).be.eql(1);
@@ -42,7 +40,7 @@ describe('DSL.keyword.notrange', () => {
     });
 
     it('should store multiple conditions on the same field correctly', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({
         not: {
           range: {
             foo: {
@@ -53,16 +51,16 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = koncorde.register({
         and: [
-          {not: {range: {foo: {gte: 10, lte: 78}}}},
-          {not: {range: {foo: {gt: 0, lt: 50}}}},
+          { not: { range: { foo: { gte: 10, lte: 78 } } } },
+          { not: { range: { foo: { gt: 0, lt: 50 } } } },
         ],
       });
 
-      const sf1 = Array.from(filters.get(sub1.id).subfilters)[0];
-      const sf2 = Array.from(filters.get(sub2.id).subfilters)[0];
-      const store = foPairs.get('index', 'collection', 'notrange');
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const store = engine.foPairs.get('notrange');
 
       should(store).be.instanceOf(FieldOperand);
       should(store.fields.get('foo').conditions.size).be.eql(3);
@@ -97,7 +95,7 @@ describe('DSL.keyword.notrange', () => {
 
   describe('#matching', () => {
     it('should match a document with its value outside the range', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: {
@@ -108,11 +106,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: -89})).eql([subscription.id]);
+      should(koncorde.test({ foo: -89 })).eql([id]);
     });
 
     it('should match a document with its value exactly on the lower exclusive boundary', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: {
@@ -123,11 +121,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 42})).eql([subscription.id]);
+      should(koncorde.test({ foo: 42 })).eql([id]);
     });
 
     it('should match a document with its value exactly on the upper exclusive boundary', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: {
@@ -138,12 +136,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 110}))
-        .be.eql([subscription.id]);
+      should(koncorde.test({ foo: 110 })).be.eql([id]);
     });
 
     it('should not match a document with its value exactly on the lower inclusive boundary', () => {
-      dsl.register('index', 'collection', {
+      koncorde.register({
         not: {
           range: {
             foo: {
@@ -154,12 +151,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 42}))
-        .be.an.Array().and.be.empty();
+      should(koncorde.test({ foo: 42 })).be.an.Array().and.be.empty();
     });
 
     it('should not match a document with its value exactly on the upper inclusive boundary', () => {
-      dsl.register('index', 'collection', {
+      koncorde.register({
         not: {
           range: {
             foo: {
@@ -170,12 +166,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 110}))
-        .be.an.Array().and.be.empty();
+      should(koncorde.test({ foo: 110 })).be.an.Array().and.be.empty();
     });
 
     it('should match a document with only a lower boundary range', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: { gt: -10 },
@@ -183,12 +178,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: -25}))
-        .be.eql([subscription.id]);
+      should(koncorde.test({ foo: -25 })).be.eql([id]);
     });
 
     it('should match a document with only an upper boundary range', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: { lt: -10 },
@@ -196,12 +190,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {foo: 105}))
-        .be.eql([subscription.id]);
+      should(koncorde.test({ foo: 105 })).be.eql([id]);
     });
 
     it('should return all notrange filters attached to the field if the document does not contain the registered field', () => {
-      dsl.register('i', 'c', {
+      koncorde.register({
         not: {
           range: {
             foo: { lt: -10 },
@@ -209,7 +202,7 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      dsl.register('i', 'c', {
+      koncorde.register({
         not: {
           range: {
             foo: { gt: 42 },
@@ -217,7 +210,7 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      dsl.register('i', 'c', {
+      koncorde.register({
         not: {
           range: {
             foo: {
@@ -228,13 +221,11 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('i', 'c', {bar: 105}))
-        .be.an.Array()
-        .length(3);
+      should(koncorde.test({ bar: 105 })).be.an.Array().length(3);
     });
 
     it('should return all notrange filters attached to the field if the document searched field is not a number', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: { lt: -10 },
@@ -242,14 +233,13 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      should(dsl.test('index', 'collection', {bar: 'baz'}))
-        .be.eql([subscription.id]);
+      should(koncorde.test({ bar: 'baz' })).be.eql([id]);
     });
   });
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         not: {
           range: {
             foo: {
@@ -260,12 +250,12 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      dsl.remove(subscription.id);
-      should(foPairs._cache).be.empty();
+      koncorde.remove(id);
+      should(engine.foPairs).be.empty();
     });
 
     it('should remove a single subfilter from a multi-filter condition', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({
         not: {
           range: {
             foo: {
@@ -276,24 +266,24 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = koncorde.register({
         and: [
-          {not: {range: {foo: {lt: 50}}}},
-          {not: {range: {foo: {gt: 2}}}},
-          {not: {range: {foo: {gte: 42, lte: 110}}}},
+          { not: { range: { foo: { lt: 50 } } } },
+          { not: { range: { foo: { gt: 2 } } } },
+          { not: { range: { foo: { gte: 42, lte: 110 } } } },
         ]
       });
 
-      const storage = foPairs.get('index', 'collection', 'notrange');
+      const storage = engine.foPairs.get('notrange');
 
       should(storage.fields.get('foo').conditions.size).eql(3);
 
-      dsl.remove(sub2.id);
+      koncorde.remove(id2);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').conditions.size).eql(1);
 
-      const multiSubfilter = Array.from(filters.get(sub1.id).subfilters)[0];
+      const multiSubfilter = Array.from(engine.filters.get(id1).subfilters)[0];
       const rcd = storage.fields.get('foo').conditions
         .get(Array.from(multiSubfilter.conditions)[0].id);
 
@@ -304,7 +294,7 @@ describe('DSL.keyword.notrange', () => {
     });
 
     it('should remove a field from the list if its last subfilter is removed', () => {
-      const sub1 = dsl.register('index', 'collection', {
+      const id1 = koncorde.register({
         not: {
           range: {
             bar: {
@@ -315,7 +305,7 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      const sub2 = dsl.register('index', 'collection', {
+      const id2 = koncorde.register({
         not: {
           range: {
             foo: {
@@ -326,19 +316,16 @@ describe('DSL.keyword.notrange', () => {
         },
       });
 
-      const operand = dsl.storage.foPairs
-        .get('index', 'collection', 'notrange');
+      const storage = engine.foPairs.get('notrange');
 
-      should(operand.fields).have.keys('bar', 'foo');
+      should(storage.fields).have.keys('bar', 'foo');
 
-      dsl.remove(sub1.id);
-
-      const storage = foPairs.get('index', 'collection', 'notrange');
+      koncorde.remove(id1);
 
       should(storage).be.instanceOf(FieldOperand);
       should(storage.fields.get('foo').conditions.size).eql(1);
 
-      const multiSubfilter = Array.from(filters.get(sub2.id).subfilters)[0];
+      const multiSubfilter = Array.from(engine.filters.get(id2).subfilters)[0];
       const rcd = storage.fields.get('foo').conditions
         .get(Array.from(multiSubfilter.conditions)[0].id);
 

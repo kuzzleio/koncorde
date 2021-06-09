@@ -40,7 +40,7 @@ describe('koncorde.operands.and', () => {
       };
 
       should(() => koncorde.validate(filter))
-        .throw('Unknown DSL keyword: foo');
+        .throw('Unknown Koncorde keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
@@ -76,34 +76,27 @@ describe('koncorde.operands.and', () => {
         ]
       };
 
-      const subscription = koncorde.register('index', 'collection', filters);
-      const result = koncorde.test(
-        'index',
-        'collection',
-        {
-          name: 'bar',
-          skills: { languages: ['c++', 'javascript', 'c#'] }
-        });
+      const id = koncorde.register(filters);
+      const result = koncorde.test({
+        name: 'bar',
+        skills: { languages: ['c++', 'javascript', 'c#'] },
+      });
 
-      should(result).eql([subscription.id]);
+      should(result).eql([id]);
     });
 
     it('should not match if the document misses at least 1 condition', () => {
-      const filters = {
+      koncorde.register({
         and: [
           { equals: { name: 'bar' } },
           { exists: 'skills.languages["javascript"]' },
         ]
-      };
+      });
 
-      koncorde.register('index', 'collection', filters);
-      const result = koncorde.test(
-        'index',
-        'collection',
-        {
-          name: 'qux',
-          skills: { languages: ['ruby', 'php', 'elm', 'javascript'] },
-        });
+      const result = koncorde.test({
+        name: 'qux',
+        skills: { languages: ['ruby', 'php', 'elm', 'javascript'] },
+      });
 
       should(result).be.an.Array().and.empty();
     });
@@ -111,22 +104,24 @@ describe('koncorde.operands.and', () => {
 
   describe('#removal', () => {
     it('should destroy all associated keywords to an AND operand', () => {
-      const subscription = koncorde.register('index', 'collection', {
+      const id = koncorde.register({
         and: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      koncorde.register('index', 'collection', {exists: {field: 'foo'}});
+      koncorde.register({ exists: { field: 'foo' } });
 
-      koncorde.remove(subscription.id);
+      koncorde.remove(id);
 
-      should(koncorde.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
-      should(koncorde.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
-      should(koncorde.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
-      should(koncorde.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
+      const engine = koncorde.engines.get(null);
+
+      should(engine.foPairs.get('exists')).be.an.Object();
+      should(engine.foPairs.get('equals')).be.undefined();
+      should(engine.foPairs.get('notexists')).be.undefined();
+      should(engine.foPairs.get('range')).be.undefined();
     });
   });
 });

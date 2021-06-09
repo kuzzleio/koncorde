@@ -12,7 +12,7 @@ const {
 
 const Koncorde = require('.');
 
-const max = 100000;
+const max = 10000;
 const engine = MersenneTwister19937.autoSeed();
 const rgen = {
   int: randomIntegerEngine(-10000, 10000),
@@ -22,12 +22,12 @@ const rgen = {
 let filters = [];
 const koncorde = new Koncorde();
 
-const matching = (name, document) => {
+const matching = document => {
   const suite = new Benchmark.Suite();
 
   suite
     .add('\tMatching', () => {
-      koncorde.test('i', name, document);
+      koncorde.test(document);
     })
     .on('cycle', event => {
       console.log(String(event.target));
@@ -56,13 +56,13 @@ function test (name, generator, document) {
   for (let i = 0;i < max; i++) {
     // Using the filter name as a collection to isolate
     // benchmark calculation per keyword
-    filters.push(koncorde.register('i', name, generator()).id);
+    filters.push(koncorde.register(generator()));
   }
 
   const filterEndTime = (Date.now() - filterStartTime) / 1000;
   console.log(`\tIndexation: time = ${filterEndTime}s, mem = +${Math.round((v8.getHeapStatistics().total_heap_size - baseHeap) / 1024 / 1024)}MB`);
 
-  matching(name, document);
+  matching(document);
 }
 
 function run () {
@@ -120,10 +120,10 @@ function run () {
     },
     { point: [0, 0] });
 
-  test('geoPolygon (10 vertices)',
+  test('geoPolygon (5 vertices)',
     () => {
       const polygon = georandom
-        .polygon(1)
+        .polygon(1, 5)
         .features[0]
         .geometry.coordinates[0].map(c => [c[1], c[0]]);
 

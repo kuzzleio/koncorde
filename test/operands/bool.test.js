@@ -1,18 +1,18 @@
 const should = require('should/as-function');
 
-const DSL = require('../../');
+const Koncorde = require('../../');
 const NormalizedExists = require('../../lib/transform/normalizedExists');
 
-describe('DSL.operands.bool', () => {
-  let dsl;
+describe('Koncorde.operands.bool', () => {
+  let koncorde;
 
   beforeEach(() => {
-    dsl = new DSL();
+    koncorde = new Koncorde();
   });
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      should(() => dsl.validate({bool: {}}))
+      should(() => koncorde.validate({bool: {}}))
         .throw('"bool" must be a non-empty object');
     });
 
@@ -26,7 +26,7 @@ describe('DSL.operands.bool', () => {
         },
       };
 
-      should(() => dsl.validate(filter))
+      should(() => koncorde.validate(filter))
         .throw('"bool" operand accepts only the following attributes: must, must_not, should, should_not');
     });
   });
@@ -80,7 +80,7 @@ describe('DSL.operands.bool', () => {
         }
       };
 
-      const result = dsl.transformer.standardizer.standardize(bool);
+      const result = koncorde.transformer.standardizer.standardize(bool);
       should(result).match({
         and: [
           {

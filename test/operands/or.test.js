@@ -1,21 +1,21 @@
 const should = require('should/as-function');
-const DSL = require('../../');
+const Koncorde = require('../../');
 
-describe('DSL.operands.or', () => {
-  let dsl;
+describe('Koncorde.operands.or', () => {
+  let koncorde;
 
   beforeEach(() => {
-    dsl = new DSL();
+    koncorde = new Koncorde();
   });
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      should(() => dsl.validate({or: []}))
+      should(() => koncorde.validate({or: []}))
         .throw('Attribute "or" cannot be empty');
     });
 
     it('should reject non-array content', () => {
-      should(() => dsl.validate({or: {foo: 'bar'}}))
+      should(() => koncorde.validate({or: {foo: 'bar'}}))
         .throw('Attribute "or" must be an array');
     });
 
@@ -27,19 +27,20 @@ describe('DSL.operands.or', () => {
         ],
       };
 
-      should(() => dsl.validate(filter))
+      should(() => koncorde.validate(filter))
         .throw('"or" operand can only contain non-empty objects');
     });
 
     it('should reject if one of the content object does not refer to a valid keyword', () => {
       const filter = {
         or: [
-          {equals: {foo: 'bar'}},
-          {foo: 'bar'},
+          { equals: { foo: 'bar' } },
+          { foo: 'bar' },
         ],
       };
 
-      should(() => dsl.validate(filter)).throw('Unknown DSL keyword: foo');
+      should(() => koncorde.validate(filter))
+        .throw('Unknown Koncorde keyword: foo');
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
@@ -50,7 +51,7 @@ describe('DSL.operands.or', () => {
         ],
       };
 
-      should(() => dsl.validate(filter))
+      should(() => koncorde.validate(filter))
         .throw('"exists" requires the following attribute: field');
     });
 
@@ -62,61 +63,59 @@ describe('DSL.operands.or', () => {
         ],
       };
 
-      should(() => dsl.validate(filters)).not.throw();
+      should(() => koncorde.validate(filters)).not.throw();
     });
   });
 
   describe('#matching', () => {
     it('should match a document if at least 1 condition is fulfilled', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      const result = dsl.test('index', 'collection', {
-        foo: 'foo',
-        bar: 'baz',
-        baz: 13,
-      });
+      const result = koncorde.test({ foo: 'foo', bar: 'baz', baz: 13 });
 
-      should(result).eql([subscription.id]);
+      should(result).eql([id]);
     });
 
     it('should not match if the document misses all conditions', () => {
-      dsl.register('index', 'collection', {
+      koncorde.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      should(dsl.test('index', 'collection', {foo: 'foo', bar: 'baz', baz: 42}))
+      should(koncorde.test({ foo: 'foo', bar: 'baz', baz: 42 }))
         .be.an.Array().and.empty();
     });
   });
 
   describe('#removal', () => {
     it('should destroy all associated keywords to an OR operand', () => {
-      const subscription = dsl.register('index', 'collection', {
+      const id = koncorde.register({
         or: [
-          {equals: {foo: 'bar'}},
-          {missing: {field: 'bar'}},
-          {range: {baz: {lt: 42}}},
+          { equals: { foo: 'bar' } },
+          { missing: { field: 'bar' } },
+          { range: { baz: {lt: 42} } },
         ],
       });
 
-      dsl.register('index', 'collection', {exists: {field: 'foo'}});
+      koncorde.register({ exists: { field: 'foo' } });
 
-      dsl.remove(subscription.id);
+      koncorde.remove(id);
 
-      should(dsl.storage.foPairs.get('index', 'collection', 'exists')).be.an.Object();
-      should(dsl.storage.foPairs.get('index', 'collection', 'equals')).be.undefined();
-      should(dsl.storage.foPairs.get('index', 'collection', 'notexists')).be.undefined();
-      should(dsl.storage.foPairs.get('index', 'collection', 'range')).be.undefined();
+      const engine = koncorde.engines.get(null);
+
+      should(engine.foPairs.get('exists')).be.an.Object();
+      should(engine.foPairs.get('equals')).be.undefined();
+      should(engine.foPairs.get('notexists')).be.undefined();
+      should(engine.foPairs.get('range')).be.undefined();
     });
   });
 });
