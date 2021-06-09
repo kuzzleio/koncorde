@@ -1,5 +1,5 @@
 const should = require('should/as-function');
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 
 describe('Koncorde.keyword.in', () => {
   let koncorde;

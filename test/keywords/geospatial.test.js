@@ -1,5 +1,5 @@
 const should = require('should/as-function');
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 
 /**
  * Mutualizes filter removal for all 4 geospatial keywords

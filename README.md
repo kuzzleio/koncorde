@@ -84,7 +84,7 @@ This can be described by the following Koncorde filter:
 All you need to do now is to register this filter to the engine, and use it to test data:
 
 ```js
-const Koncorde = require('koncorde');
+import { Koncorde } from 'koncorde';
 
 const engine = new Koncorde();
 
@@ -128,6 +128,7 @@ To install:
 npm install --save koncorde
 ```
 
+Koncorde is compatible with either Javascript or Typescript projects.
 
 ## Filter unique identifier
 
@@ -147,7 +148,7 @@ This means that:
 In the following example, we provide a fixed random seed. Replaying this example will always generate the same result:
 
 ```js
-const Koncorde = require('koncorde');
+import { Koncorde } from 'koncorde';
 
 const seed = Buffer.from(
   'ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 
@@ -1023,15 +1024,19 @@ The following filter validates the first document:
 
 Instantiates a new Koncorde engine.
 
-**constructor([options])**
+```ts
+constructor(options: KoncordeOptions = null)
+```
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`options`|`Object`| Optional parameters |
+|`options`|`KoncordeOptions`| Optional parameters |
 
 #### Options
+
+`KoncordeOptions` is an interface exposed by the Koncorde module, with the following properties:
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
@@ -1061,8 +1066,8 @@ Accepted formats: `<int (spaces accepted)>[.|,]<decimal><spaces><unit>`.
 
 Examples:
 
-```js
-const Koncorde = require('koncorde');
+```typescript
+import { Koncorde } from 'koncorde';
 
 // Prints: 4.88442
 console.log(Koncorde.convertDistance('192.3in'));
@@ -1071,13 +1076,15 @@ console.log(Koncorde.convertDistance('192.3in'));
 console.log(Koncorde.convertDistance('3 456,58 kilometers'));
 ```
 
-**convertDistance(str)**
+```ts
+convertDistance(distance: string): number
+```
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`str`|`string`| Distance to convert |
+|`distance`|`string`| Distance to convert |
 
 #### Returns
 
@@ -1122,14 +1129,16 @@ Also accepted:
 
 Example:
 
-```js
-const Koncorde = require('koncorde');
+```ts
+import { Koncorde } from 'koncorde';
 
 // Prints: Coordinate { lat: 43.6021299, lon: 3.8989713 }
 console.log(Koncorde.convertGeopoint('spfb09x0ud5s'));
 ```
 
-**convertGeopoint(point)**
+```ts
+convertGeopoint(point: string|JSONObject): { lat: number; lon: number; }
+```
 
 #### Arguments
 
@@ -1139,7 +1148,7 @@ console.log(Koncorde.convertGeopoint('spfb09x0ud5s'));
 
 #### Returns
 
-A `Coordinate` object containing the following properties: `lat` (latitude, type: number), `lon` (longitude, type: number)
+An object containing the following properties: `lat` (latitude, type: number), `lon` (longitude, type: number)
 
 ---
 
@@ -1147,7 +1156,9 @@ A `Coordinate` object containing the following properties: `lat` (latitude, type
 
 Returns the list of registered filter identifiers.
 
-**getFilterIds([index])**
+```ts
+getFilterIds (index: string = null): string[]
+```
 
 
 #### Arguments
@@ -1166,7 +1177,9 @@ An `array` of filter unique identifiers corresponding to filters registered on t
 
 Returns the list of named indexes registered in this Koncorde instance
 
-**getIndexes()**
+```ts
+getIndexes (): string[]
+```
 
 #### Returns
 
@@ -1178,7 +1191,9 @@ An `array` of index names.
 
 Tells whether a filter identifier is known by Koncorde.
 
-**hasFilterId(filterId, [index])**
+```ts
+hasFilterId (filterId: string, index: string = null): boolean
+```
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
@@ -1196,14 +1211,16 @@ This method does not modify the internal storage. To save a filter, the [store](
 
 If you do not need the filter unique identifier prior to save a filter in the engine, then consider using the all-in-one [register](#register) method instead.
 
-**normalize(filters, [index])**
+```ts
+normalize(filter: JSONObject, index: string = null): NormalizedFilter
+```
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filter`|`object`| Search filters in Koncorde format |
-|`[index]`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided  |
+|`index`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided  |
 
 #### Returns
 
@@ -1211,7 +1228,7 @@ An object containing the following attributes:
 
 * `id`: filter unique identifier
 * `index`: index name
-* `normalized`: an object containing the canonical form of the supplied filter
+* `filter`: a complex structure containing the canonical form of the supplied filter
 
 ---
 
@@ -1219,14 +1236,16 @@ An object containing the following attributes:
 
 Registers a search filter in Koncorde. This method is equivalent to executing [normalize](#normalize) + [store](#store).
 
-**register(filter, [index])**
+```ts
+register (filter: JSONObject, index: string = null): string
+```
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filter`|`object`| Search filters in Koncorde format |
-|`[index]`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided |
+|`index`|`string`| (OPTIONAL) Index name. Uses the default one if none is provided |
 
 #### Returns
 
@@ -1238,14 +1257,16 @@ A string representing the filter identifier.
 
 Removes a filter from an index.
 
-**remove(filterId, [index])**
+```ts
+remove (filterId: string, index: string = null): void
+```
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
 |`filterId`|`string`| Filter unique ID. Obtained by using `register`|
-|`[index]` | `string` | (OPTIONAL) Index name. Uses the default one if none is provided |
+|`index` | `string` | (OPTIONAL) Index name. Uses the default one if none is provided |
 
 ---
 
@@ -1253,17 +1274,17 @@ Removes a filter from an index.
 
 Stores a normalized filter (obtained with [normalize](#normalize)).
 
-**store(normalized)**
+```ts
+store (normalized: NormalizedFilter): string
+```
 
 #### Arguments
 
 | Name | Type | Description                      |
 |------|------|----------------------------------|
-|`normalized`|`Object`| Normalized filter |
+|`normalized`|`Object`| Normalized filter, obtained with [normalize](#normalize) |
 
 #### Returns
-
-An `Object` containing the following attributes:
 
 A string representing the filter identifier.
 
@@ -1275,7 +1296,9 @@ Test data against filters registered in the engine, returning matching filter id
 
 This method only tests filters in the targeted index: if no index name is provided, only filters pertaining to the default index will be tested.
 
-**test(data, [index])**
+```ts
+test (data: JSONObject, index: string = null): string[]
+```
 
 #### Arguments
 
@@ -1295,7 +1318,9 @@ An array of filter identifiers matching the provided data (and/or documentId, if
 
 Tests the provided filter without storing it in the engine, to check whether it is well-formed or not.
 
-**validate(filter)**
+```ts
+validate (filter: JSONObject): void
+```
 
 #### Arguments
 

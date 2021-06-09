@@ -18,30 +18,94 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-// add support for ES6 modules ("import ... from ...")
-require('reify');
 
-const crypto = require('crypto');
+import { randomBytes } from 'crypto';
 
-const Transformer = require('./transform');
-const Engine = require('./engine');
-const convertDistance = require('./util/convertDistance');
-const convertGeopoint = require('./util/convertGeopoint');
-const hash = require('./util/hash');
+import { Transformer } from './transform';
+import { Engine } from './engine';
+import { convertDistance } from './util/convertDistance';
+import { convertGeopoint } from './util/convertGeopoint';
+import { hash } from './util/hash';
+import { JSONObject } from './types/JSONObject';
 
+
+/**
+ * Describes a search filter normalized by Koncorde.
+ * Returned by Koncorde.normalize(), and usable with Koncorde.store().
+ */
 class NormalizedFilter {
-  constructor (normalized, id, index) {
+  /**
+   * Normalized filter.
+   *
+   * @type {JSONObject[][]}
+   */
+  public filter: JSONObject[][];
+
+  /**
+   * Filter unique identifier.
+   *
+   * @type {string}
+   */
+  public id: string;
+
+  /**
+   * Target index name.
+   *
+   * @type {string}
+   */
+  public index: string;
+
+  constructor (normalized: any, id: string, index: string|null) {
     this.filter = normalized;
     this.id = id;
     this.index = index;
   }
 }
 
-class Koncorde {
+/**
+ * Koncorde configuration
+ */
+export interface KoncordeOptions {
+  /**
+   * The maximum number of conditions a filter can hold after being
+   * canonicalized. It is advised to test performances and memory consumption
+   * impacts before increasing this value. If set to 0, no limit is applied.
+   *
+   * (default: 256)
+   *
+   * @type {number}
+   */
+  maxMinTerms: number;
+
+  /**
+   * Set the regex engine to either re2 or js.
+   * The former is not fully compatible with PCREs, while the latter is
+   * vulnerable to catastrophic backtracking, making it unsafe if regular
+   * expressions are provided by end-users.
+   *
+   * (default: re2)
+   *
+   * @type {string}
+   */
+  regExpEngine: string;
+
+  /**
+   * 32 bytes buffer containing a fixed random seed, to make filter
+   * unique identifiers predictable.
+   *
+   * @type {ArrayBuffer}
+   */
+  seed: ArrayBuffer;
+}
+
+export class Koncorde {
+  private engines: Map<string, Engine>;
+  private config: JSONObject;
+  private transformer: Transformer;
 
   /**
    * @param {Object} config   */
-  constructor (config) {
+  constructor (config: KoncordeOptions = null) {
     if (config && (typeof config !== 'object' || Array.isArray(config))) {
       throw new Error('Invalid argument: expected an object');
     }
@@ -51,7 +115,7 @@ class Koncorde {
       regExpEngine: 're2',
     }, config);
 
-    this.config.seed = this.config.seed || crypto.randomBytes(32);
+    this.config.seed = this.config.seed || randomBytes(32);
 
     if (this.config.regExpEngine !== 're2' && this.config.regExpEngine !== 'js') {
       throw new Error('Invalid configuration value for "regExpEngine". Supported: re2, js');
@@ -70,11 +134,11 @@ class Koncorde {
   /**
    * Checks if the provided filter is valid
    *
-   * @param {object} filter
-   * @return {Object}
+   * @param {Object} filter
+   * @throws
    */
-  validate (filter) {
-    return this.transformer.check(filter);
+  validate (filter: JSONObject): void {
+    this.transformer.check(filter);
   }
 
   /**
@@ -87,7 +151,7 @@ class Koncorde {
    * @param {String} [index] - Index name
    * @return {String}
    */
-  register (filter, index = null) {
+  register (filter: JSONObject, index: string = null): string {
     const normalized = this.normalize(filter, index);
     return this.store(normalized);
   }
@@ -100,9 +164,9 @@ class Koncorde {
    *
    * @param  {Object} filter
    * @param  {String} [index] name
-   * @return {{id: String, index: String, normalized: Object}}
+   * @return {NormalizedFilter}
    */
-  normalize(filter, index = null) {
+  normalize(filter: JSONObject, index: string = null): NormalizedFilter {
     if (index !== null && typeof index !== 'string') {
       throw new Error('Invalid "index" argument: must be a string');
     }
@@ -122,7 +186,7 @@ class Koncorde {
    * @param  {NormalizedFilter} normalized - Obtained with a call to normalize()
    * @return {String}
    */
-  store (normalized) {
+  store (normalized: NormalizedFilter): string {
     if (!(normalized instanceof NormalizedFilter)) {
       throw new Error('Invalid argument: not a normalized filter (use Koncorde.normalize to get one)');
     }
@@ -145,7 +209,7 @@ class Koncorde {
    * @param {String} [index] name
    * @returns {Array.<String>} Array of matching filter IDs
    */
-  getFilterIds (index = null) {
+  getFilterIds (index: string = null): string[] {
     const engine = this.engines.get(index);
 
     if (!engine) {
@@ -160,7 +224,7 @@ class Koncorde {
    *
    * @return {Array.<String>}
    */
-  getIndexes () {
+  getIndexes (): string[] {
     return Array.from(this.engines.keys()).map(i => i || '(default)');
   }
 
@@ -171,7 +235,7 @@ class Koncorde {
    * @param {String} [index] name
    * @returns {Boolean}
    */
-  hasFilterId (filterId, index = null) {
+  hasFilterId (filterId: string, index: string = null): boolean {
     const engine = this.engines.get(index);
 
     return engine && engine.filters.has(filterId);
@@ -185,7 +249,7 @@ class Koncorde {
    * @param {String} [index] name
    * @return {Array} list of matching filters
    */
-  test (data, index = null) {
+  test (data: JSONObject, index: string = null): string[] {
     const engine = this.engines.get(index);
 
     if (!engine) {
@@ -201,7 +265,7 @@ class Koncorde {
    * @param {String} filterId - ID of the filter to remove
    * @param {String} [index] name
    */
-  remove (filterId, index = null) {
+  remove (filterId: string, index: string = null): void {
     const engine = this.engines.get(index);
 
     if (!engine) {
@@ -220,7 +284,7 @@ class Koncorde {
    * @param {string} distance - client-provided distance
    * @returns {number} converted distance
    */
-  static convertDistance(distance) {
+  static convertDistance(distance: string): number {
     return convertDistance(distance);
   }
 
@@ -228,10 +292,10 @@ class Koncorde {
    * Converts one of the accepted geopoint format into
    * a standardized version
    *
-   * @param {object} obj - object containing a geopoint
+   * @param {Object} obj - object containing a geopoint
    * @returns {Coordinate} or null if no accepted format is found
    */
-  static convertGeopoint(point) {
+  static convertGeopoint(point: string|JSONObject): { lat: number; lon: number; } {
     return convertGeopoint(point);
   }
 }
@@ -251,10 +315,10 @@ class Koncorde {
  *  info.tag: news
  * }
  *
- * @param {object} target the object we have to flatten
- * @returns {object} the flattened object
+ * @param {Object} target the object we have to flatten
+ * @returns {Object} the flattened object
  */
-function flattenObject(target) {
+function flattenObject(target: JSONObject): JSONObject {
   const output = {};
 
   flattenStep(output, target);
@@ -262,7 +326,10 @@ function flattenObject(target) {
   return output;
 }
 
-function flattenStep(output, object, prev) {
+function flattenStep(
+  output: JSONObject,
+  object: JSONObject,
+  prev: string = null): void {
   const keys = Object.keys(object);
 
   for(let i = 0; i < keys.length; i++) {
@@ -278,8 +345,3 @@ function flattenStep(output, object, prev) {
     output[newKey] = value;
   }
 }
-
-/**
- * @type {Koncorde}
- */
-module.exports = Koncorde;

@@ -1,8 +1,8 @@
 const should = require('should/as-function');
 
 const FieldOperand = require('../../lib/engine/objects/fieldOperand');
-const RangeCondition = require('../../lib/engine/objects/rangeCondition');
-const Koncorde = require('../../');
+const { RangeCondition } = require('../../lib/engine/objects/rangeCondition');
+const { Koncorde } = require('../../');
 
 describe('Koncorde.keyword.range', () => {
   let koncorde;

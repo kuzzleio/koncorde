@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
+    "declaration": true,
+    "listEmittedFiles": true,
+    "module": "commonjs",
+    "target": "es2020",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "node_modules/*"
+      ]
+    },
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  },
+  "rootDir": "lib/",
+  "include": [
+    "lib/**/*.ts"
+  ]
+}

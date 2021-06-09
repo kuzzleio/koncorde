@@ -2,8 +2,8 @@ const should = require('should/as-function');
 const sinon = require('sinon');
 
 const FieldOperand = require('../../lib/engine/objects/fieldOperand');
-const RegexpCondition = require('../../lib/engine/objects/regexpCondition');
-const Koncorde = require('../../');
+const { RegExpCondition } = require('../../lib/engine/objects/regexpCondition');
+const { Koncorde } = require('../../');
 
 describe('Koncorde.keyword.notregexp', () => {
   let koncorde;
@@ -30,7 +30,7 @@ describe('Koncorde.keyword.notregexp', () => {
       });
 
       const storage = engine.foPairs.get('notregexp');
-      const condition = new RegexpCondition(
+      const condition = new RegExpCondition(
         { regExpEngine: 're2' },
         '^\\w{2}oba\\w$',
         Array.from(engine.filters.get(id).subfilters)[0],
@@ -61,7 +61,7 @@ describe('Koncorde.keyword.notregexp', () => {
       });
 
       const storage = engine.foPairs.get('notregexp');
-      const condition = new RegexpCondition(
+      const condition = new RegExpCondition(
         { regExpEngine: 'js' },
         '^\\w{2}oba\\w$',
         Array.from(engine.filters.get(id).subfilters)[0],

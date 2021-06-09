@@ -1,14 +1,18 @@
 {
   "name": "koncorde",
   "version": "3.0.0",
-  "description": "Supersonic real-time data percolation engine",
+  "description": "Supersonic reverse matching engine",
   "main": "lib/index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
+    "build": "npx tsc",
+    "prepublishOnly": "npm run build",
     "test": "npm run --silent test:lint && npm run test:unit:coverage",
-    "test:lint": "eslint --max-warnings=0 ./lib ./test",
+    "test:lint": "npm run test:lint:js && npm run test:lint:ts",
+    "test:lint:js": "eslint --max-warnings=0 ./lib ./test",
+    "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintrc-ts.json",
     "test:unit:coverage": "nyc --reporter=text-summary --reporter=lcov mocha",
     "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
     "codecov": "codecov"
@@ -22,7 +26,8 @@
     "realtime",
     "match",
     "matching",
-    "percolation",
+    "reverse matching",
+    "reverse match",
     "geofencing"
   ],
   "author": "Kuzzle",
@@ -40,10 +45,12 @@
     "ngeohash": "^0.6.3",
     "node-interval-tree": "^1.3.3",
     "node-units": "^0.1.7",
-    "re2": "^1.16.0",
-    "reify": "^0.20.12"
+    "re2": "^1.16.0"
   },
   "devDependencies": {
+    "@types/node": "^15.6.1",
+    "@typescript-eslint/eslint-plugin": "^4.26.0",
+    "@typescript-eslint/parser": "^4.26.0",
     "benchmark": "^2.1.4",
     "codecov": "^3.8.2",
     "eslint": "^7.26.0",
@@ -53,6 +60,20 @@
     "random-js": "^2.1.0",
     "should": "^13.2.3",
     "should-sinon": "0.0.6",
-    "sinon": "^10.0.0"
-  }
+    "sinon": "^10.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.2"
+  },
+  "engines": {
+    "node": ">= 12.13.0"
+  },
+  "files": [
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
+    "lib/**/*.json",
+    "package.json",
+    "package-lock.json",
+    "LICENSE.md",
+    "README.md"
+  ]
 }

@@ -10,7 +10,7 @@ const {
   integer: randomIntegerEngine
 } = require('random-js');
 
-const Koncorde = require('.');
+const { Koncorde } = require('.');
 
 const max = 10000;
 const engine = MersenneTwister19937.autoSeed();

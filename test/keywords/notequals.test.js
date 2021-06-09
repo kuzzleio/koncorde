@@ -1,8 +1,6 @@
-require('reify');
-
 const should = require('should/as-function');
 const FieldOperand = require('../../lib/engine/objects/fieldOperand');
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 
 describe('Koncorde.keyword.notequals', () => {
   let koncorde;

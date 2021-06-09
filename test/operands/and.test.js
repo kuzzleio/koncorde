@@ -1,5 +1,5 @@
 const should = require('should/as-function');
-const Koncorde = require('../../');
+const { Koncorde } = require('../../');
 
 describe('koncorde.operands.and', () => {
   let koncorde;

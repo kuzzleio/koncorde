@@ -16,6 +16,7 @@ before_install:
 - export CC="gcc-4.9" CXX="g++-4.9"
 install:
 - npm install
+- npm run build
 deploy:
   provider: npm
   email: support@kuzzle.io
