@@ -48,13 +48,13 @@ describe('Koncorde API', () => {
         const seed = Buffer.from('01234567890123456789012345678901');
         const engine = new Koncorde({
           seed,
-          maxMinTerms: 3,
+          maxConditions: 3,
           regExpEngine: 'js',
         });
 
         should(engine.config).eql({
           seed,
-          maxMinTerms: 3,
+          maxConditions: 3,
           regExpEngine: 'js',
         });
       }
