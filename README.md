@@ -1377,9 +1377,9 @@ Filter count per tested keyword: 10000
   Filters removal: time = 0.058s
 
 > Benchmarking keyword: range (random bounds)
-  Indexation: time = 0.266s, mem = +-67MB
-  Matching x 53,100 ops/sec ±0.36% (95 runs sampled)
-  Filters removal: time = 0.076s
+  Indexation: time = 0.276s, mem = +-72MB
+  Matching x 122,311 ops/sec ±1.28% (96 runs sampled)
+  Filters removal: time = 0.074s
 ```
 
 _(results obtained with node v16.2.0)_
