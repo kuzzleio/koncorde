@@ -42,7 +42,6 @@
     "espresso-logic-minimizer": "^2.0.3",
     "js-combinatorics": "^0.6.1",
     "json-stable-stringify": "^1.0.1",
-    "murmurhash-native": "^3.5.0",
     "ngeohash": "^0.6.3",
     "node-units": "^0.1.7",
     "re2": "^1.16.0"
