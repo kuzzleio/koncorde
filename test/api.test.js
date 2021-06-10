@@ -349,7 +349,7 @@ describe('Koncorde API', () => {
 
       should(normalized).match({
         filter: n,
-        id: hash(koncorde.seed, { filter: n, index: null }),
+        id: hash(koncorde.config.seed, { filter: n, index: null }),
         index: null,
       });
 
@@ -368,7 +368,7 @@ describe('Koncorde API', () => {
 
       should(normalized).match({
         filter: n,
-        id: hash(koncorde.seed, { filter: n, index: 'foobar' }),
+        id: hash(koncorde.config.seed, { filter: n, index: 'foobar' }),
         index: 'foobar',
       });
 
