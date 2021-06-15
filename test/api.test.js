@@ -43,6 +43,12 @@ describe('Koncorde API', () => {
       should(() => new Koncorde({ regExpEngine: 'foo' }))
         .throw({message: 'Invalid configuration value for "regExpEngine". Supported: re2, js'});
 
+      should(() => new Koncorde({ maxConditions: 'foo' }))
+        .throw({message: 'Invalid maxConditions configuration: positive or nul integer expected'});
+
+      should(() => new Koncorde({ maxConditions: -1 }))
+        .throw({message: 'Invalid maxConditions configuration: positive or nul integer expected'});
+
       {
         // valid params
         const seed = Buffer.from('01234567890123456789012345678901');
