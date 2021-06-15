@@ -1,3 +1,4 @@
 **/*.d.ts
 lib/index.js
 lib/engine/storeOperands.js
+lib/types/KoncordeParseError.js

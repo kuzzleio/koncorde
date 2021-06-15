@@ -47,41 +47,69 @@ describe('Koncorde.keyword.geoPolygon', () => {
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
       should(() => standardize({geoPolygon: {}}))
-        .throw('"geoPolygon" must be a non-empty object');
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon": expected object to have exactly 1 property, got 0',
+          path: 'geoPolygon',
+        });
     });
 
     it('should reject a filter with multiple field attributes', () => {
       should(() => standardize({geoPolygon: {foo: polygon, bar: polygon}}))
-        .throw('"geoPolygon" can contain only one attribute');
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon": expected object to have exactly 1 property, got 2',
+          path: 'geoPolygon',
+        });
     });
 
     it('should reject a filter without a points field', () => {
       const filter = {foo: {bar: [[0, 0], [5, 5], [5, 0]]}};
 
       should(() => standardize({geoPolygon: filter}))
-        .throw('"geoPolygon.foo" requires the following attribute: points');
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo": the property "points" is missing',
+          path: 'geoPolygon.foo',
+        });
     });
 
     it('should reject a filter with an empty points field', () => {
       should(() => standardize({geoPolygon: {foo: {points: []}}}))
-        .throw('Attribute "points" in "geoPolygon.foo" cannot be empty');
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": at least 3 points are required to build a polygon',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should reject a polygon with less than 3 points defined', () => {
       should(() => standardize({geoPolygon: {foo: {points: [[0, 0], [5, 5]]}}}))
-        .throw('"geoPolygon.foo": at least 3 points are required to build a polygon');
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": at least 3 points are required to build a polygon',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should reject a polygon with a non-array points field', () => {
       should(() => standardize({geoPolygon: {foo: {points: 'foobar'}}}))
-        .throw('Attribute "points" in "geoPolygon.foo" must be an array');
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": must be an array',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should reject a polygon containing an invalid point format', () => {
       const p = polygon.points.slice();
       p.push(42);
       should(() => standardize({geoPolygon: {foo: {points: p}}}))
-        .throw(/^geoPolygon.foo: unrecognized point format/);
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": unrecognized point format "42"',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should standardize all geopoint types in a single points array', () => {

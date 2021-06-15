@@ -11,12 +11,20 @@ describe('koncorde.operands.and', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       should(() => koncorde.validate({and: []}))
-        .throw('Attribute "and" cannot be empty');
+        .throw({
+          keyword: 'and',
+          message: '"and": cannot be empty',
+          path: 'and',
+        });
     });
 
     it('should reject non-array content', () => {
       should(() => koncorde.validate({and: {foo: 'bar'}}))
-        .throw('Attribute "and" must be an array');
+        .throw({
+          keyword: 'and',
+          message: '"and": must be an array',
+          path: 'and',
+        });
     });
 
     it('should reject if one of the content is not an object', () => {
@@ -28,7 +36,11 @@ describe('koncorde.operands.and', () => {
       };
 
       should(() => koncorde.validate(filter))
-        .throw('"and" operand can only contain non-empty objects');
+        .throw({
+          keyword: 'and',
+          message: '"and": can only contain non-empty objects',
+          path: 'and',
+        });
     });
 
     it('should reject if one of the content object does not refer to a valid keyword', () => {
@@ -40,7 +52,11 @@ describe('koncorde.operands.and', () => {
       };
 
       should(() => koncorde.validate(filter))
-        .throw('Unknown Koncorde keyword: foo');
+        .throw({
+          keyword: 'foo',
+          message: '"and.foo": unknown keyword',
+          path: 'and.foo',
+        });
     });
 
     it('should reject if one of the content object is not a well-formed keyword', () => {
@@ -52,7 +68,11 @@ describe('koncorde.operands.and', () => {
       };
 
       should(() => koncorde.validate(filter))
-        .throw('"exists" requires the following attribute: field');
+        .throw({
+          keyword: 'exists',
+          message: '"and.exists": the property "field" is missing',
+          path: 'and.exists',
+        });
     });
 
     it('should validate a well-formed "and" operand', () => {

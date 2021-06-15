@@ -16,37 +16,65 @@ describe('Koncorde.keyword.range', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       should(() => koncorde.validate({range: {}}))
-        .throw('"range" must be a non-empty object');
+        .throw({
+          keyword: 'range',
+          message: '"range": expected object to have exactly 1 property, got 0',
+          path: 'range',
+        });
     });
 
     it('should reject filters with more than 1 field', () => {
       should(() => koncorde.validate({range: {foo: 'foo', bar: 'bar'}}))
-        .throw('"range" can contain only one attribute');
+        .throw({
+          keyword: 'range',
+          message: '"range": expected object to have exactly 1 property, got 2',
+          path: 'range',
+        });
     });
 
     it('should reject an empty field definition', () => {
       should(() => koncorde.validate({range: {foo: {}}}))
-        .throw('"range.foo" must be a non-empty object');
+        .throw({
+          keyword: 'range',
+          message: '"range.foo": must be a non-empty object',
+          path: 'range.foo',
+        });
     });
 
     it('should reject a field definition containing an unrecognized range keyword', () => {
       should(() => koncorde.validate({range: {foo: {gt: 42, lt: 113, bar: 'baz'}}}))
-        .throw('"range.foo" accepts only the following attributes : gt, gte, lt, lte');
+        .throw({
+          keyword: 'range',
+          message: '"range.foo": "bar" is not an allowed attribute (allowed: gt,gte,lt,lte)',
+          path: 'range.foo',
+        });
     });
 
     it('should reject a field definition with a range keyword not containing a number', () => {
       should(() => koncorde.validate({range: {foo: {gt: '42', lt: 113}}}))
-        .throw('"range.foo.gt" must be a number');
+        .throw({
+          keyword: 'range',
+          message: '"range.foo.gt": must be a number',
+          path: 'range.foo.gt',
+        });
     });
 
     it('should reject a field definition containing more than 1 lower boundary', () => {
       should(() => koncorde.validate({range: {foo: {gt: 42, gte: 13, lt: 113}}}))
-        .throw('"range.foo:" only 1 lower boundary allowed');
+        .throw({
+          keyword: 'range',
+          message: '"range.foo": only 1 lower boundary allowed',
+          path: 'range.foo',
+        });
     });
 
     it('should reject a field definition containing more than 1 upper boundary', () => {
       should(() => koncorde.validate({range: {foo: {gt: 42, lt: 113, lte: 200}}}))
-        .throw('"range.foo:" only 1 upper boundary allowed');
+        .throw({
+          keyword: 'range',
+          message: '"range.foo": only 1 upper boundary allowed',
+          path: 'range.foo',
+        });
     });
 
     it('should validate a valid range filter', () => {
@@ -56,7 +84,11 @@ describe('Koncorde.keyword.range', () => {
 
     it('should reject a range filter with inverted boundaries', () => {
       should(() => koncorde.validate({range: {foo: {lt: 42, gt: 200}}}))
-        .throw('"range.foo:" lower boundary must be strictly inferior to the upper one');
+        .throw({
+          keyword: 'range',
+          message: '"range.foo": lower boundary must be strictly inferior to the upper one',
+          path: 'range.foo',
+        });
     });
   });
 

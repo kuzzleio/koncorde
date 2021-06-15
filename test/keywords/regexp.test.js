@@ -15,41 +15,69 @@ describe('Koncorde.keyword.regexp', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       should(() => koncorde.validate({regexp: {}}))
-        .throw('"regexp" must be a non-empty object');
+        .throw({
+          keyword: 'regexp',
+          message: '"regexp": expected object to have exactly 1 property, got 0',
+          path: 'regexp',
+        });
     });
 
     it('should reject filters with more than 1 field', () => {
       const filter = {foo: {value: 'foo'}, bar: {value: 'foo'}};
 
       should(() => koncorde.validate({regexp: filter}))
-        .throw('"regexp" can contain only one attribute');
+        .throw({
+          keyword: 'regexp',
+          message: '"regexp": expected object to have exactly 1 property, got 2',
+          path: 'regexp',
+        });
     });
 
     it('should reject filters with an empty field object', () => {
       should(() => koncorde.validate({regexp: {foo: {}}}))
-        .throw('regexp.foo must be either a string or a non-empty object');
+        .throw({
+          keyword: 'regexp',
+          message: '"regexp.foo": must be a non-empty object',
+          path: 'regexp.foo',
+        });
     });
 
     it('should reject filters with other fields defined other than the accepted ones', () => {
       const filter = {foo: {value: 'foo', flags: 'ig', bar: 'qux'}};
 
       should(() => koncorde.validate({regexp: filter}))
-        .throw('Keyword "regexp" can only contain the following attributes: flags, value');
+        .throw({
+          keyword: 'regexp',
+          message: '"regexp.foo": "bar" is not an allowed attribute (allowed: flags,value)',
+          path: 'regexp.foo',
+        });
     });
 
     it('should reject filters if the "value" attribute is not defined', () => {
       should(() => koncorde.validate({regexp: {foo: {flags: 'ig'}}}))
-        .throw('"regexp" requires the following attribute: value');
+        .throw({
+          keyword: 'regexp',
+          message: '"regexp.foo": the property "value" is missing',
+          path: 'regexp.foo',
+        });
     });
 
     it('should reject filters with a non-string "flags" attribute', () => {
       should(() => koncorde.validate({regexp: {foo: {value: 'foo', flags: 42}}}))
-        .throw('Attribute "flags" in "regexp" must be a string');
+        .throw({
+          keyword: 'regexp',
+          message: '"regexp.foo.flags": must be a string',
+          path: 'regexp.foo.flags',
+        });
     });
 
     it('should reject filters with an invalid regular expression value', () => {
       should(() => koncorde.validate({regexp: {foo: {value: 'foo(', flags: 'i'}}}))
-        .throw(/^Cannot parse regexp expression/);
+        .throw({
+          keyword: 'regexp',
+          message: /^"regexp.foo": cannot parse regexp expression/,
+          path: 'regexp.foo',
+        });
     });
 
     it('should reject filters with invalid flags (js engine only)', () => {
@@ -63,7 +91,11 @@ describe('Koncorde.keyword.regexp', () => {
           }
         }
       }))
-        .throw(/^Cannot parse regexp expression/);
+        .throw({
+          keyword: 'regexp',
+          message: /^"regexp.foo": cannot parse regexp expression/,
+          path: 'regexp.foo',
+        });
     });
 
     it('should validate a well-formed regular expression filter w/ flags', () => {
@@ -132,7 +164,11 @@ describe('Koncorde.keyword.regexp', () => {
 
     it('should reject an invalid simple form regex', () => {
       should(() => koncorde.validate({ regexp: { foo: '++' } }))
-        .throw(/^Cannot parse regexp expression/);
+        .throw({
+          keyword: 'regexp',
+          message: /^"regexp.foo": cannot parse regexp expression/,
+          path: 'regexp.foo',
+        });
     });
   });
 
