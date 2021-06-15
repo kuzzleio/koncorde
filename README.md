@@ -1034,7 +1034,7 @@ constructor(options: KoncordeOptions = null)
 
 | Name | Type | Default |Description                      |
 |------|------|---------|---------------------------------|
-|`maxMinTerms`| `Number` | `256` | The maximum number of conditions a filter can hold after being canonicalized in its [CDNF](https://en.wikipedia.org/wiki/Canonical_normal_form) form. It is advised to test performances and memory consumption impacts before increasing this value. If set to 0, no limit is applied. |
+|`maxConditions`| `Number` | `50` | The maximum number of conditions a filter can hold. It is advised to test performances and memory consumption impacts before increasing this value. If set to 0, no limit is applied. |
 |`seed`|`Buffer`| fixed | 32 bytes buffer containing a fixed random seed. |
 | `regExpEngine` | `String` | `re2` | Set the engine to either [re2](https://github.com/google/re2) or [js](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp). The former is not fully compatible with PCREs, while the latter is vulnerable to [catastrophic backtracking](https://www.regular-expressions.info/catastrophic.html), making it unsafe if regular expressions are provided by end-users. |
 

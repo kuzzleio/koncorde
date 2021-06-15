@@ -67,15 +67,19 @@ class NormalizedFilter {
  */
 export interface KoncordeOptions {
   /**
-   * The maximum number of conditions a filter can hold after being
-   * canonicalized. It is advised to test performances and memory consumption
+   * The maximum number of conditions a filter can hold.
+   * It is advised to test performances and memory consumption
    * impacts before increasing this value. If set to 0, no limit is applied.
    *
-   * (default: 256)
+   * NOTE: this check is performed after filters are decomposed, meaning that
+   * the limit can kick in even though the provided filter is seemingly
+   * simpler.
+   *
+   * (default: 50)
    *
    * @type {number}
    */
-  maxMinTerms: number;
+  maxConditions: number;
 
   /**
    * Set the regex engine to either re2 or js.
@@ -110,12 +114,11 @@ export class Koncorde {
       throw new Error('Invalid argument: expected an object');
     }
 
-    this.config = Object.assign({
-      maxMinTerms: 256,
-      regExpEngine: 're2',
-    }, config);
-
-    this.config.seed = this.config.seed || randomBytes(32);
+    this.config = {
+      maxConditions: config && config.maxConditions || 50,
+      regExpEngine: config && config.regExpEngine || 're2',
+      seed: config && config.seed || randomBytes(32),
+    };
 
     if (this.config.regExpEngine !== 're2' && this.config.regExpEngine !== 'js') {
       throw new Error('Invalid configuration value for "regExpEngine". Supported: re2, js');
@@ -123,6 +126,12 @@ export class Koncorde {
 
     if (!(this.config.seed instanceof Buffer) || this.config.seed.length !== 32) {
       throw new Error('Invalid seed: expected a 32 bytes long Buffer');
+    }
+
+    if ( !Number.isInteger(this.config.maxConditions)
+      || this.config.maxConditions < 0
+    ) {
+      throw new Error('Invalid maxConditions configuration: positive or nul integer expected');
     }
 
     this.transformer = new Transformer(this.config);

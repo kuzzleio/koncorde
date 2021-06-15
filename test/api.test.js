@@ -43,18 +43,24 @@ describe('Koncorde API', () => {
       should(() => new Koncorde({ regExpEngine: 'foo' }))
         .throw({message: 'Invalid configuration value for "regExpEngine". Supported: re2, js'});
 
+      should(() => new Koncorde({ maxConditions: 'foo' }))
+        .throw({message: 'Invalid maxConditions configuration: positive or nul integer expected'});
+
+      should(() => new Koncorde({ maxConditions: -1 }))
+        .throw({message: 'Invalid maxConditions configuration: positive or nul integer expected'});
+
       {
         // valid params
         const seed = Buffer.from('01234567890123456789012345678901');
         const engine = new Koncorde({
           seed,
-          maxMinTerms: 3,
+          maxConditions: 3,
           regExpEngine: 'js',
         });
 
         should(engine.config).eql({
           seed,
-          maxMinTerms: 3,
+          maxConditions: 3,
           regExpEngine: 'js',
         });
       }
@@ -146,6 +152,25 @@ describe('Koncorde API', () => {
       }
 
       should(filterIds.sort()).match(ids.sort());
+    });
+
+    it('should reject if the filter is too complex', () => {
+      koncorde = new Koncorde({ maxConditions: 2 });
+
+      should(() => koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+        ],
+      })).not.throw();
+
+      should(() => koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+          { exists: 'foo' },
+        ],
+      })).throw('Filter too complex: exceeds the configured maximum number of conditions');
     });
   });
 
