@@ -153,6 +153,25 @@ describe('Koncorde API', () => {
 
       should(filterIds.sort()).match(ids.sort());
     });
+
+    it('should reject if the filter is too complex', () => {
+      koncorde = new Koncorde({ maxConditions: 2 });
+
+      should(() => koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+        ],
+      })).not.throw();
+
+      should(() => koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+          { exists: 'foo' },
+        ],
+      })).throw('Filter too complex: exceeds the configured maximum number of conditions');
+    });
   });
 
   describe('#getFilterIds', () => {
