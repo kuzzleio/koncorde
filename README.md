@@ -83,7 +83,7 @@ Koncorde is compatible with either Javascript or Typescript projects.
 To install:
 
 ```
-npm install --save koncorde
+npm install koncorde
 ```
 
 
@@ -136,4 +136,3 @@ Filter count per tested keyword: 10000
 ```
 
 _(results obtained with node v16.2.0)_
-
