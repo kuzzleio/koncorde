@@ -29,13 +29,13 @@ export class KoncordeParseError extends Error {
    * The faulty keyword that triggered the error
    * @type {string}
    */
-  public keyword: string;
+  keyword: string;
 
   /**
    * The filter path where the error was found
    * @type {string}
    */
-  public path: string;
+  path: string;
 
   constructor (message: string, keyword: string, path: string) {
     if (path) {
@@ -49,4 +49,3 @@ export class KoncordeParseError extends Error {
     this.path = path;
   }
 }
-
