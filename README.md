@@ -140,20 +140,15 @@ Filter identifiers are unique hashes, dependant on the following:
 
 This means that:
 
-* filter identifiers are predictable, as long that the same random seed is supplied to each new Koncorde instance
+* filter identifiers are predictable, as long that the same seed is supplied to Koncorde instances
 * since filters are transformed into a canonical form before a filter identifier is calculated, equivalent yet differently written filters will produce the same identifier
 
 **Example:**
 
-In the following example, we provide a fixed random seed. Replaying this example will always generate the same result:
-
 ```js
 import { Koncorde } from 'koncorde';
 
-const seed = Buffer.from(
-  'ac1bb751a1e5b3dce4a5d58e3e5e317677f780f57f8ca27b624345808b3e0e86', 
-  'hex');
-const engine = new Koncorde({ seed });
+const engine = new Koncorde();
 
 // filter1 and filter2 are equivalent
 const filterId1 = engine.register({
@@ -174,9 +169,8 @@ const filterId2 = engine.register({
   },
 });
 
-// Prints:
-// Filter ID 1: 9505a284900033238b609b77e575c51f, Filter ID 2: 9505a284900033238b609b77e575c51f, Equals: true
-console.log(`Filter ID 1: ${filterId1}, Filter ID 2: ${filterId2}, Equals: ${filterId1 === filterId2}`);
+// Prints: "Are filter IDs equal: true"
+console.log(`Are filter IDs equal: ${filterId1 === filterId2}`);
 ```
 
 ## Indexes
