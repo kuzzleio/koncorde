@@ -11,27 +11,47 @@ describe('Koncorde.keyword.in', () => {
   describe('#validation', () => {
     it('should reject empty filters', () => {
       should(() => koncorde.validate({in: {}}))
-        .throw('"in" must be a non-empty object');
+        .throw({
+          keyword: 'in',
+          message: '"in": expected object to have exactly 1 property, got 0',
+          path: 'in',
+        });
     });
 
     it('should reject filters with multiple defined attributes', () => {
       should(() => koncorde.validate({in: {bar: ['foo'], foo: ['foo']}}))
-        .throw('"in" can contain only one attribute');
+        .throw({
+          keyword: 'in',
+          message: '"in": expected object to have exactly 1 property, got 2',
+          path: 'in',
+        });
     });
 
     it('should reject filters with an empty value list', () => {
       should(() => koncorde.validate({in: {foo: []}}))
-        .throw('Attribute "foo" in "in" cannot be empty');
+        .throw({
+          keyword: 'in',
+          message: '"in.foo": cannot be empty',
+          path: 'in.foo',
+        });
     });
 
     it('should reject filters with non-array values attribute', () => {
       should(() => koncorde.validate({in: {foo: 'foo'}}))
-        .throw('Attribute "foo" in "in" must be an array');
+        .throw({
+          keyword: 'in',
+          message: '"in.foo": must be an array',
+          path: 'in.foo',
+        });
     });
 
     it('should reject filters containing a non-string value', () => {
       should(() => koncorde.validate({in: {foo: ['foo', 'bar', 42, 'baz']}}))
-        .throw('Array "foo" in keyword "in" can only contain strings');
+        .throw({
+          keyword: 'in',
+          message: '"in.foo": must hold only values of type "string"',
+          path: 'in.foo',
+        });
     });
 
     it('should validate a well-formed ids filter', () => {

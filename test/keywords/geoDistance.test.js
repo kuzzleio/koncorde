@@ -29,17 +29,32 @@ describe('Koncorde.keyword.geoDistance', () => {
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
       should(() => standardize({geoDistance: {}}))
-        .throw('"geoDistance" must be a non-empty object');
+        .throw({
+          keyword: 'geoDistance',
+          message: '"geoDistance": expected object to have exactly 2 properties, got 0',
+          path: 'geoDistance',
+        });
     });
 
     it('should reject a filter with multiple field attributes', () => {
-      const filter = {geoDistance: {foo: point, bar: point, distance: '1km'}};
+      const filter = {
+        geoDistance: {
+          bar: point,
+          distance: '1km',
+          foo: point,
+        },
+      };
 
-      should(() => standardize(filter)).throw('"geoDistance" keyword must (only) contain a document field and a "distance" attribute');
+      should(() => standardize(filter))
+        .throw({
+          keyword: 'geoDistance',
+          message: '"geoDistance": expected object to have exactly 2 properties, got 3',
+          path: 'geoDistance',
+        });
     });
 
     it('should validate a {lat, lon} point', () => {
-      should(standardize({geoDistance: {foo: point, distance: '1km'}}))
+      should(standardize({ geoDistance: { foo: point, distance: '1km' } }))
         .match(distanceStandardized);
     });
 
@@ -121,26 +136,42 @@ describe('Koncorde.keyword.geoDistance', () => {
       const p = {foo: 'bar'};
 
       should(() => standardize({geoDistance: {foo: p, distance: '1km'}}))
-        .throw('geoDistance.foo: unrecognized point format');
+        .throw({
+          keyword: 'geoDistance',
+          message: '"geoDistance.foo": unrecognized point format',
+          path: 'geoDistance.foo',
+        });
     });
 
     it('should reject an invalid latLon argument type', () => {
       const p = {latLon: 42};
 
       should(() => standardize({geoDistance: {foo: p, distance: '1km'}}))
-        .throw('geoDistance.foo: unrecognized point format');
+        .throw({
+          keyword: 'geoDistance',
+          message: '"geoDistance.foo": unrecognized point format',
+          path: 'geoDistance.foo',
+        });
     });
 
     it('should reject an invalid latLon argument string', () => {
       const p = {latLon: '[10, 10]'};
 
       should(() => standardize({geoDistance: {foo: p, distance: '1km'}}))
-        .throw('geoDistance.foo: unrecognized point format');
+        .throw({
+          keyword: 'geoDistance',
+          message: '"geoDistance.foo": unrecognized point format',
+          path: 'geoDistance.foo',
+        });
     });
 
     it('should reject a filter with a non-string distance value', () => {
       should(() => standardize({geoDistance: {foo: point, distance: 42}}))
-        .throw('Attribute "distance" in "geoDistance" must be a string');
+        .throw({
+          keyword: 'geoDistance',
+          message: '"geoDistance.distance": must be a string',
+          path: 'geoDistance.distance',
+        });
     });
 
     it('should reject a filter with incorrect distance value', () => {

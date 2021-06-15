@@ -17,19 +17,40 @@ describe('Koncorde.keyword.equals', () => {
   }
 
   describe('#validation', () => {
-    it('should reject empty filters', () => {
+    it('should reject non-object filters', () => {
       should(() => koncorde.validate({equals: ['foo', 'bar']}))
-        .throw('"equals" must be a non-empty object');
+        .throw({
+          keyword: 'equals',
+          message: '"equals": must be an object',
+          path: 'equals',
+        });
+    });
+
+    it('should reject empty filters', () => {
+      should(() => koncorde.validate({equals: {}}))
+        .throw({
+          keyword: 'equals',
+          message: '"equals": expected object to have exactly 1 property, got 0',
+          path: 'equals',
+        });
     });
 
     it('should reject filters with more than 1 field', () => {
       should(() => koncorde.validate({equals: {foo: 'foo', bar: 'bar'}}))
-        .throw('"equals" can contain only one attribute');
+        .throw({
+          keyword: 'equals',
+          message: '"equals": expected object to have exactly 1 property, got 2',
+          path: 'equals',
+        });
     });
 
     it('should reject filters with array argument', () => {
       should(() => koncorde.validate({equals: {foo: ['bar']}}))
-        .throw('"foo" in "equals" must be either a string, a number, a boolean or null');
+        .throw({
+          keyword: 'equals',
+          message: '"equals.foo": must either be a string, a number, a boolean, or null',
+          path: 'equals.foo',
+        });
     });
 
     it('should validate filters with number argument', () => {
@@ -38,12 +59,20 @@ describe('Koncorde.keyword.equals', () => {
 
     it('should reject filters with object argument', () => {
       should(() => koncorde.validate({equals: {foo: {}}}))
-        .throw('"foo" in "equals" must be either a string, a number, a boolean or null');
+        .throw({
+          keyword: 'equals',
+          message: '"equals.foo": must either be a string, a number, a boolean, or null',
+          path: 'equals.foo',
+        });
     });
 
     it('should reject filters with undefined argument', () => {
       should(() => koncorde.validate({equals: {foo: undefined}}))
-        .throw('"foo" in "equals" must be either a string, a number, a boolean or null');
+        .throw({
+          keyword: 'equals',
+          message: '"equals.foo": must either be a string, a number, a boolean, or null',
+          path: 'equals.foo',
+        });
     });
 
     it('should validate filters with null argument', () => {
