@@ -19,11 +19,13 @@
  * limitations under the License.
  */
 
-const Combinatorics = require('js-combinatorics');
+import { BaseN, CartesianProduct } from 'ts-combinatorics';
+import * as EspressoImport from 'espresso-logic-minimizer';
 
-const { Espresso } = require('espresso-logic-minimizer');
+import { JSONObject } from '../types/JSONObject';
+import { strcmp } from '../util/stringCompare';
 
-const strcmp = require('../util/stringCompare');
+const Espresso = EspressoImport.default;
 
 /**
  * Converts filters in canonical form
@@ -31,7 +33,9 @@ const strcmp = require('../util/stringCompare');
  * @constructor
  * @param {Object} config
  */
-class Canonical {
+export class Canonical {
+  config: JSONObject;
+
   constructor(config) {
     this.config = config;
   }
@@ -56,7 +60,7 @@ class Canonical {
    * @return {Array} resolving to a simplified filters array
    * @throws if espresso is unable to normalize the provided filters
    */
-  convert (filters) {
+  convert (filters: JSONObject): JSONObject[][] {
     let result = [];
 
     if (Object.keys(filters).length === 0) {
@@ -108,12 +112,10 @@ class Canonical {
         result.push(subresult);
       }
       else if (ors.length > 0) {
-        const combinations = Combinatorics.cartesianProduct(...ors);
-        let n = combinations.length;
+        const combinations = new CartesianProduct(...ors);
 
-        while (n) {
-          n--;
-          result.push(subresult.concat(combinations.next()));
+        for (let n = 0; n < combinations.length; n++) {
+          result.push(subresult.concat(combinations.nth(n)));
         }
       }
     });
@@ -137,7 +139,7 @@ class Canonical {
    * @param {Object[]} conds
    * @private
    */
-  _andOr (conds) {
+  _andOr (conds: JSONObject[]): JSONObject[] {
     return conds.map(c => {
       if (c.not) {
         return Object.assign(c.not, {
@@ -155,7 +157,7 @@ class Canonical {
    * @returns {Array|Object}
    * @private
    */
-  _cloneFilters (filters) { //NOSONAR
+  _cloneFilters (filters: any): JSONObject[]|JSONObject {
     if (Array.isArray(filters)) {
       return filters.map(v => this._cloneFilters(v));
     }
@@ -164,7 +166,8 @@ class Canonical {
       return filters;
     }
 
-    const clone = {};
+    // casted to "any" to allow the copy of non-enumerable properties
+    const clone: any = {};
 
     for (const k of Object.keys(filters)) {
       if (Array.isArray(filters[k])) {
@@ -188,11 +191,11 @@ class Canonical {
   /**
    * Extracts the conditions from a filter set
    *
-   * @param {object} filters
+   * @param {Object} filters
    * @param {Array} [conditions]
    * @return {Array}
    */
-  _extractConditions (filters, conditions = []) {
+  _extractConditions (filters: JSONObject, conditions: JSONObject[] = []): JSONObject[] {
     const key = Object.keys(filters)[0];
 
     if (['and', 'or', 'not'].indexOf(key) === -1) {
@@ -220,7 +223,7 @@ class Canonical {
    * @param {Array} conditions
    * @return {Number
    */
-  _countConditions (conditions) {
+  _countConditions (conditions: JSONObject[]): number {
     let count = 0;
 
     for (const condition of conditions) {
@@ -241,10 +244,10 @@ class Canonical {
    * @returns {String[]}
    * @private
    */
-  _normalize (filters, conditions) {
+  _normalize (filters: JSONObject, conditions: JSONObject[]): string[] {
     if (conditions.length === 1) {
-      const zero = evalFilter(filters, [0]);
-      const one = evalFilter(filters, [1]);
+      const zero = Number(evalFilter(filters, [0]));
+      const one = Number(evalFilter(filters, [1]));
       // string binary representation of the truth table output
       const combined = `${zero >>> 0}${one >>> 0}`;
 
@@ -262,11 +265,11 @@ class Canonical {
       }
     }
 
-    const baseN = Combinatorics.baseN([0, 1], conditions.length);
+    const baseN = new BaseN([0, 1], conditions.length);
     const espresso = new Espresso(conditions.length, 1);
 
-    let row;
-    while ((row = baseN.next())) {
+    for (let i = 0; i < baseN.length; i++) {
+      const row = baseN.nth(i);
       espresso.push(row, [evalFilter(filters, row)]);
     }
 
@@ -278,7 +281,7 @@ class Canonical {
    * @param conds
    * @private
    */
-  _notAndOr (conds) {
+  _notAndOr (conds: JSONObject[]): JSONObject[] {
     return conds.map(c => {
       if (c.not) {
         return Object.assign(c.not, {not: false});
@@ -290,7 +293,7 @@ class Canonical {
     });
   }
 
-  _removeImpossiblePredicates (ors) {
+  _removeImpossiblePredicates (ors: JSONObject[][]): JSONObject[][] {
     const result = [];
 
     for (const ands of ors) {
@@ -416,12 +419,12 @@ class Canonical {
  * @param {object} [pos] - current condition position
  * @returns {boolean}
  */
-function evalFilter(filters, results, pos = {value: 0}) {
+function evalFilter(filters: JSONObject, results: number[], pos: JSONObject = {value: 0}): boolean {
   const key = Object.keys(filters)[0];
 
   if (['and', 'or', 'not'].indexOf(key) === -1 || filters._isLeaf) {
     pos.value++;
-    return results[pos.value - 1];
+    return Boolean(results[pos.value - 1]);
   }
 
   if (key === 'not') {
@@ -438,5 +441,3 @@ function evalFilter(filters, results, pos = {value: 0}) {
     return key === 'and' ? p && r : p || r;
   }, null);
 }
-
-module.exports = Canonical;

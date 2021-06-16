@@ -2,3 +2,4 @@
 lib/index.js
 lib/engine/storeOperands.js
 lib/types/KoncordeParseError.js
+lib/transform/canonical.js
