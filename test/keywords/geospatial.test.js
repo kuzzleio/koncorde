@@ -1,82 +1,95 @@
-'use strict';
-
-const
-  should = require('should'),
-  DSL = require('../../');
+const should = require('should/as-function');
+const { Koncorde } = require('../../');
 
 /**
  * Mutualizes filter removal for all 4 geospatial keywords
  */
-describe('DSL.keyword.geospatial', () => {
-  let dsl;
-  const
-    geoFilter = {
-      geoBoundingBox: {
-        foo: {
-          bottom: 43.5810609,
-          left: 3.8433703,
-          top: 43.6331979,
-          right: 3.9282093
-        }
+describe('Koncorde.keyword.geospatial', () => {
+  let koncorde;
+  let engine;
+  const geoFilter = {
+    geoBoundingBox: {
+      foo: {
+        bottom: 43.5810609,
+        left: 3.8433703,
+        top: 43.6331979,
+        right: 3.9282093
       }
-    };
+    }
+  };
 
   beforeEach(() => {
-    dsl = new DSL();
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
   });
 
   describe('#removal', () => {
     it('should destroy the whole structure when removing the last item', () => {
-      return dsl.register('index', 'collection', geoFilter)
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => should(dsl.storage.foPairs._cache).be.empty());
+      const id = koncorde.register(geoFilter);
+      koncorde.remove(id);
+      should(engine.foPairs).be.empty();
     });
 
     it('should remove the entire field if its last condition is removed', () => {
-      return dsl.register('index', 'collection', {geoDistance: {bar: {lat: 13, lon: 42}, distance: '1km'}})
-        .then(() => dsl.register('index', 'collection', geoFilter))
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      koncorde.register({
+        geoDistance: {
+          bar: {
+            lat: 13,
+            lon: 42,
+          },
+          distance: '1km',
+        },
+      });
 
-          should(storage.fields.get('bar')).be.an.Object();
-          should(storage.fields.get('foo')).be.undefined();
-        });
+      const id = koncorde.register(geoFilter);
+
+      koncorde.remove(id);
+
+      const storage = engine.foPairs.get('geospatial');
+
+      should(storage.fields.get('bar')).be.an.Object();
+      should(storage.fields.get('foo')).be.undefined();
     });
 
     it('should remove a single condition from a field if other conditions exist', () => {
-      let cond, sf;
+      const id1 = koncorde.register({
+        geoDistance: {
+          foo: {
+            lat: 13,
+            lon: 42,
+          },
+          distance: '1km',
+        },
+      });
+      const id2 = koncorde.register(geoFilter);
 
-      return dsl.register('index', 'collection', {geoDistance: {foo: {lat: 13, lon: 42}, distance: '1km'}})
-        .then(subscription => {
-          sf = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          cond = Array.from(sf.conditions)[0].id;
-          return dsl.register('index', 'collection', geoFilter);
-        })
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sf = Array.from(engine.filters.get(id1).subfilters)[0];
+      const cond = Array.from(sf.conditions)[0].id;
 
-          should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
-        });
+      koncorde.remove(id2);
+
+      const storage = engine.foPairs.get('geospatial');
+
+      should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
     });
 
     it('should remove a subfilter from a condition if other subfilters exist', () => {
-      let cond, sf;
+      const id1 = koncorde.register(geoFilter);
+      const sf = Array.from(engine.filters.get(id1).subfilters)[0];
+      const cond = Array.from(sf.conditions)[0].id;
 
-      return dsl.register('index', 'collection', geoFilter)
-        .then(subscription => {
-          sf = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          cond = Array.from(sf.conditions)[0].id;
+      const id2 = koncorde.register({
+        and: [
+          geoFilter,
+          { exists: { field: 'bar' } },
+        ],
+      });
 
-          return dsl.register('index', 'collection', {and: [geoFilter, {exists: {field: 'bar'}}]});
-        })
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          const storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      koncorde.remove(id2);
 
-          should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
-        });
+      const storage = engine.foPairs.get('geospatial');
+
+      should(storage.fields.get('foo').get(cond)).match(new Set([sf]));
     });
   });
 });

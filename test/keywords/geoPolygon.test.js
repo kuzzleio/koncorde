@@ -1,81 +1,115 @@
-'use strict';
+const should = require('should/as-function');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const { Koncorde } = require('../../');
 
-describe('DSL.keyword.geoPolygon', () => {
-  let
-    dsl,
-    standardize;
-  const
-    polygon = {
-      points: [
-        {lat: 43.6021299, lon: 3.8989713},
-        {lat: 43.6057389, lon: 3.8968173},
-        {lat: 43.6092889, lon: 3.8970423},
-        {lat: 43.6100359, lon: 3.9040853},
-        {lat: 43.6069619, lon: 3.9170343},
-        {lat: 43.6076479, lon: 3.9230133},
-        {lat: 43.6038779, lon: 3.9239153},
-        {lat: 43.6019189, lon: 3.9152403},
-        {lat: 43.6036049, lon: 3.9092313}
-      ]
-    },
-    polygonStandardized = {
-      geospatial: {
-        geoPolygon: {
-          foo: [
-            [43.6021299, 3.8989713],
-            [43.6057389, 3.8968173],
-            [43.6092889, 3.8970423],
-            [43.6100359, 3.9040853],
-            [43.6069619, 3.9170343],
-            [43.6076479, 3.9230133],
-            [43.6038779, 3.9239153],
-            [43.6019189, 3.9152403],
-            [43.6036049, 3.9092313]
-          ]
-        }
+describe('Koncorde.keyword.geoPolygon', () => {
+  let koncorde;
+  let engine;
+  let standardize;
+  const polygon = {
+    points: [
+      { lat: 43.6021299, lon: 3.8989713 },
+      { lat: 43.6057389, lon: 3.8968173 },
+      { lat: 43.6092889, lon: 3.8970423 },
+      { lat: 43.6100359, lon: 3.9040853 },
+      { lat: 43.6069619, lon: 3.9170343 },
+      { lat: 43.6076479, lon: 3.9230133 },
+      { lat: 43.6038779, lon: 3.9239153 },
+      { lat: 43.6019189, lon: 3.9152403 },
+      { lat: 43.6036049, lon: 3.9092313 },
+    ]
+  };
+  const polygonStandardized = {
+    geospatial: {
+      geoPolygon: {
+        foo: [
+          [ 43.6021299, 3.8989713 ],
+          [ 43.6057389, 3.8968173 ],
+          [ 43.6092889, 3.8970423 ],
+          [ 43.6100359, 3.9040853 ],
+          [ 43.6069619, 3.9170343 ],
+          [ 43.6076479, 3.9230133 ],
+          [ 43.6038779, 3.9239153 ],
+          [ 43.6019189, 3.9152403 ],
+          [ 43.6036049, 3.9092313 ],
+        ]
       }
-    };
+    }
+  };
 
   beforeEach(() => {
-    dsl = new DSL();
-    standardize = dsl.transformer.standardizer.standardize.bind(dsl.transformer.standardizer);
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
+    standardize = koncorde.transformer.standardizer.standardize.bind(koncorde.transformer.standardizer);
   });
 
   describe('#validation/standardization', () => {
     it('should reject an empty filter', () => {
-      return should(standardize({geoPolygon: {}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {}}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon": expected object to have exactly 1 property, got 0',
+          path: 'geoPolygon',
+        });
     });
 
     it('should reject a filter with multiple field attributes', () => {
-      return should(standardize({geoPolygon: {foo: polygon, bar: polygon}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: polygon, bar: polygon}}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon": expected object to have exactly 1 property, got 2',
+          path: 'geoPolygon',
+        });
     });
 
     it('should reject a filter without a points field', () => {
-      return should(standardize({geoPolygon: {foo: {bar: [[0, 0], [5, 5], [5, 0]]}}})).be.rejectedWith(BadRequestError);
+      const filter = {foo: {bar: [[0, 0], [5, 5], [5, 0]]}};
+
+      should(() => standardize({geoPolygon: filter}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo": the property "points" is missing',
+          path: 'geoPolygon.foo',
+        });
     });
 
     it('should reject a filter with an empty points field', () => {
-      return should(standardize({geoPolygon: {foo: {points: []}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: []}}}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": at least 3 points are required to build a polygon',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should reject a polygon with less than 3 points defined', () => {
-      return should(standardize({geoPolygon: {foo: {points: [[0, 0], [5, 5]]}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: [[0, 0], [5, 5]]}}}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": at least 3 points are required to build a polygon',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should reject a polygon with a non-array points field', () => {
-      return should(standardize({geoPolygon: {foo: {points: 'foobar'}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: 'foobar'}}}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": must be an array',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should reject a polygon containing an invalid point format', () => {
       const p = polygon.points.slice();
       p.push(42);
-      return should(standardize({geoPolygon: {foo: {points: p}}})).be.rejectedWith(BadRequestError);
+      should(() => standardize({geoPolygon: {foo: {points: p}}}))
+        .throw({
+          keyword: 'geoPolygon',
+          message: '"geoPolygon.foo.points": unrecognized point format "42"',
+          path: 'geoPolygon.foo.points',
+        });
     });
 
     it('should standardize all geopoint types in a single points array', () => {
@@ -93,115 +127,118 @@ describe('DSL.keyword.geoPolygon', () => {
         ]
       };
 
-      return standardize({geoPolygon: {foo: points}})
-        .then(result => {
-          should(result.geospatial).be.an.Object();
-          should(result.geospatial.geoPolygon).be.an.Object();
-          should(result.geospatial.geoPolygon.foo).be.an.Object();
+      const result = standardize({geoPolygon: {foo: points}});
+      should(result.geospatial).be.an.Object();
+      should(result.geospatial.geoPolygon).be.an.Object();
+      should(result.geospatial.geoPolygon.foo).be.an.Object();
 
-          result.geospatial.geoPolygon.foo.forEach((p, i) => {
-            should(p[0]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][0], 10e-6);
-            should(p[1]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][1], 10e-6);
-          });
-        });
+      result.geospatial.geoPolygon.foo.forEach((p, i) => {
+        should(p[0]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][0], 10e-6);
+        should(p[1]).be.approximately(polygonStandardized.geospatial.geoPolygon.foo[i][1], 10e-6);
+      });
     });
   });
 
   describe('#storage', () => {
     it('should store a single geoPolygon correctly', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          const
-            subfilter = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const id = koncorde.register({ geoPolygon: { foo: polygon } });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id)).match(new Set([subfilter]));
-        });
+      const subfilter = Array.from(engine.filters.get(id).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(Array.from(subfilter.conditions)[0].id))
+        .match(new Set([subfilter]));
     });
 
     it('should add a subfilter to an already existing condition', () => {
-      let sf1;
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          return dsl.register('index', 'collection', {and: [{geoPolygon: {foo: polygon}}, {equals: {foo: 'bar'}}]});
-        })
-        .then(subscription => {
-          const
-            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const id1 = koncorde.register({ geoPolygon: { foo: polygon } });
+      const id2 = koncorde.register({
+        and: [
+          { geoPolygon: { foo: polygon } },
+          { equals: { foo: 'bar' } },
+        ],
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id)).match(new Set([sf1, sf2]));
-        });
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(Array.from(sf1.conditions)[0].id))
+        .match(new Set([sf1, sf2]));
     });
 
     it('should add another condition to an already existing field', () => {
-      let cond1, sf1;
+      const id1 = koncorde.register({ geoPolygon: { foo: polygon } });
+      const id2 = koncorde.register({
+        geoBoundingBox: {
+          foo: {
+            bottomRight: 'drj7teegpus6',
+            topLeft: 'dr5r9ydj2y73',
+          },
+        },
+      });
 
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          sf1 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0];
-          cond1 = Array.from(sf1.conditions)[0].id;
-          return dsl.register('index', 'collection', {geoBoundingBox: {foo: {topLeft: 'dr5r9ydj2y73', bottomRight: 'drj7teegpus6'}}});
-        })
-        .then(subscription => {
-          const
-            sf2 = Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-            storage = dsl.storage.foPairs.get('index', 'collection', 'geospatial');
+      const sf1 = Array.from(engine.filters.get(id1).subfilters)[0];
+      const cond1 = Array.from(sf1.conditions)[0].id;
+      const sf2 = Array.from(engine.filters.get(id2).subfilters)[0];
+      const storage = engine.foPairs.get('geospatial');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
-          should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id)).match(new Set([sf2]));
-        });
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(cond1)).match(new Set([sf1]));
+      should(storage.fields.get('foo').get(Array.from(sf2.conditions)[0].id))
+        .match(new Set([sf2]));
     });
   });
 
   describe('#matching', () => {
     it('should match a point inside the polygon', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {latLon: [43.6073913, 3.9109057]}});
+      const id = koncorde.register({ geoPolygon: { foo: polygon } });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = koncorde.test({
+        foo: {
+          latLon: [ 43.6073913, 3.9109057 ],
+        },
+      });
+
+      should(result).eql([id]);
     });
 
     it('should match a point exactly on a polygon corner', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {latLon: polygon.points[0]}});
+      const id = koncorde.register({ geoPolygon: { foo: polygon } });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = koncorde.test({ foo: { latLon: polygon.points[0] } });
+
+      should(result).eql([id]);
     });
 
     it('should not match if a point is outside the bbox', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {foo: {lat: polygon.points[0][0] + 10e-6, lon: polygon.points[0][1] + 10e-6}});
+      koncorde.register({ geoPolygon: { foo: polygon } });
+      const result = koncorde.test({
+        foo: {
+          lat: polygon.points[0][0] + 10e-6,
+          lon: polygon.points[0][1] + 10e-6,
+        },
+      });
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document does not contain a geopoint', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {bar: {latLon: polygon.points[0]}});
+      koncorde.register({ geoPolygon: { foo: polygon } });
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = koncorde.test({ bar: { latLon: polygon.points[0] } });
+
+      should(result).be.an.Array().and.be.empty();
     });
 
     it('should return an empty array if the document contain an invalid geopoint', () => {
-      return dsl.register('index', 'collection', {geoPolygon: {foo: polygon}})
-        .then(() => {
-          const result = dsl.test('index', 'collection', {foo: '43.6331979 / 3.8433703'});
+      koncorde.register({ geoPolygon: { foo: polygon } });
 
-          should(result).be.an.Array().and.be.empty();
-        });
+      const result = koncorde.test({ foo: '43.6331979 / 3.8433703' });
+
+      should(result).be.an.Array().and.be.empty();
     });
   });
 });

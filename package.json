@@ -1,15 +1,20 @@
 {
   "name": "koncorde",
-  "version": "3.0.0",
-  "description": "Supersonic real-time data percolation engine",
+  "version": "4.0.0",
+  "description": "Supersonic reverse matching engine",
   "main": "lib/index.js",
   "directories": {
     "lib": "lib"
   },
   "scripts": {
-    "test": "npm run --silent lint && npm run unit-test",
-    "lint": "eslint --max-warnings=0 ./lib ./test",
-    "unit-test": "nyc --reporter=text-summary --reporter=lcov mocha",
+    "build": "npx tsc",
+    "prepublishOnly": "npm run build",
+    "test": "npm run --silent test:lint && npm run test:unit:coverage",
+    "test:lint": "npm run test:lint:js && npm run test:lint:ts",
+    "test:lint:js": "eslint --max-warnings=0 ./lib ./test",
+    "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintrc-ts.json",
+    "test:unit:coverage": "nyc --reporter=text-summary --reporter=lcov mocha",
+    "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
     "codecov": "codecov"
   },
   "repository": {
@@ -21,7 +26,8 @@
     "realtime",
     "match",
     "matching",
-    "percolation",
+    "reverse matching",
+    "reverse match",
     "geofencing"
   ],
   "author": "Kuzzle",
@@ -31,29 +37,42 @@
   },
   "homepage": "https://github.com/kuzzleio/koncorde#readme",
   "dependencies": {
-    "bluebird": "^3.7.1",
-    "boost-geospatial-index": "^1.0.5",
+    "@flatten-js/interval-tree": "^1.0.14",
+    "boost-geospatial-index": "^1.1.0",
     "espresso-logic-minimizer": "^2.0.3",
-    "js-combinatorics": "^0.5.4",
     "json-stable-stringify": "^1.0.1",
-    "kuzzle-common-objects": "^3.0.17",
-    "murmurhash-native": "^3.4.1",
     "ngeohash": "^0.6.3",
-    "node-interval-tree": "^1.3.3",
     "node-units": "^0.1.7",
-    "re2": "^1.10.4",
-    "reify": "^0.20.12"
+    "re2": "^1.16.0",
+    "ts-combinatorics": "^1.0.0"
   },
   "devDependencies": {
+    "@types/node": "^15.12.2",
+    "@typescript-eslint/eslint-plugin": "^4.27.0",
+    "@typescript-eslint/parser": "^4.27.0",
     "benchmark": "^2.1.4",
-    "codecov": "^3.6.1",
-    "eslint": "^6.6.0",
+    "codecov": "^3.8.2",
+    "eslint": "^7.28.0",
     "geojson-random": "^0.5.0",
-    "mocha": "^6.2.2",
-    "nyc": "^14.1.1",
+    "mocha": "^9.0.0",
+    "nyc": "^15.1.0",
     "random-js": "^2.1.0",
     "should": "^13.2.3",
     "should-sinon": "0.0.6",
-    "sinon": "^7.5.0"
-  }
+    "sinon": "^11.1.1",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.2"
+  },
+  "engines": {
+    "node": ">= 12.13.0"
+  },
+  "files": [
+    "lib/**/*.js",
+    "lib/**/*.d.ts",
+    "lib/**/*.json",
+    "package.json",
+    "package-lock.json",
+    "LICENSE.md",
+    "README.md"
+  ]
 }

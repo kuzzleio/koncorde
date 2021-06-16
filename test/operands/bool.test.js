@@ -1,25 +1,41 @@
-'use strict';
+const should = require('should/as-function');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../'),
-  NormalizedExists = require('../../lib/transform/normalizedExists');
+const { Koncorde } = require('../../');
+const NormalizedExists = require('../../lib/transform/normalizedExists');
 
-describe('DSL.operands.bool', () => {
-  let dsl;
+describe('Koncorde.operands.bool', () => {
+  let koncorde;
 
   beforeEach(() => {
-    dsl = new DSL();
+    koncorde = new Koncorde();
   });
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({bool: {}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({bool: {}}))
+        .throw({
+          keyword: 'bool',
+          message: '"bool": must be a non-empty object',
+          path: 'bool',
+        });
     });
 
     it('should reject filters with unrecognized bool attributes', () => {
-      return should(dsl.validate({bool: {must: [{exists: {foo: 'bar'}}], foo: 'bar'}})).be.rejectedWith(BadRequestError);
+      const filter = {
+        bool: {
+          must: [
+            {exists: {foo: 'bar'}},
+          ],
+          foo: 'bar',
+        },
+      };
+
+      should(() => koncorde.validate(filter))
+        .throw({
+          keyword: 'bool',
+          message: '"bool": "foo" is not an allowed attribute (allowed: must,must_not,should,should_not)',
+          path: 'bool',
+        });
     });
   });
 
@@ -72,26 +88,30 @@ describe('DSL.operands.bool', () => {
         }
       };
 
-      return dsl.transformer.standardizer.standardize(bool)
-        .then(result => {
-          should(result).match({
+      const result = koncorde.transformer.standardizer.standardize(bool);
+      should(result).match({
+        and: [
+          {
+            or: [
+              {equals: {firstName: 'Grace'}},
+              {equals: {firstName: 'Ada'}},
+            ],
+          },
+          {
+            or: [
+              {equals: {hobby: 'computer'}},
+              {exists: new NormalizedExists('lastName', false, null)},
+            ],
+          },
+          {
             and: [
-              {or: [
-                {equals: {firstName: 'Grace'}},
-                {equals: {firstName: 'Ada'}}
-              ]},
-              {or: [
-                {equals: {hobby: 'computer'}},
-                {exists: new NormalizedExists('lastName', false, null)}
-              ]},
-              {and: [
-                {range: {age: {gte: 36, lt: 85}}},
-                {not: {equals: {city: 'NYC'}}},
-                {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}}
-              ]}
-            ]
-          });
-        });
+              {range: {age: {gte: 36, lt: 85}}},
+              {not: {equals: {city: 'NYC'}}},
+              {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}},
+            ],
+          },
+        ],
+      });
     });
   });
 });

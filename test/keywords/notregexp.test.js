@@ -1,124 +1,165 @@
-'use strict';
+const should = require('should/as-function');
+const sinon = require('sinon');
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  FieldOperand = require('../../lib/storage/objects/fieldOperand'),
-  RegexpCondition = require('../../lib/storage/objects/regexpCondition'),
-  DSL = require('../../');
+const FieldOperand = require('../../lib/engine/objects/fieldOperand');
+const { RegExpCondition } = require('../../lib/engine/objects/regexpCondition');
+const { Koncorde } = require('../../');
 
-describe('DSL.keyword.notregexp', () => {
-  let dsl;
+describe('Koncorde.keyword.notregexp', () => {
+  let koncorde;
+  let engine;
 
   beforeEach(() => {
-    dsl = new DSL();
+    koncorde = new Koncorde();
+    engine = koncorde.engines.get(null);
   });
 
   describe('#storage', () => {
     it('should invoke regexp storage function', () => {
-      const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
+      const spy = sinon.spy(engine.storeOperand, 'regexp');
 
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const
-            storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
-            condition = new RegexpCondition(
-              { regExpEngine: 're2' },
-              '^\\w{2}oba\\w$',
-              Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-              'i'
-            );
+      const id = koncorde.register({
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(spy.called).be.true();
+      const storage = engine.foPairs.get('notregexp');
+      const condition = new RegExpCondition(
+        { regExpEngine: 're2' },
+        '^\\w{2}oba\\w$',
+        Array.from(engine.filters.get(id).subfilters)[0],
+        'i');
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(condition.stringValue)).eql(condition);
-        });
+      should(spy.called).be.true();
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(condition.stringValue))
+        .eql(condition);
     });
 
     it('should invoke regexp storage function (js engine)', () => {
-      dsl = new DSL({ regExpEngine: 'js' });
-      const spy = sinon.spy(dsl.storage.storeOperand, 'regexp');
+      koncorde = new Koncorde({ regExpEngine: 'js' });
+      engine = koncorde.engines.get(null);
 
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const
-            storage = dsl.storage.foPairs.get('index', 'collection', 'notregexp'),
-            condition = new RegexpCondition(
-              { regExpEngine: 'js' },
-              '^\\w{2}oba\\w$',
-              Array.from(dsl.storage.filters.get(subscription.id).subfilters)[0],
-              'i'
-            );
+      const spy = sinon.spy(engine.storeOperand, 'regexp');
 
-          should(spy.called).be.true();
+      const id = koncorde.register({
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(storage).be.instanceOf(FieldOperand);
-          should(storage.fields.get('foo').get(condition.stringValue)).eql(condition);
-        });
+      const storage = engine.foPairs.get('notregexp');
+      const condition = new RegExpCondition(
+        { regExpEngine: 'js' },
+        '^\\w{2}oba\\w$',
+        Array.from(engine.filters.get(id).subfilters)[0],
+        'i');
+
+      should(spy.called).be.true();
+
+      should(storage).be.instanceOf(FieldOperand);
+      should(storage.fields.get('foo').get(condition.stringValue))
+        .eql(condition);
     });
   });
 
   describe('#matching', () => {
     it('should not match a document if its registered field matches the regexp', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('index', 'collection', {foo: 'foobar'})).be.an.Array().and.be.empty();
-        });
+      koncorde.register({
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      should(koncorde.test({ foo: 'foobar' })).be.an.Array().and.be.empty();
     });
 
     it('should match a document if its registered field does not match the regexp', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: 'bar'});
+      const id = koncorde.register({
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(result).eql([subscription.id]);
-        });
+      const result = koncorde.test({ foo: 'bar' });
+
+      should(result).eql([id]);
     });
 
     it('should match if the document does not contain the registered field', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('index', 'collection', {bar: 'qux'}))
-            .be.an.Array()
-            .and.have.length(1);
-        });
+      koncorde.register({
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      should(koncorde.test({ bar: 'qux' })).be.an.Array().and.have.length(1);
     });
 
     it('should match a document with the subscribed nested keyword', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {'foo.bar.baz': {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => {
-          const result = dsl.test('index', 'collection', {foo: {bar: {baz: 'bar'}}});
+      const id = koncorde.register({
+        not: {
+          regexp: {
+            'foo.bar.baz': {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
 
-          should(result).eql([subscription.id]);
-        });
-    });
+      const result = koncorde.test({ foo: { bar: { baz: 'bar' } } });
 
-    it('should not match if the document is in another index', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('foobar', 'collection', {foo: 'qux'})).be.an.Array().and.empty();
-        });
-    });
-
-    it('should not match if the document is in another collection', () => {
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(() => {
-          should(dsl.test('index', 'foobar', {foo: 'qux'})).be.an.Array().and.empty();
-        });
+      should(result).eql([id]);
     });
   });
 
   describe('#removal', () => {
     it('should invoke regexp removal function', () => {
-      const spy = sinon.spy(dsl.storage.removeOperand, 'regexp');
+      const spy = sinon.spy(engine.removeOperand, 'regexp');
 
-      return dsl.register('index', 'collection', {not: {regexp: {foo: {value: '^\\w{2}oba\\w$', flags: 'i'}}}})
-        .then(subscription => dsl.remove(subscription.id))
-        .then(() => {
-          should(spy.called).be.true();
-          should(dsl.storage.foPairs._cache).be.empty();
-        });
+      const id = koncorde.register({
+        not: {
+          regexp: {
+            foo: {
+              value: '^\\w{2}oba\\w$',
+              flags: 'i',
+            },
+          },
+        },
+      });
+
+      koncorde.remove(id);
+
+      should(spy.called).be.true();
+      should(engine.foPairs).be.empty();
     });
   });
 });

@@ -1,67 +1,68 @@
-'use strict';
+const should = require('should').noConflict();
+const sinon = require('sinon');
 
-require('reify');
+const { Koncorde } = require('../');
+const { hash } = require('../lib/util/hash');
 
-const
-  should = require('should').noConflict(),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  Dsl = require('../'),
-  sinon = require('sinon');
-
-describe('DSL API', () => {
-  let dsl;
+describe('Koncorde API', () => {
+  let koncorde;
+  let defaultEngine;
 
   beforeEach(() => {
-    dsl = new Dsl();
+    koncorde = new Koncorde();
+    defaultEngine = koncorde.engines.get(null);
   });
 
   describe('#prototypes', () => {
     it('should expose the expected methods', () => {
-      should(dsl.validate).be.a.Function();
-      should(dsl.register).be.a.Function();
-      should(dsl.exists).be.a.Function();
-      should(dsl.getFilterIds).be.a.Function();
-      should(dsl.test).be.a.Function();
-      should(dsl.remove).be.a.Function();
-      should(dsl.normalize).be.a.Function();
-      should(dsl.store).be.a.Function();
+      should(koncorde.validate).be.a.Function();
+      should(koncorde.register).be.a.Function();
+      should(koncorde.getFilterIds).be.a.Function();
+      should(koncorde.test).be.a.Function();
+      should(koncorde.remove).be.a.Function();
+      should(koncorde.normalize).be.a.Function();
+      should(koncorde.store).be.a.Function();
     });
   });
 
   describe('#constructor', () => {
     it('should throw if an invalid argument is supplied', () => {
-      should(() => new Dsl('foobar')).throw(/Invalid argument: expected an object/);
-      should(() => new Dsl(['foo', 'bar'])).throw(/Invalid argument: expected an object/);
+      should(() => new Koncorde('foobar')).throw(/Invalid argument: expected an object/);
+      should(() => new Koncorde(['foo', 'bar'])).throw(/Invalid argument: expected an object/);
 
-      should(() => new Dsl({
+      should(() => new Koncorde({
         seed: 'not a buffer'
       }))
         .throw({message: 'Invalid seed: expected a 32 bytes long Buffer'});
 
-      should(() => new Dsl({
+      should(() => new Koncorde({
         seed: require('crypto').randomBytes(24)
       }))
         .throw({message: 'Invalid seed: expected a 32 bytes long Buffer'});
 
-      should(() => new Dsl({ regExpEngine: 'foo' }))
+      should(() => new Koncorde({ regExpEngine: 'foo' }))
         .throw({message: 'Invalid configuration value for "regExpEngine". Supported: re2, js'});
+
+      should(() => new Koncorde({ maxConditions: 'foo' }))
+        .throw({message: 'Invalid maxConditions configuration: positive or nul integer expected'});
+
+      should(() => new Koncorde({ maxConditions: -1 }))
+        .throw({message: 'Invalid maxConditions configuration: positive or nul integer expected'});
 
       {
         // valid params
-        const
-          seed = Buffer.from('01234567890123456789012345678901'),
-          engine = new Dsl({
-            seed,
-            maxMinTerms: 3,
-            regExpEngine: 'js'
-          });
+        const seed = Buffer.from('01234567890123456789012345678901');
+        const engine = new Koncorde({
+          seed,
+          maxConditions: 3,
+          regExpEngine: 'js',
+        });
 
-        should(engine.config)
-          .eql({
-            seed,
-            maxMinTerms: 3,
-            regExpEngine: 'js'
-          });
+        should(engine.config).eql({
+          seed,
+          maxConditions: 3,
+          regExpEngine: 'js',
+        });
       }
 
     });
@@ -69,326 +70,384 @@ describe('DSL API', () => {
 
   describe('#validate', () => {
     it('should resolve to "true" if a filter is valid', () => {
-      return should(dsl.validate({equals: {foo: 'bar'}})).be.fulfilledWith(true);
+      should(() => koncorde.validate({ equals: { foo: 'bar' } })).not.throw();
     });
 
-    it('should resolve to a BadRequestError if a filter is not valid', () => {
-      return should(dsl.validate({equals: {foo: 'bar'}, exists: 'qux'})).be.rejectedWith(BadRequestError);
+    it('should reject if a filter is not valid', () => {
+      should(() => koncorde.validate({ equals: { foo: 'bar' }, exists: 'qux'}))
+        .throw();
     });
   });
 
   describe('#register', () => {
-    it('should resolve to a BadRequestError if a filter is not valid', () => {
-      return should(dsl.register('i', 'c', {foo: 'bar'})).be.rejectedWith(BadRequestError);
+    it('should reject if a filter is not valid', () => {
+      should(() => koncorde.register({ foo: 'bar' })).throw();
     });
 
     it('should resolve to a cluster diff object if the registration succeeds', () => {
-      return dsl.register('i', 'c', {not: {and: [{exists: 'bar'}, {equals: {foo: 'bar'}}]}})
-        .then(result => {
-          should(result).be.an.Object();
-          should(result.diff).be.an.Object().and.match({
-            index: 'i',
-            collection: 'c',
-            filters: [
-              [ { exists: { path: 'bar', array: false, value: null }, not: true } ],
-              [ { equals: { foo: 'bar' }, not: true } ]
-            ]
-          });
+      const result = koncorde.register({
+        not: {
+          and: [
+            { exists: 'bar' },
+            { equals: { foo: 'bar' } },
+          ],
+        },
+      });
 
-          should(result.id).be.a.String();
-        });
+      should(result).be.a.String();
     });
 
-    it('should resolve to a "no diff" object if the room already exists', () => {
-      let id;
+    it('should resolve to the same id for equivalent filters', () => {
+      const id1 = koncorde.register({
+        not: {
+          and: [
+            { exists: 'bar' },
+            { equals: { foo: 'bar' } },
+          ],
+        },
+      });
 
-      return dsl.register('i', 'c', {not: {and: [{exists: 'bar'}, {equals: {foo: 'bar'}}]}})
-        .then(result => {
-          id = result.id;
-          return dsl.register('i', 'c', {
-            or: [
-              {not: { exists: 'bar'}},
-              {not: { equals: { foo: 'bar' }}}
-            ]
-          });
-        })
-        .then(result => {
-          const bool = {
-            bool: {
-              should_not: [
-                {exists: { field: 'bar' }},
-                {equals: { foo: 'bar' }}
-              ]
-            }
-          };
+      const id2 = koncorde.register({
+        or: [
+          { not: { exists: 'bar' } },
+          { not: { equals: { foo: 'bar' } } },
+        ],
+      });
 
-          should(result.diff)
-            .eql({
-              index: 'i',
-              collection: 'c',
-              filters: [
-                [ {exists: {path: 'bar', array: false, value: null}, not: true}],
-                [ {equals: {foo: 'bar'}, not: true}]
-              ]
-            });
-          should(result.id).be.eql(id);
+      const id3 = koncorde.register({
+        bool: {
+          should_not: [
+            { exists: { field: 'bar' } },
+            { equals: { foo: 'bar' } }
+          ]
+        }
+      });
 
-          return dsl.register('i', 'c', bool);
-        })
-        .then(result => {
-          should(result.id).be.eql(id);
-        });
+      should(id1).eql(id2);
+      should(id1).eql(id3);
     });
 
     it('should not recreate an already existing subfilter', () => {
-      let ids = [];
+      const ids = [];
 
-      return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: 'bar'}]})
-        .then(subscription => {
-          ids.push(subscription.id);
-          return dsl.register('i', 'c', {equals: {foo: 'bar'}});
-        })
-        .then(subscription => {
-          const sfs = dsl.storage.filters.get(subscription.id).subfilters;
+      ids.push(koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+        ],
+      }));
 
-          ids.push(subscription.id);
-          should(sfs).instanceOf(Set);
-          should(sfs.size).be.eql(1);
+      const id = koncorde.register({ equals: { foo: 'bar' } });
 
-          const filterIds = [];
+      const sfs = defaultEngine.filters.get(id).subfilters;
 
-          for (const sf of sfs.values()) {
-            sf.filters.forEach(f => filterIds.push(f.id));
-          }
+      ids.push(id);
+      should(sfs).instanceOf(Set);
+      should(sfs.size).be.eql(1);
 
-          should(filterIds.sort()).match(ids.sort());
-        });
-    });
-  });
+      const filterIds = [];
 
-  describe('#exists', () => {
-    it('should return true if a filter exists on the provided index and collection', () => {
-      should(dsl.exists('i', 'c')).be.false();
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => {
-          should(dsl.exists('i', 'c')).be.true();
-        });
+      for (const sf of sfs.values()) {
+        sf.filters.forEach(f => filterIds.push(f.id));
+      }
+
+      should(filterIds.sort()).match(ids.sort());
     });
 
-    it('should return false if no filter exists on a provided collection', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => {
-          should(dsl.exists('i', 'foo')).be.false();
-        });
-    });
+    it('should reject if the filter is too complex', () => {
+      koncorde = new Koncorde({ maxConditions: 2 });
 
-    it('should return false if no filter exists on a provided index', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => {
-          should(dsl.exists('foo', 'c')).be.false();
-        });
+      should(() => koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+        ],
+      })).not.throw();
+
+      should(() => koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: 'bar' },
+          { exists: 'foo' },
+        ],
+      })).throw('Filter too complex: exceeds the configured maximum number of conditions');
     });
   });
 
   describe('#getFilterIds', () => {
-    it('should return an empty array if no filter exist on the provided index and collection', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => {
-          should(dsl.getFilterIds('foo', 'bar')).be.an.Array().and.be.empty();
-        });
+    it('should return the list of registered filter IDs', () => {
+      const ids = [];
+
+      ids.push(koncorde.register({ equals: { foo: 'bar' } }));
+      ids.push(koncorde.register({ exists: 'foo' }));
+
+      should(koncorde.getFilterIds().sort()).match(ids.sort());
     });
 
-    it('should return the list of registered filter IDs on the provided index and collection', () => {
-      let ids = [];
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(result => {
-          ids.push(result.id);
-          return dsl.register('i', 'c', {exists: 'foo'});
-        })
-        .then(result => {
-          ids.push(result.id);
-          should(dsl.getFilterIds('i', 'c').sort()).match(ids.sort());
-        });
+    it('should return an empty array if the default index is empty', () => {
+      should(koncorde.getFilterIds()).be.an.Array().and.be.empty();
+    });
+
+    it('should return an empty array if the named index does not exist', () => {
+      should(koncorde.getFilterIds('foobar')).be.an.Array().and.be.empty();
     });
   });
 
-  describe('#getIndexes', () => {
-    it('should return an empty array if no filter exist on the provided index and collection', () => {
-      should(dsl.getIndexes()).be.an.Array().and.be.empty();
-    });
-
-    it('should return the list of registered indexes on the provided index and collection', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => dsl.register('i', 'c', {exists: 'foo'}))
-        .then(() => dsl.register('i2', 'c', {exists: 'foo'}))
-        .then(() => should(dsl.getIndexes().sort()).match(['i', 'i2']));
-    });
-  });
-
-  describe('#getCollections', () => {
-    it('should return an empty array if no filter exist on the provided index and collection', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => {
-          should(dsl.getCollections('foo')).be.an.Array().and.be.empty();
-        });
-    });
-
-    it('should return the list of registered collections on the provided index and collection', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(() => dsl.register('i', 'c', {exists: 'foo'}))
-        .then(() => dsl.register('i', 'c2', {exists: 'foo'}))
-        .then(() => should(dsl.getCollections('i').sort()).match(['c', 'c2']));
-    });
-  });
-
-  describe('#hasFilter', () => {
+  describe('#hasFilterId', () => {
     it('should return false if the filter does not exist', () => {
-      should(dsl.hasFilter('i dont exist'))
-        .be.false();
+      should(koncorde.hasFilterId('i dont exist')).be.false();
     });
 
     it('should return true if the filter exists', () => {
-      return dsl.register('i', 'c', {equals: {foo: 'bar'}})
-        .then(response => {
-          should(dsl.hasFilter(response.id))
-            .be.true();
-        });
-
+      const id = koncorde.register({ equals: { foo: 'bar' } });
+      should(koncorde.hasFilterId(id)).be.true();
     });
   });
 
   describe('#test', () => {
-    /*
-     we only check the special case of no registered filter on the provided
-     index and collection, as all other checks are performed in
-     test/api/dsl/keywords unit tests files
-     */
-    it('should return an empty array if there is no filter registered on an index or collection', () => {
-      should(dsl.test('i', 'c', {foo: 'bar'})).be.an.Array().and.be.empty();
+    it('should return an empty array if the named index does not exist', () => {
+      should(koncorde.test({ foo: 'bar' }, 'foobar'))
+        .be.an.Array()
+        .and.be.empty();
     });
 
     it('should flatten submitted documents', () => {
-      const stub = sinon.stub(dsl.matcher, 'match');
+      const stub = sinon.stub(defaultEngine, 'match');
 
-      return dsl.register('i', 'c', {})
-        .then(() => {
-          dsl.test('i', 'c', {
-            bar: 'bar',
-            qux: 'qux',
-            obj: {
-              hello: 'world',
-              nested: {
-                another: 'one',
-                bites: 'the dust'
-              },
-              bottlesOfBeer: 99
-            },
-            arr: ['foo', 'bar'],
-            foo: 'bar'
-          });
+      koncorde.register({});
+      koncorde.test({
+        bar: 'bar',
+        qux: 'qux',
+        obj: {
+          hello: 'world',
+          nested: {
+            another: 'one',
+            bites: 'the dust'
+          },
+          bottlesOfBeer: 99
+        },
+        arr: ['foo', 'bar'],
+        foo: 'bar'
+      });
 
-          should(stub).calledWith('i', 'c', {
-            bar: 'bar',
-            qux: 'qux',
-            obj: {
-              hello: 'world',
-              nested: {
-                another: 'one',
-                bites: 'the dust'
-              },
-              bottlesOfBeer: 99
-            },
-            'obj.hello': 'world',
-            'obj.nested': {
-              another: 'one',
-              bites: 'the dust'
-            },
-            'obj.nested.another': 'one',
-            'obj.nested.bites': 'the dust',
-            'obj.bottlesOfBeer': 99,
-            arr: ['foo', 'bar'],
-            foo: 'bar'
-          });
-        });
+      should(stub.calledWith({
+        bar: 'bar',
+        qux: 'qux',
+        obj: {
+          hello: 'world',
+          nested: {
+            another: 'one',
+            bites: 'the dust'
+          },
+          bottlesOfBeer: 99
+        },
+        'obj.hello': 'world',
+        'obj.nested': {
+          another: 'one',
+          bites: 'the dust'
+        },
+        'obj.nested.another': 'one',
+        'obj.nested.bites': 'the dust',
+        'obj.bottlesOfBeer': 99,
+        arr: ['foo', 'bar'],
+        foo: 'bar'
+      })).be.true();
     });
   });
 
   describe('#remove', () => {
-    it('should do nothing if the filter id does not exist', () => {
-      dsl._removeFromTestTables = sinon.spy();
+    it('should do nothing if the target index does not exist', () => {
+      should(koncorde.engines).have.key(null);
+      should(koncorde.engines.size).eql(1);
 
-      dsl.remove('foo');
-      should(dsl._removeFromTestTables)
-        .have.callCount(0);
+      should(() => koncorde.remove('foo', 'bar')).not.throw();
+
+      should(koncorde.engines).have.key(null);
+      should(koncorde.engines.size).eql(1);
     });
 
     it('should unsubscribe a filter from a multi-filter subfilter', () => {
-      let sf;
       const ids = [];
 
-      return dsl.register('i', 'c', {or: [{equals: {foo: 'bar'}}, {exists: {field: 'bar'}}]})
-        .then(subscription => {
-          ids.push(subscription.id);
-          return dsl.register('i', 'c', {equals: {foo: 'bar'}});
-        })
-        .then(subscription => {
-          const sfs = dsl.storage.filters.get(subscription.id).subfilters;
+      ids.push(koncorde.register({
+        or: [
+          { equals: { foo: 'bar' } },
+          { exists: { field: 'bar' } },
+        ],
+      }));
 
-          ids.push(subscription.id);
-          should(sfs).instanceOf(Set);
-          should(sfs.size).be.eql(1);
+      const id = koncorde.register({ equals: { foo: 'bar' } });
+      ids.push(id);
 
-          sf = Array.from(sfs.values())[0];
-          should(sf.filters.size).be.eql(2);
+      const sfs = defaultEngine.filters.get(id).subfilters;
+      should(sfs).instanceOf(Set);
+      should(sfs.size).be.eql(1);
 
-          const filterIds = Array.from(sf.filters).map(f => f.id);
-          should(filterIds.sort()).match(Array.from(ids).sort());
+      const sf = Array.from(sfs.values())[0];
+      should(sf.filters.size).be.eql(2);
 
-          return dsl.remove(subscription.id);
-        })
-        .then(() => {
-          should(sf.filters.size).be.eql(1);
-          const fid = Array.from(sf.filters)[0].id;
-          should(fid).match(ids[0]);
-        });
+      const filterIds = Array.from(sf.filters).map(f => f.id);
+      should(filterIds.sort()).match(Array.from(ids).sort());
+
+      koncorde.remove(id);
+
+      should(sf.filters.size).be.eql(1);
+      const fid = Array.from(sf.filters)[0].id;
+      should(fid).match(ids[0]);
+    });
+
+    it('should unsubscribe from a named index', () => {
+      const id1 = koncorde.register({ equals: { foo: 'bar' } }, 'foobar');
+      const id2 = koncorde.register({ equals: { foo: 'qux' } }, 'foobar');
+
+      should(koncorde.getFilterIds('foobar')).match([ id1, id2 ]);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      // wrong index
+      koncorde.remove(id1);
+
+      should(koncorde.getFilterIds('foobar').length).eql(2);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      koncorde.remove(id1, 'foobar');
+
+      should(koncorde.getFilterIds('foobar')).match([ id2 ]);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+    });
+
+    it('should remove an index when the last filter in it is deleted', () => {
+      const id1 = koncorde.register({ equals: { foo: 'bar' } }, 'foobar');
+      const id2 = koncorde.register({ equals: { foo: 'qux' } }, 'foobar');
+
+      should(koncorde.getFilterIds('foobar')).match([ id1, id2 ]);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      // wrong index
+      koncorde.remove(id1);
+
+      should(koncorde.getFilterIds('foobar').length).eql(2);
+      should(koncorde.engines).have.keys(null, 'foobar');
+      should(koncorde.engines.size).eql(2);
+
+      koncorde.remove(id1, 'foobar');
+      koncorde.remove(id2, 'foobar');
+
+      should(koncorde.engines).have.keys(null);
+      should(koncorde.engines.size).eql(1);
+    });
+
+    it('should never remove the default index', () => {
+      const id = koncorde.register({ equals: { foo: 'bar' } });
+
+      should(koncorde.getFilterIds()).match([ id ]);
+      should(koncorde.engines).have.keys(null);
+      should(koncorde.engines.size).eql(1);
+
+      // wrong index
+      koncorde.remove(id);
+
+      should(koncorde.getFilterIds().length).eql(0);
+      should(koncorde.engines).have.keys(null);
+      should(koncorde.engines.size).eql(1);
     });
   });
 
   describe('#normalize', () => {
     it('should invoke the normalizer', () => {
-      const
-        f = {not: {and: [{exists: {field: 'bar'}}, {equals: {foo: 'bar'}}]}},
-        n = {};
+      const f = {
+        not: {
+          and: [
+            { exists: { field: 'bar' } },
+            { equals: { foo: 'bar' } },
+          ],
+        },
+      };
+      const n = [];
 
-      sinon.stub(dsl.transformer, 'normalize').resolves(n);
-      sinon.stub(dsl.storage, 'getFilterId');
+      sinon.stub(koncorde.transformer, 'normalize').returns(n);
 
-      return dsl.normalize('i', 'c', f)
-        .then(() => {
-          should(dsl.transformer.normalize.calledOnce).be.true();
-          should(dsl.transformer.normalize).calledWith(f);
+      const normalized = koncorde.normalize(f);
 
-          should(dsl.storage.getFilterId.calledOnce).be.true();
-          should(dsl.storage.getFilterId).calledWith('i', 'c', n);
-        });
+      should(normalized).match({
+        filter: n,
+        id: hash(koncorde.config.seed, { filter: n, index: null }),
+        index: null,
+      });
+
+      should(normalized.constructor.name).eql('NormalizedFilter');
+
+      should(koncorde.transformer.normalize.calledOnce).be.true();
+      should(koncorde.transformer.normalize.calledWith(f)).be.true();
+    });
+
+    it('should return a normalized object taking the provided index into account', () => {
+      const n = [];
+
+      sinon.stub(koncorde.transformer, 'normalize').returns(n);
+
+      const normalized = koncorde.normalize({}, 'foobar');
+
+      should(normalized).match({
+        filter: n,
+        id: hash(koncorde.config.seed, { filter: n, index: 'foobar' }),
+        index: 'foobar',
+      });
+
+      should(normalized.constructor.name).eql('NormalizedFilter');
+    });
+
+    it('should throw if an invalid index name is provided', () => {
+      for (const ohnoes of [true, false, 0, 123, {}, []]) {
+        // eslint-disable-next-line no-loop-func
+        should(() => koncorde.normalize({}, ohnoes))
+          .throw('Invalid "index" argument: must be a string');
+      }
     });
   });
 
   describe('#store', () => {
     it('should store the supplied normalized filter', () => {
-      const r = {
-        index: 'i',
-        collection: 'c',
-        id: 'id',
-        normalized: {}
-      };
+      const r = koncorde.normalize({});
 
-      sinon.stub(dsl.storage, 'store');
+      sinon.stub(defaultEngine, 'store');
 
-      dsl.store(r);
+      koncorde.store(r);
 
-      should(dsl.storage.store.calledOnce).be.true();
-      should(dsl.storage.store).calledWith(r.index, r.collection, r.normalized, r.id);
+      should(defaultEngine.store.calledOnce).be.true();
+      should(defaultEngine.store.calledWith(r)).be.true();
+    });
+
+    it('should throw when receiving a non-NormalizedFilter object', () => {
+      should(() => koncorde.store({}))
+        .throw(/Invalid argument/);
+    });
+
+    it('should create a new index when subscribing to one for the first time', () => {
+      const r = koncorde.normalize({}, 'foo');
+
+      sinon.stub(defaultEngine, 'store');
+
+      koncorde.store(r);
+
+      should(koncorde.engines).have.key('foo');
+    });
+  });
+
+  describe('#getIndexes', () => {
+    it('should always return the default index, and rename it', () => {
+      should(koncorde.getIndexes()).match(['(default)']);
+    });
+
+    it('should return the list of named indexes alongwith the default one', () => {
+      koncorde.register({}, 'foo');
+      koncorde.register({}, 'bar');
+      koncorde.register({}, 'qux');
+
+      should(koncorde.getIndexes()).match(['(default)', 'foo', 'bar', 'qux']);
     });
   });
 });

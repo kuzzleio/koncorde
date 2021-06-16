@@ -1,51 +1,78 @@
-'use strict';
+const should = require('should/as-function');
+const { Koncorde } = require('../../');
 
-const
-  should = require('should'),
-  BadRequestError = require('kuzzle-common-objects').errors.BadRequestError,
-  DSL = require('../../');
-
-describe('DSL.keyword.ids', () => {
-  let dsl;
+describe('Koncorde.keyword.ids', () => {
+  let koncorde;
 
   beforeEach(() => {
-    dsl = new DSL();
+    koncorde = new Koncorde();
   });
 
   describe('#validation', () => {
     it('should reject empty filters', () => {
-      return should(dsl.validate({ids: {}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({ids: {}}))
+        .throw({
+          keyword: 'ids',
+          message: '"ids": expected object to have exactly 1 property, got 0',
+          path: 'ids',
+        });
     });
 
     it('should reject filters with other fields other than the "values" one', () => {
-      return should(dsl.validate({ids: {foo: ['foo']}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({ids: {foo: ['foo']}}))
+        .throw({
+          keyword: 'ids',
+          message: '"ids": the property "values" is missing',
+          path: 'ids',
+        });
     });
 
     it('should reject filters with multiple defined attributes', () => {
-      return should(dsl.validate({ids: {values: ['foo'], foo: ['foo']}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({ids: {values: ['foo'], foo: ['foo']}}))
+        .throw({
+          keyword: 'ids',
+          message: '"ids": expected object to have exactly 1 property, got 2',
+          path: 'ids',
+        });
     });
 
     it('should reject filters with an empty value list', () => {
-      return should(dsl.validate({ids: {values: []}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({ids: {values: []}}))
+        .throw({
+          keyword: 'ids',
+          message: '"ids.values": cannot be empty',
+          path: 'ids.values',
+        });
     });
 
     it('should reject filters with non-array values attribute', () => {
-      return should(dsl.validate({ids: {values: 'foo'}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({ids: {values: 'foo'}}))
+        .throw({
+          keyword: 'ids',
+          message: '"ids.values": must be an array',
+          path: 'ids.values',
+        });
     });
 
     it('should reject filters containing a non-string value', () => {
-      return should(dsl.validate({ids: {values: ['foo', 'bar', 42, 'baz']}})).be.rejectedWith(BadRequestError);
+      should(() => koncorde.validate({ids: {values: ['foo', 'bar', 42, 'baz']}}))
+        .throw({
+          keyword: 'ids',
+          message: '"ids.values": must hold only values of type "string"',
+          path: 'ids.values',
+        });
     });
 
     it('should validate a well-formed ids filter', () => {
-      return should(dsl.validate({ids: {values: ['foo', 'bar', 'baz']}})).be.fulfilledWith(true);
+      should(() => koncorde.validate({ids: {values: ['foo', 'bar', 'baz']}}))
+        .not.throw();
     });
   });
 
   describe('#standardization', () => {
     it('should return a list of "equals" conditions in a "or" operand', () => {
-      return should(dsl.transformer.standardizer.standardize({ids: {values: ['foo', 'bar', 'baz']}}))
-        .be.fulfilledWith({or: [
+      should(koncorde.transformer.standardizer.standardize({ids: {values: ['foo', 'bar', 'baz']}}))
+        .match({or: [
           {equals: {_id: 'foo'}},
           {equals: {_id: 'bar'}},
           {equals: {_id: 'baz'}}
