@@ -33,7 +33,7 @@ import { JSONObject } from './types/JSONObject';
  * Describes a search filter normalized by Koncorde.
  * Returned by Koncorde.normalize(), and usable with Koncorde.store().
  */
-class NormalizedFilter {
+export class NormalizedFilter {
   /**
    * Normalized filter.
    *
