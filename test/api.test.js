@@ -170,7 +170,7 @@ describe('Koncorde API', () => {
           { exists: 'bar' },
           { exists: 'foo' },
         ],
-      })).throw('Filter too complex: exceeds the configured maximum number of conditions');
+      })).throw(/^Filter too complex/);
     });
   });
 

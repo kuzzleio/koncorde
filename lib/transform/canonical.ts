@@ -69,7 +69,7 @@ export class Canonical {
     const count = this._countConditions(conditions);
 
     if (this.config.maxConditions && count > this.config.maxConditions) {
-      throw new Error('Filter too complex: exceeds the configured maximum number of conditions');
+      throw new Error(`Filter too complex: exceeds the configured maximum number of conditions (conditions: ${count}, max: ${this.config.maxConditions})`);
     }
 
     const normalized = this._normalize(filters, conditions);
