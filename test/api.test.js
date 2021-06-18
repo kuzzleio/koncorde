@@ -170,7 +170,7 @@ describe('Koncorde API', () => {
           { exists: 'bar' },
           { exists: 'foo' },
         ],
-      })).throw('Filter too complex: exceeds the configured maximum number of conditions');
+      })).throw(/^Filter too complex/);
     });
   });
 
@@ -252,6 +252,26 @@ describe('Koncorde API', () => {
         arr: ['foo', 'bar'],
         foo: 'bar'
       })).be.true();
+    });
+
+    it('should behave correctly on complex filters', () => {
+      const id = koncorde.register({
+        and: [
+          { in: { foo: ['bar', 'baz'] } },
+          {
+            or: [
+              { range: { num: { lt: 10, gte: 0 } } },
+              { range: { num: { lt: 100, gte: 90 } } },
+              { not: { range: { num: { lt: 50, gt: 40 } } } },
+            ],
+          },
+        ],
+      });
+
+      should(koncorde.test({ foo: 'qux', num: 1})).Array().and.empty();
+      should(koncorde.test({ num: 41 })).Array().and.empty();
+      should(koncorde.test({ foo: 'bar', num: 41 })).Array().and.empty();
+      should(koncorde.test({ foo: 'baz', num: 91 })).match([id]);
     });
   });
 
