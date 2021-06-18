@@ -20,12 +20,10 @@
  */
 
 import { BaseN, CartesianProduct } from 'ts-combinatorics';
-import * as EspressoImport from 'espresso-logic-minimizer';
+import { Espresso } from 'espresso-logic-minimizer';
 
 import { JSONObject } from '../types/JSONObject';
 import { strcmp } from '../util/stringCompare';
-
-const Espresso = EspressoImport.default;
 
 /**
  * Converts filters in canonical form
