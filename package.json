@@ -1,6 +1,6 @@
 {
   "name": "koncorde",
-  "version": "4.0.2",
+  "version": "4.0.3",
   "description": "Supersonic reverse matching engine",
   "main": "lib/index.js",
   "directories": {
@@ -38,7 +38,7 @@
   "homepage": "https://github.com/kuzzleio/koncorde#readme",
   "dependencies": {
     "@flatten-js/interval-tree": "^1.0.14",
-    "boost-geospatial-index": "^1.1.0",
+    "boost-geospatial-index": "^1.1.1",
     "espresso-logic-minimizer": "^2.0.3",
     "json-stable-stringify": "^1.0.1",
     "ngeohash": "^0.6.3",
