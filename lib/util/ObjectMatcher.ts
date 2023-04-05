@@ -37,17 +37,17 @@ export function matchArray(array: Array<any>, match: Array<any>): boolean {
       return false;
   };
 
-  const document = [];
+  const arrayCopy = [];
   for (let i = 0; i < array.length; i++) {
-      document[i] = array[i];
+      arrayCopy[i] = array[i];
   }
 
   for (let i = 0; i < match.length; i++) {
       const toMatch = match[i];
       let found = false;
-      for (let j = 0; j < document.length; j++) {
-          if (matchAny(document[j], toMatch)) {
-              document.splice(j, 1);
+      for (let j = 0; j < arrayCopy.length; j++) {
+          if (matchAny(arrayCopy[j], toMatch)) {
+              arrayCopy.splice(j, 1);
               found = true;
               break;
           }
