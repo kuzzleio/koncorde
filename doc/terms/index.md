@@ -129,7 +129,9 @@ Keep in mind that since this process is recursive on Sub Objects and Arrays the 
 
 ```
 match: {
+  <field name>: <value>,
   <field name>: <value>
+  ...
 }
 ```
 
