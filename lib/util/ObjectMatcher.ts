@@ -47,11 +47,17 @@ export function matchArray(array: Array<any>, match: Array<any>): boolean {
       let found = false;
       for (let j = 0; j < arrayCopy.length; j++) {
           if (matchAny(arrayCopy[j], toMatch)) {
+              // Remove the value from the arrayCopy so we don't match it twice
+              // and this reduces the number of iterations we need to do over the arrayCopy
               arrayCopy.splice(j, 1);
               found = true;
               break;
           }
       }
+      /**
+       * If there is no value in the array that matches the value we want to match,
+       * then the array doesn't match
+       */
       if (!found) {
           return false;
       }
