@@ -82,6 +82,40 @@ export class OperandsStorage {
   }
 
   /**
+   * Stores a "match" condition into the field-operand structure
+   *
+   * @param {FieldOperand} operand
+   * @param {object} subfilter
+   * @param {object} condition
+   */
+  match (operand, subfilter, condition) {
+    const fieldName = Object.keys(condition.value)[0];
+    const value = condition.value[fieldName];
+    const field = operand.fields.get(fieldName);
+
+    if (!field) {
+      operand.fields.set(fieldName, [{
+        value,
+        subfilter
+      }]);
+    }
+    else {
+      field.push({ value, subfilter });
+    }
+  }
+
+  /**
+   * Stores a "not match" condition into the field-operand structure
+   *
+   * @param {FieldOperand} operand
+   * @param {object} subfilter
+   * @param {object} condition
+   */
+  notmatch (operand, subfilter, condition) {
+    this.match(operand, subfilter, condition);
+  }
+
+  /**
    * Stores a "not equals" condition into the field-operand structure
    *
    * @param {FieldOperand} operand
