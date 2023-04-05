@@ -89,18 +89,17 @@ export class OperandsStorage {
    * @param {object} condition
    */
   match (operand, subfilter, condition) {
-    const fieldName = Object.keys(condition.value)[0];
-    const value = condition.value[fieldName];
-    const field = operand.fields.get(fieldName);
 
-    if (!field) {
-      operand.fields.set(fieldName, [{
-        value,
+    const filters = operand.custom.filters;
+
+    if (!filters) {
+      operand.custom.filters = [{
+        value: condition.value,
         subfilter
-      }]);
+      }];
     }
     else {
-      field.push({ value, subfilter });
+      filters.push({ value: condition.value, subfilter });
     }
   }
 

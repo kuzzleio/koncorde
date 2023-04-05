@@ -30,14 +30,12 @@ import { matchAny } from "../../util/ObjectMatcher";
  * @param {object} document
  */
 export function MatchMatch (operand, testTables, document) {
-  for (const [key, value] of operand.fields.entries()) {
-    
-    const subfilters = value
-      .filter(filter => matchAny(document[key], filter.value))
-      .map(filter => filter.subfilter);
+  const filters = operand.custom.filters;
+  const subfilters = filters
+    .filter(filterInfo => matchAny(document, filterInfo.value))
+    .map(filterInfo => filterInfo.subfilter);
 
-    if (subfilters.length > 0) {
-      testTables.addMatch(subfilters);
-    }
+  if (subfilters.length > 0) {
+    testTables.addMatch(subfilters);
   }
 }
