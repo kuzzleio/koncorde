@@ -105,6 +105,172 @@ And this filter validates the second document:
 }
 ```
 
+## match
+
+Test if properties of the filter is matching with the properties of the document.
+
+If A and B both are Scalars, checks that they're equal.
+If A and B both are Objects, checks that every property of A is matching a property of B.
+If A and B both are Arrays, checks that every values of A has a value in B matching.
+
+This process is recursive, meaning that Sub Objects and Arrays are expected to match each other and not be strictly equal.
+
+:::warning
+Matching Arrays is O(n * m) with n being the number of elements in A and m the numbers of elements in B
+
+Matching Objects is O(min(n,m)) with n being the number of properties in A and m the numbers of properties in B
+
+Matching Scalars is O(1)
+
+Keep in mind that since this process is recursive on Sub Objects and Arrays the complexity can increase.
+:::
+
+### Syntax
+
+```
+match: {
+  <field name>: <value>
+}
+```
+
+### Example
+
+#### Array Matching
+Given the following filter:
+
+```js
+{
+  "match": {
+    "foo": [1, 2, 3]
+  }
+}
+```
+
+It will match this document, because all values from the filter `foo` property are contained in the document `foo` property.
+
+```js
+{
+  "foo": [0, 1, 4, 2, 3]
+}
+```
+
+But will not match this document, because the document `foo` property is missing some values.
+
+```js
+{
+  "foo": [0, 0, 1, 2]
+}
+```
+
+#### Object Matching
+
+Given the following filter:
+
+```js
+{
+  "match": {
+    "foo": {
+      "a": 5
+    }
+  }
+}
+
+```
+
+It will match this document, because all properties from the filter `foo` Object can be matched against the document `foo` property.
+
+```js
+{
+  "foo": {
+    "a": 5,
+    "b": 8,
+    "c": "something"
+  }
+}
+```
+
+But will not match this document, because the document `foo` Object is missing some properties or they have not the same values as the properties from the `foo` Object of the filter.
+
+```js
+{
+  "foo": {
+    "b": 8,
+    "c": "something"
+  }
+}
+```
+
+#### Combined Object and Array Matching
+
+Given the following filter:
+
+```js
+{
+  "match": {
+    "delivery": [
+      {
+        "state": "IN PROGRESS",
+        "itemIDs": [ 42 ]
+      }
+    ]
+  }
+}
+
+```
+
+It will match this document.
+
+```js
+{
+ "delivery": [
+    { 
+      "city": "London",
+      "state": "DELIVERED",
+      "itemIDs": [ 21 ]
+    },
+    {
+      "city": "New York",
+      "state": "IN PROGRESS",
+      "itemIDs": [ 42, 84 ]
+    },
+    {
+      "city": "Paris",
+      "state": "DELIVERED",
+      "itemIDs": [ 168 ]
+    }
+  ]
+}
+```
+
+But will not match this document.
+
+```js
+{
+ "delivery": [
+    { 
+      "city": "London",
+      "state": "DELIVERED",
+      "itemIDs": [ 21 ]
+    },
+    {
+      "city": "New York",
+      "state": "DELIVERED",
+      "itemIDs": [ 42, 84 ]
+    },
+    {
+      "city": "New York",
+      "state": "IN PROGRESS",
+      "itemIDs": [ 84 ]
+    },
+    {
+      "city": "Paris",
+      "state": "DELIVERED",
+      "itemIDs": [ 168 ]
+    }
+  ]
+}
+```
+
 ## geoBoundingBox
 
 Filter documents containing a geographical point confined within a bounding box:
