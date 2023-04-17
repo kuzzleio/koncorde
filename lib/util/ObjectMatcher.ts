@@ -1,4 +1,4 @@
-import { JSONObject } from "../types/JSONObject";
+import { JSONObject } from '../types/JSONObject';
 
 /**
  * Verifies that the provided `obj` value matches the provided `toMatch` value
@@ -8,22 +8,22 @@ import { JSONObject } from "../types/JSONObject";
  */
 export function matchAny(obj: any, toMatch: any): boolean {
   if (typeof obj !== typeof toMatch) {
-      return false;
+    return false;
   }
 
   if (typeof obj === 'object' && obj !== null && toMatch !== null) {
-      if (Array.isArray(obj) !== Array.isArray(toMatch)) {
-          return false;
-      }
+    if (Array.isArray(obj) !== Array.isArray(toMatch)) {
+      return false;
+    }
 
-      if (Array.isArray(obj)) {
-          return matchArray(obj, toMatch);
-      } else {
-          return matchObject(obj, toMatch);
-      }
-  } else {
-      return obj === toMatch;
-  }
+    if (Array.isArray(obj)) {
+      return matchArray(obj, toMatch);
+    } 
+    return matchObject(obj, toMatch);
+      
+  } 
+  return obj === toMatch;
+  
 }
 
 /**
@@ -34,33 +34,33 @@ export function matchAny(obj: any, toMatch: any): boolean {
  */
 export function matchArray(array: Array<any>, match: Array<any>): boolean {
   if (array.length < match.length) {
-      return false;
-  };
+    return false;
+  }
 
   const arrayCopy = [];
   for (let i = 0; i < array.length; i++) {
-      arrayCopy[i] = array[i];
+    arrayCopy[i] = array[i];
   }
 
   for (let i = 0; i < match.length; i++) {
-      const toMatch = match[i];
-      let found = false;
-      for (let j = 0; j < arrayCopy.length; j++) {
-          if (matchAny(arrayCopy[j], toMatch)) {
-              // Remove the value from the arrayCopy so we don't match it twice
-              // and this reduces the number of iterations we need to do over the arrayCopy
-              arrayCopy.splice(j, 1);
-              found = true;
-              break;
-          }
+    const toMatch = match[i];
+    let found = false;
+    for (let j = 0; j < arrayCopy.length; j++) {
+      if (matchAny(arrayCopy[j], toMatch)) {
+        // Remove the value from the arrayCopy so we don't match it twice
+        // and this reduces the number of iterations we need to do over the arrayCopy
+        arrayCopy.splice(j, 1);
+        found = true;
+        break;
       }
-      /**
+    }
+    /**
        * If there is no value in the array that matches the value we want to match,
        * then the array doesn't match
        */
-      if (!found) {
-          return false;
-      }
+    if (!found) {
+      return false;
+    }
   }
 
   return true;
@@ -85,9 +85,9 @@ export function matchObject(obj: JSONObject, match: JSONObject): boolean {
    * On objects with ~20 properties, this is ~2x faster than doing Object.keys().
    */
   for (const key in match) {
-      if (!matchAny(obj[key], match[key])) {
-          return false;
-      }
+    if (!matchAny(obj[key], match[key])) {
+      return false;
+    }
   }
   return true;
 }

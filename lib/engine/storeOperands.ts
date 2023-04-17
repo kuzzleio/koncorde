@@ -94,12 +94,12 @@ export class OperandsStorage {
 
     if (!filters) {
       operand.custom.filters = [{
+        subfilter,
         value: condition.value,
-        subfilter
       }];
     }
     else {
-      filters.push({ value: condition.value, subfilter });
+      filters.push({ subfilter, value: condition.value });
     }
   }
 

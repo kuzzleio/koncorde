@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { matchAny } from "../../util/ObjectMatcher";
+import { matchAny } from '../../util/ObjectMatcher';
 
 /**
  * Updates the matched filters according to the provided data
