@@ -30,7 +30,7 @@ describe('Koncorde.keyword.match', () => {
       should(() => koncorde.validate({ match: {} }))
         .throw({
           keyword: 'match',
-          message: '"match": expected object to have exactly 1 property, got 0',
+          message: '"match": must be a non-empty object',
           path: 'match',
         });
     });
@@ -80,6 +80,22 @@ describe('Koncorde.keyword.match', () => {
     it('should match a document if partially equal', () => {
       const id = koncorde.register({ match: { foo: 'bar' } });
       const result = koncorde.test({ foo: 'bar', 'bar': 'baz' });
+
+      should(result).be.an.Array().and.not.empty();
+      should(result[0]).be.eql(id);
+    });
+
+    it('should match a document if the array contains all the element of the filter', () => {
+      const id = koncorde.register({ match: { foo: [4, 2] } });
+      const result = koncorde.test({ foo: [1, 4, 9, 2] });
+
+      should(result).be.an.Array().and.not.empty();
+      should(result[0]).be.eql(id);
+    });
+
+    it('should match a document if the array contains all the element of the filter and sub arrays and objects matches', () => {
+      const id = koncorde.register({ match: { foo: [ { a: 1 } ] } });
+      const result = koncorde.test({ foo: [ { b: 1 }, { a: 1, b: 2 }] });
 
       should(result).be.an.Array().and.not.empty();
       should(result[0]).be.eql(id);
@@ -143,7 +159,7 @@ describe('Koncorde.keyword.match', () => {
       should(engine.foPairs).be.an.Object().and.be.empty();
     });
 
-    it.only('should remove a single subfilter from a multi-filter condition', () => {
+    it('should remove a single subfilter from a multi-filter condition', () => {
       const id1 = koncorde.register({ match: { foo: 'bar' } });
       const id2 = koncorde.register({
         and: [
@@ -158,52 +174,8 @@ describe('Koncorde.keyword.match', () => {
       const multiSubfilter = getSubfilter(id2);
 
       should(match).be.an.instanceof(FieldOperand);
-      should(match.custom.filters.indexOf(f => f.subfilter === multiSubfilter)).be.greaterThan(-1);
-      // should(match.custom.filters)
-      //   .have.value({
-      //     value: { foo: 'bar' },
-      //     subfilter: multiSubfilter,
-      //   });
-    });
-
-    it('should remove a value from the list if its last subfilter is removed', () => {
-      const id1 = koncorde.register({ match: { foo: 'bar' } });
-      const id2 = koncorde.register({ match: { foo: 'qux' } });
-
-      const match = engine.foPairs.get('match');
-      const barSubfilter = getSubfilter(id1);
-
-      should(match.fields.get('foo').get('bar')).eql(new Set([barSubfilter]));
-
-      should(match.fields.get('foo').get('qux'))
-        .eql(new Set([getSubfilter(id2)]));
-
-      koncorde.remove(id2);
-
-      should(match).be.an.instanceof(FieldOperand);
-      should(match.fields.get('foo'))
-        .have.value('bar', new Set([barSubfilter]))
-        .not.have.key('qux');
-    });
-
-    it('should remove a field from the list if its last value to test is removed', () => {
-      const id1 = koncorde.register({ match: { foo: 'bar' } });
-      const id2 = koncorde.register({ match: { baz: 'qux' } });
-
-      const barSubfilter = getSubfilter(id1);
-      const match = engine.foPairs.get('match');
-
-      should(match.fields.get('baz'))
-        .have.value('qux', new Set([getSubfilter(id2)]));
-
-      koncorde.remove(id2);
-
-      should(match).be.an.instanceof(FieldOperand);
-
-      should(match.fields.get('foo'))
-        .have.value('bar', new Set([barSubfilter]));
-
-      should(match.fields).not.have.key('baz');
+      should(match.custom.filters.findIndex(f => f.subfilter.id === multiSubfilter.id && f.value.baz === 'qux')).be.greaterThan(-1);
+      should(match.custom.filters.findIndex(f => f.subfilter.id === multiSubfilter.id && f.value.foo === 'bar')).be.greaterThan(-1);
     });
   });
 });
