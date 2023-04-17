@@ -26,6 +26,9 @@ import { RegExpCondition } from './objects/regexpCondition';
 import { RangeCondition } from './objects/rangeCondition';
 import * as BoostSpatialIndexImport from 'boost-geospatial-index';
 import { JSONObject } from '../types/JSONObject';
+import { Transformer } from '../transform';
+import { hash } from '../util/hash';
+import { NormalizedFilter } from '../index';
 
 const BoostSpatialIndex = BoostSpatialIndexImport.default;
 
@@ -37,9 +40,20 @@ const BoostSpatialIndex = BoostSpatialIndexImport.default;
  * */
 export class OperandsStorage {
   public config: JSONObject;
+  private transformer: Transformer;
+  private Engine: any;
 
   constructor (config) {
     this.config = config;
+    this.transformer = new Transformer(this.config);
+    
+    // I didn't want to, but I had no choice, because the Engine class
+    // cannot be imported in this file, because it would create a circular
+    // dependency. And it does not import it.
+    // So I have to use a require() here, and tell TypeScript to ignore it.
+    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    this.Engine = require('./index').Engine;
   }
 
   /**
@@ -77,6 +91,57 @@ export class OperandsStorage {
       }
       else {
         entries.add(subfilter);
+      }
+    }
+  }
+
+  /**
+   * Stores a "select" condition into the field-operand structure
+   *
+   * @param {FieldOperand} operand
+   * @param {object} subfilter
+   * @param {object} condition
+   */
+  select (operand, subfilter, condition) {
+    const fieldName = condition.value.field;
+    const arrayIndex = condition.value.index;
+    const field = operand.fields.get(fieldName);
+    const index = `${fieldName}[${arrayIndex}]`;
+
+    const normalized = this.transformer.normalize(condition.value.query);
+    const id = hash(this.config.seed, { filter: normalized, index });
+
+    const filter = new NormalizedFilter(normalized, id, index);
+
+    if (!field) {
+      const engine = new this.Engine(this.config);
+      engine.store(filter);
+
+      operand.fields.set(fieldName, new Map([[arrayIndex, {
+        engine,
+        filters: new Map([[filter.id, [subfilter]]]),
+      }]]));
+    }
+    else {
+      const indexEntry = field.get(arrayIndex);
+
+      if (indexEntry) {
+        indexEntry.engine.store(filter);
+
+        const subfilters = indexEntry.filters.get(filter.id);
+        if (subfilters) {
+          subfilters.push(subfilter);
+        } else {
+          indexEntry.filters.set(filter.id, [subfilter]);
+        }
+      } else {
+        const engine = new this.Engine(this.config);
+        engine.store(filter);
+
+        field.set(arrayIndex, {
+          engine,
+          filters: new Map([[filter.id, [subfilter]]]),
+        });
       }
     }
   }
