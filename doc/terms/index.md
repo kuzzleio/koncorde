@@ -105,6 +105,76 @@ And this filter validates the second document:
 }
 ```
 
+## select
+
+Executes a Koncorde query on a particular index of an array
+
+Negative value for the index are allowed, and will be interpreted as an offset from the end of the array, -1 being the last element.
+
+The query is executed on an object that has a single property `value` which correspond to the element in the array at the given index.
+
+### Syntax
+
+```
+select: {
+  field: <field name>,
+  index: <array index>
+  query: <koncorde query>
+}
+```
+
+### Example
+
+Given the following documents:
+
+```js
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: ['compiler', 'COBOL'],
+  alive: false
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: ['programming', 'algorithm']
+}
+```
+
+The following filter validates the first document:
+
+```js
+{
+  select: {
+    field: 'hobby',
+    index: 0,
+    query: {
+      equals: {
+        value: 'compiler'
+      }
+    }
+  }
+}
+```
+
+And this filter validates the second document:
+
+```js
+{
+  select: {
+    field: 'hobby',
+    index: -1,
+    query: {
+      equals: {
+        value: 'algorithm'
+      }
+    }
+  }
+}
+```
+
 ## match
 
 Test if properties of the filter is matching with the properties of the document.
