@@ -31,15 +31,6 @@ import { flattenObject } from '../../util/Flatten';
  * @param {object} document
  */
 export function MatchSelect (operand, testTables, document) {
-  // const filters = operand.custom.filters;
-  // const subfilters = filters
-  //   .filter(filterInfo => matchAny(document, filterInfo.value))
-  //   .map(filterInfo => filterInfo.subfilter);
-
-  // if (subfilters.length > 0) {
-  //   testTables.addMatch(subfilters);
-  // }
-
   for (const [key, indexMap] of operand.fields.entries()) {
     if (!Array.isArray(document[key])) {
       continue;
