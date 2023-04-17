@@ -5,12 +5,12 @@ on: [pull_request]
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
-          node-version: 12
+          node-version: 14
       - uses: ./.github/actions/eslint
 
   unit-tests:
@@ -18,11 +18,11 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: ['12.16.3', '12.20.0']
-    runs-on: ubuntu-18.04
+        node-version: ["14", "16"]
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
