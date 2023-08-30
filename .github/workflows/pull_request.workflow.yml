@@ -6,17 +6,23 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: ["16", "18", "20"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/eslint
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
     needs: [lint]
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: ["16", "18", "20"]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
