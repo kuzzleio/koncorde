@@ -39,7 +39,7 @@
   "homepage": "https://github.com/kuzzleio/koncorde#readme",
   "dependencies": {
     "@flatten-js/interval-tree": "^1.1.0",
-    "boost-geospatial-index": "v1.2.0-beta.1",
+    "boost-geospatial-index": "1.2.0-beta.2",
     "espresso-logic-minimizer": "^2.0.3",
     "json-stable-stringify": "^1.0.2",
     "ngeohash": "^0.6.3",
