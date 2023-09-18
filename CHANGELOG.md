@@ -1,3 +1,10 @@
+# [4.3.0-beta.3](https://github.com/kuzzleio/koncorde/compare/v4.3.0-beta.2...v4.3.0-beta.3) (2023-09-18)
+
+
+### Bug Fixes
+
+* **deps:** fIxing all deps, use true release of boost ([7ba7a4c](https://github.com/kuzzleio/koncorde/commit/7ba7a4c2ca677bccbe6c925bd942a2419ff7d897))
+
 # [4.3.0-beta.2](https://github.com/kuzzleio/koncorde/compare/v4.3.0-beta.1...v4.3.0-beta.2) (2023-09-18)
 
 
