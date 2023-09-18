@@ -1,3 +1,10 @@
+# [4.3.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.2.0...v4.3.0-beta.1) (2023-09-18)
+
+
+### Features
+
+* **depedencies:** update deps to their latest version, focus on boost-geospatial-index ([523bc77](https://github.com/kuzzleio/koncorde/commit/523bc7719993f14c0a6f96b78599dbca3df687dc))
+
 # [4.2.0](https://github.com/kuzzleio/koncorde/compare/v4.1.0...v4.2.0) (2023-08-30)
 
 
