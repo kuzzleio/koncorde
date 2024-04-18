@@ -127,6 +127,18 @@ describe('Koncorde API', () => {
       should(id1).eql(id3);
     });
 
+    it('should resolve to the different id for equivalent filters and different values', () => {
+      const id1 = koncorde.register({
+        and : [ { equals: { city: 'Montpellier' } }, { equals: {city: 'Nimes'} } ]
+      });
+
+      const id2 = koncorde.register({
+        and : [ { equals: { city: 'Montpellier' } }, { equals: {city: 'Test'} } ]
+      });
+
+      should(id1).not.eql(id2);
+    });
+
     it('should not recreate an already existing subfilter', () => {
       const ids = [];
 
