@@ -129,11 +129,17 @@ describe('Koncorde API', () => {
 
     it('should resolve to the different id for equivalent filters and different values', () => {
       const id1 = koncorde.register({
-        and : [ { equals: { city: 'Montpellier' } }, { equals: {city: 'Nimes'} } ]
+        and : [ 
+          { equals: { city: 'Montpellier' } }, 
+          { equals: {city: 'Nimes'} } 
+        ]
       });
 
       const id2 = koncorde.register({
-        and : [ { equals: { city: 'Montpellier' } }, { equals: {city: 'Test'} } ]
+        and : [ 
+          { equals: { city: 'Montpellier' } }, 
+          { equals: {city: 'Test'} } 
+        ]
       });
 
       should(id1).not.eql(id2);
