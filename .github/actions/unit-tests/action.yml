@@ -10,5 +10,4 @@ runs:
       shell: bash
     - run: npm run test:unit:coverage
       shell: bash
-    - run: npm run codecov
-      shell: bash
+
