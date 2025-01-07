@@ -1,3 +1,15 @@
+# [4.4.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.3.0...v4.4.0-beta.1) (2025-01-07)
+
+
+### Bug Fixes
+
+* typo in ci ([904071e](https://github.com/kuzzleio/koncorde/commit/904071e1d09b0eeea96f314feb0332e223a6d8dd))
+
+
+### Features
+
+* update deps ([ff9cc13](https://github.com/kuzzleio/koncorde/commit/ff9cc13c5ee0fb5f09be7a8f0ae9042e30af4dc9))
+
 # [4.3.0](https://github.com/kuzzleio/koncorde/compare/v4.2.0...v4.3.0) (2023-09-18)
 
 
