@@ -1,6 +1,6 @@
 {
   "name": "koncorde",
-  "version": "4.6.0-beta.1",
+  "version": "4.6.0",
   "description": "Supersonic reverse matching engine",
   "main": "lib/index.js",
   "directories": {
