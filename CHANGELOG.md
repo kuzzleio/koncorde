@@ -1,3 +1,10 @@
+# [4.5.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.4.0...v4.5.0-beta.1) (2025-01-15)
+
+
+### Features
+
+* move to espressio-minimizer ([34b1165](https://github.com/kuzzleio/koncorde/commit/34b11653daf3859cb1ec7a007f4a4304c4f85c42))
+
 # [4.4.0](https://github.com/kuzzleio/koncorde/compare/v4.3.0...v4.4.0) (2025-01-07)
 
 
