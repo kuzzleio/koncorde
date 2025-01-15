@@ -20,7 +20,7 @@
  */
 
 import { BaseN, CartesianProduct } from 'ts-combinatorics';
-import { Espresso } from 'espresso-logic-minimizer';
+import { Espresso } from 'espresso-minimizer';
 
 import { JSONObject } from '../types/JSONObject';
 import { strcmp } from '../util/stringCompare';
