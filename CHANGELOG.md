@@ -1,3 +1,10 @@
+# [4.6.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.5.0...v4.6.0-beta.1) (2025-01-15)
+
+
+### Features
+
+* update deps ([f3410c9](https://github.com/kuzzleio/koncorde/commit/f3410c9776519d63851b1a207d9b944756c4a6ac))
+
 # [4.5.0](https://github.com/kuzzleio/koncorde/compare/v4.4.0...v4.5.0) (2025-01-15)
 
 
