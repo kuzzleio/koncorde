@@ -58,6 +58,7 @@
     "should": "13.2.3",
     "should-sinon": "0.0.6",
     "eslint-plugin-kuzzle": "0.0.15",
+    "semantic-release-config-kuzzle": "1.1.2",
     "sinon": "21.0.0",
     "typescript": "5.4.*"
   },
