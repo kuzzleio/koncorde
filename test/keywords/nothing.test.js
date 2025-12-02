@@ -1,9 +1,11 @@
-const should = require('should/as-function');
+"use strict";
 
-const FieldOperand = require('../../lib/engine/objects/fieldOperand');
-const { Koncorde } = require('../../');
+const should = require("should/as-function");
 
-describe('Koncorde.keyword.nothing', () => {
+const FieldOperand = require("../../lib/engine/objects/fieldOperand");
+const { Koncorde } = require("../../");
+
+describe("Koncorde.keyword.nothing", () => {
   let koncorde;
   let engine;
 
@@ -12,15 +14,16 @@ describe('Koncorde.keyword.nothing', () => {
     engine = koncorde.engines.get(null);
   });
 
-  describe('#storage', () => {
-    it('should register in the store', () => {
-      const id = koncorde.register({ nothing: 'anything' });
+  describe("#storage", () => {
+    it("should register in the store", () => {
+      const id = koncorde.register({ nothing: "anything" });
 
-      const storeEntry = engine.foPairs.get('nothing');
+      const storeEntry = engine.foPairs.get("nothing");
 
       should(storeEntry).be.instanceof(FieldOperand);
-      should(storeEntry.fields.get('all'))
-        .eql([Array.from(engine.filters.get(id).subfilters)[0]]);
+      should(storeEntry.fields.get("all")).eql([
+        Array.from(engine.filters.get(id).subfilters)[0],
+      ]);
     });
   });
 });

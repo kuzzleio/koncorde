@@ -19,8 +19,7 @@
  * limitations under the License.
  */
 
-import { flattenObject } from '../../util/Flatten';
-
+import { flattenObject } from "../../util/Flatten";
 
 /**
  * Updates the matched filters according to the provided data
@@ -30,7 +29,7 @@ import { flattenObject } from '../../util/Flatten';
  * @param {object} testTables - test tables to update when a filter matches the document
  * @param {object} document
  */
-export function MatchSelect (operand, testTables, document) {
+export function MatchSelect(operand, testTables, document) {
   for (const [key, indexMap] of operand.fields.entries()) {
     if (!Array.isArray(document[key])) {
       continue;
@@ -43,7 +42,7 @@ export function MatchSelect (operand, testTables, document) {
       if (computedIndex < 0 || computedIndex >= document[key].length) {
         continue;
       }
-      
+
       const value = document[key][computedIndex];
 
       const matchedFilters = indexEngine.engine.match(flattenObject({ value }));

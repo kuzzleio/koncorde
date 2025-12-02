@@ -1,4 +1,4 @@
-import { JSONObject } from '../types/JSONObject';
+import { JSONObject } from "../types/JSONObject";
 
 /**
  * Flatten an object transform:
@@ -29,15 +29,16 @@ export function flattenObject(target: JSONObject): JSONObject {
 function flattenStep(
   output: JSONObject,
   object: JSONObject,
-  prev: string = null): void {
+  prev: string = null,
+): void {
   const keys = Object.keys(object);
 
-  for(let i = 0; i < keys.length; i++) {
+  for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const value = object[key];
-    const newKey = prev ? prev + '.' + key : key;
+    const newKey = prev ? prev + "." + key : key;
 
-    if (Object.prototype.toString.call(value) === '[object Object]') {
+    if (Object.prototype.toString.call(value) === "[object Object]") {
       output[newKey] = value;
       flattenStep(output, value, newKey);
     }

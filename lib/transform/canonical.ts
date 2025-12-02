@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-import { BaseN, CartesianProduct } from 'ts-combinatorics';
-import { Espresso } from 'kuzzle-espresso-logic-minimizer';
+import { BaseN, CartesianProduct } from "ts-combinatorics";
+import { Espresso } from "kuzzle-espresso-logic-minimizer";
 
-import { JSONObject } from '../types/JSONObject';
-import { strcmp } from '../util/stringCompare';
+import { JSONObject } from "../types/JSONObject";
+import { strcmp } from "../util/stringCompare";
 
 /**
  * Converts filters in canonical form
@@ -58,49 +58,49 @@ export class Canonical {
    * @return {Array} resolving to a simplified filters array
    * @throws if espresso is unable to normalize the provided filters
    */
-  convert (filters: JSONObject): JSONObject[][] {
+  convert(filters: JSONObject): JSONObject[][] {
     let result = [];
 
     if (Object.keys(filters).length === 0) {
-      return [[{'everything': true}]];
+      return [[{ everything: true }]];
     }
 
     const conditions = this._extractConditions(filters);
     const count = this._countConditions(conditions);
 
     if (this.config.maxConditions && count > this.config.maxConditions) {
-      throw new Error(`Filter too complex: exceeds the configured maximum number of conditions (conditions: ${count}, max: ${this.config.maxConditions})`);
+      throw new Error(
+        `Filter too complex: exceeds the configured maximum number of conditions (conditions: ${count}, max: ${this.config.maxConditions})`,
+      );
     }
 
     const normalized = this._normalize(filters, conditions);
 
-    normalized.forEach(entry => {
+    normalized.forEach((entry) => {
       const ors = [];
       const subresult = [];
 
-      for (let i = 0; entry.charAt(i) !== ' ' && i < entry.length; i++) {
+      for (let i = 0; entry.charAt(i) !== " " && i < entry.length; i++) {
         // espresso output character can have the following values: '0', '1' or '-'
         const n = parseInt(entry.charAt(i), 2);
         const sub = conditions[i];
 
         if (!isNaN(n)) {
           // eslint-disable-next-line no-extra-boolean-cast
-          sub.not = !(Boolean(n));
+          sub.not = !Boolean(n);
 
           if (sub.or || sub.and) {
             const conds = sub.not
               ? this._notAndOr(sub.or || sub.and)
               : this._andOr(sub.or || sub.and);
 
-            if (sub.and && !sub.not || sub.or && sub.not) {
+            if ((sub.and && !sub.not) || (sub.or && sub.not)) {
               // and case
               subresult.push(...conds);
-            }
-            else {
+            } else {
               ors.push(conds);
             }
-          }
-          else {
+          } else {
             subresult.push(sub);
           }
         }
@@ -108,8 +108,7 @@ export class Canonical {
 
       if (ors.length === 0 && subresult.length > 0) {
         result.push(subresult);
-      }
-      else if (ors.length > 0) {
+      } else if (ors.length > 0) {
         const combinations = new CartesianProduct(...ors);
 
         for (let n = 0; n < combinations.length; n++) {
@@ -122,8 +121,8 @@ export class Canonical {
 
     for (const sub of result) {
       sub.sort((a, b) => {
-        const k1 = Object.keys(a).find(k => k !== 'not');
-        const k2 = Object.keys(b).find(k => k !== 'not');
+        const k1 = Object.keys(a).find((k) => k !== "not");
+        const k2 = Object.keys(b).find((k) => k !== "not");
 
         return strcmp(k1, k2);
       });
@@ -137,14 +136,14 @@ export class Canonical {
    * @param {Object[]} conds
    * @private
    */
-  _andOr (conds: JSONObject[]): JSONObject[] {
-    return conds.map(c => {
+  _andOr(conds: JSONObject[]): JSONObject[] {
+    return conds.map((c) => {
       if (c.not) {
         return Object.assign(c.not, {
-          not: true
+          not: true,
         });
       }
-      return Object.assign(c, {not: false});
+      return Object.assign(c, { not: false });
     });
   }
 
@@ -155,9 +154,9 @@ export class Canonical {
    * @returns {Array|Object}
    * @private
    */
-  _cloneFilters (filters: any): JSONObject[]|JSONObject {
+  _cloneFilters(filters: any): JSONObject[] | JSONObject {
     if (Array.isArray(filters)) {
-      return filters.map(v => this._cloneFilters(v));
+      return filters.map((v) => this._cloneFilters(v));
     }
 
     if (!(filters instanceof Object)) {
@@ -169,12 +168,10 @@ export class Canonical {
 
     for (const k of Object.keys(filters)) {
       if (Array.isArray(filters[k])) {
-        clone[k] = filters[k].map(v => this._cloneFilters(v));
-      }
-      else if (filters[k] instanceof Object) {
+        clone[k] = filters[k].map((v) => this._cloneFilters(v));
+      } else if (filters[k] instanceof Object) {
         clone[k] = this._cloneFilters(filters[k]);
-      }
-      else {
+      } else {
         clone[k] = filters[k];
       }
     }
@@ -193,15 +190,18 @@ export class Canonical {
    * @param {Array} [conditions]
    * @return {Array}
    */
-  _extractConditions (filters: JSONObject, conditions: JSONObject[] = []): JSONObject[] {
+  _extractConditions(
+    filters: JSONObject,
+    conditions: JSONObject[] = [],
+  ): JSONObject[] {
     const key = Object.keys(filters)[0];
 
-    if (['and', 'or', 'not'].indexOf(key) === -1) {
+    if (["and", "or", "not"].indexOf(key) === -1) {
       conditions.push(this._cloneFilters(filters));
       return conditions;
     }
 
-    if (key === 'not') {
+    if (key === "not") {
       return this._extractConditions(filters[key], conditions);
     }
 
@@ -212,7 +212,8 @@ export class Canonical {
 
     return filters[key].reduce(
       (p, c) => this._extractConditions(c, p),
-      conditions);
+      conditions,
+    );
   }
 
   /**
@@ -221,15 +222,13 @@ export class Canonical {
    * @param {Array} conditions
    * @return {Number
    */
-  _countConditions (conditions: JSONObject[]): number {
+  _countConditions(conditions: JSONObject[]): number {
     let count = 0;
 
     for (const condition of conditions) {
       const key = Object.keys(condition)[0];
 
-      count += ['and', 'or', 'not'].includes(key)
-        ? condition[key].length
-        : 1;
+      count += ["and", "or", "not"].includes(key) ? condition[key].length : 1;
     }
 
     return count;
@@ -242,24 +241,21 @@ export class Canonical {
    * @returns {String[]}
    * @private
    */
-  _normalize (filters: JSONObject, conditions: JSONObject[]): string[] {
+  _normalize(filters: JSONObject, conditions: JSONObject[]): string[] {
     if (conditions.length === 1) {
       const zero = Number(evalFilter(filters, [0]));
       const one = Number(evalFilter(filters, [1]));
       // string binary representation of the truth table output
       const combined = `${zero >>> 0}${one >>> 0}`;
 
-      if (combined === '00') {
+      if (combined === "00") {
         return [];
-      }
-      else if (combined === '01') {
-        return ['1 1'];
-      }
-      else if (combined === '10') {
-        return ['0 1'];
-      }
-      else if (combined === '11') {
-        return ['- 1'];
+      } else if (combined === "01") {
+        return ["1 1"];
+      } else if (combined === "10") {
+        return ["0 1"];
+      } else if (combined === "11") {
+        return ["- 1"];
       }
     }
 
@@ -279,19 +275,19 @@ export class Canonical {
    * @param conds
    * @private
    */
-  _notAndOr (conds: JSONObject[]): JSONObject[] {
-    return conds.map(c => {
+  _notAndOr(conds: JSONObject[]): JSONObject[] {
+    return conds.map((c) => {
       if (c.not) {
-        return Object.assign(c.not, {not: false});
+        return Object.assign(c.not, { not: false });
       }
 
       return Object.assign(c, {
-        not: true
+        not: true,
       });
     });
   }
 
-  _removeImpossiblePredicates (ors: JSONObject[][]): JSONObject[][] {
+  _removeImpossiblePredicates(ors: JSONObject[][]): JSONObject[][] {
     const result = [];
 
     for (const ands of ors) {
@@ -300,23 +296,26 @@ export class Canonical {
         exists: {},
         notequals: {},
         notexists: {},
-        range: {}
+        range: {},
       };
       let skip = false;
 
-      for (const sub of ands) { // we *do* want to break as soon as possible NOSONAR
+      for (const sub of ands) {
+        // we *do* want to break as soon as possible NOSONAR
         let field;
         let operator;
         let value;
 
         for (const prop in sub) {
-          if (Object.prototype.hasOwnProperty.call(sub, prop) && prop !== 'not') {
+          if (
+            Object.prototype.hasOwnProperty.call(sub, prop) &&
+            prop !== "not"
+          ) {
             operator = prop;
 
-            if (operator === 'exists') {
+            if (operator === "exists") {
               field = sub[prop].path;
-            }
-            else {
+            } else {
               field = Object.keys(sub[prop])[0];
             }
 
@@ -324,29 +323,33 @@ export class Canonical {
           }
         }
 
-        if (operator === 'equals' && sub.not === false) {
-          if ( operators.equals[field] !== undefined
-            && operators.equals[field] !== value
+        if (operator === "equals" && sub.not === false) {
+          if (
+            operators.equals[field] !== undefined &&
+            operators.equals[field] !== value
           ) {
             skip = true;
             break;
           }
           operators.equals[field] = value;
 
-          if ( operators.notexists[field]
-            || operators.notequals[field] && operators.notequals[field][value]
-            || operators.range[field]
-            && ( operators.range[field].lt !== undefined && value >= operators.range[field].lt
-              || operators.range[field].lte !== undefined && value > operators.range[field].lte
-              || operators.range[field].gt !== undefined && value <= operators.range[field].gt
-              || operators.range[field].gte !== undefined && value < operators.range[field].gte
-            )
+          if (
+            operators.notexists[field] ||
+            (operators.notequals[field] && operators.notequals[field][value]) ||
+            (operators.range[field] &&
+              ((operators.range[field].lt !== undefined &&
+                value >= operators.range[field].lt) ||
+                (operators.range[field].lte !== undefined &&
+                  value > operators.range[field].lte) ||
+                (operators.range[field].gt !== undefined &&
+                  value <= operators.range[field].gt) ||
+                (operators.range[field].gte !== undefined &&
+                  value < operators.range[field].gte)))
           ) {
             skip = true;
             break;
           }
-        }
-        else if (operator === 'equals' && sub.not === true) {
+        } else if (operator === "equals" && sub.not === true) {
           if (!operators.notequals[field]) {
             operators.notequals[field] = {};
           }
@@ -356,37 +359,40 @@ export class Canonical {
             skip = true;
             break;
           }
-        }
-        else if (operator === 'exists' && sub.not === false) {
+        } else if (operator === "exists" && sub.not === false) {
           operators.exists[field] = true;
 
           if (operators.notexists[field]) {
             skip = true;
             break;
           }
-        }
-        else if (operator === 'exists' && sub.not === true) {
+        } else if (operator === "exists" && sub.not === true) {
           operators.notexists[field] = true;
 
-          if (operators.equals[field] !== undefined
-            || operators.exists[field]
-            || operators.range[field]) {
+          if (
+            operators.equals[field] !== undefined ||
+            operators.exists[field] ||
+            operators.range[field]
+          ) {
             skip = true;
             break;
           }
-        }
-        else if (operator === 'range' && sub.not === false) {
+        } else if (operator === "range" && sub.not === false) {
           // naive test only. We keep only the last range and don't test
           // "not" conditions
           operators.range[field] = value;
 
-          if (operators.notexists[field]
-            || operators.equals[field] !== undefined
-            && (value.lt !== undefined && operators.equals[field] >= value.lt
-              || value.lte !== undefined && operators.equals[field] > value.lte
-              || value.gt !== undefined && operators.equals[field] <= value.gt
-              || value.gte !== undefined && operators.equals[field] < value.gte
-            )
+          if (
+            operators.notexists[field] ||
+            (operators.equals[field] !== undefined &&
+              ((value.lt !== undefined &&
+                operators.equals[field] >= value.lt) ||
+                (value.lte !== undefined &&
+                  operators.equals[field] > value.lte) ||
+                (value.gt !== undefined &&
+                  operators.equals[field] <= value.gt) ||
+                (value.gte !== undefined &&
+                  operators.equals[field] < value.gte)))
           ) {
             skip = true;
             break;
@@ -400,13 +406,12 @@ export class Canonical {
     }
 
     if (result.length === 0) {
-      return [[{nothing: true}]];
+      return [[{ nothing: true }]];
     }
 
     return result;
   }
 }
-
 
 /**
  * Given a boolean array containing the conditions results, returns
@@ -417,15 +422,19 @@ export class Canonical {
  * @param {object} [pos] - current condition position
  * @returns {boolean}
  */
-function evalFilter(filters: JSONObject, results: number[], pos: JSONObject = {value: 0}): boolean {
+function evalFilter(
+  filters: JSONObject,
+  results: number[],
+  pos: JSONObject = { value: 0 },
+): boolean {
   const key = Object.keys(filters)[0];
 
-  if (['and', 'or', 'not'].indexOf(key) === -1 || filters._isLeaf) {
+  if (["and", "or", "not"].indexOf(key) === -1 || filters._isLeaf) {
     pos.value++;
     return Boolean(results[pos.value - 1]);
   }
 
-  if (key === 'not') {
+  if (key === "not") {
     return !evalFilter(filters[key], results, pos);
   }
 
@@ -436,6 +445,6 @@ function evalFilter(filters: JSONObject, results: number[], pos: JSONObject = {v
       return r;
     }
 
-    return key === 'and' ? p && r : p || r;
+    return key === "and" ? p && r : p || r;
   }, null);
 }

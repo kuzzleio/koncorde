@@ -19,16 +19,15 @@
  * limitations under the License.
  */
 
-import { randomBytes } from 'crypto';
+import { randomBytes } from "crypto";
 
-import { Transformer } from './transform';
-import { Engine } from './engine';
-import { convertDistance } from './util/convertDistance';
-import { convertGeopoint } from './util/convertGeopoint';
-import { hash } from './util/hash';
-import { JSONObject } from './types/JSONObject';
-import { flattenObject } from './util/Flatten';
-
+import { Transformer } from "./transform";
+import { Engine } from "./engine";
+import { convertDistance } from "./util/convertDistance";
+import { convertGeopoint } from "./util/convertGeopoint";
+import { hash } from "./util/hash";
+import { JSONObject } from "./types/JSONObject";
+import { flattenObject } from "./util/Flatten";
 
 /**
  * Describes a search filter normalized by Koncorde.
@@ -56,7 +55,7 @@ export class NormalizedFilter {
    */
   public index: string;
 
-  constructor (normalized: any, id: string, index: string|null) {
+  constructor(normalized: any, id: string, index: string | null) {
     this.filter = normalized;
     this.id = id;
     this.index = index;
@@ -110,29 +109,40 @@ export class Koncorde {
 
   /**
    * @param {Object} config   */
-  constructor (config: KoncordeOptions = null) {
-    if (config && (typeof config !== 'object' || Array.isArray(config))) {
-      throw new Error('Invalid argument: expected an object');
+  constructor(config: KoncordeOptions = null) {
+    if (config && (typeof config !== "object" || Array.isArray(config))) {
+      throw new Error("Invalid argument: expected an object");
     }
 
     this.config = {
-      maxConditions: config && config.maxConditions || 50,
-      regExpEngine: config && config.regExpEngine || 're2',
-      seed: config && config.seed || randomBytes(32),
+      maxConditions: (config && config.maxConditions) || 50,
+      regExpEngine: (config && config.regExpEngine) || "re2",
+      seed: (config && config.seed) || randomBytes(32),
     };
 
-    if (this.config.regExpEngine !== 're2' && this.config.regExpEngine !== 'js') {
-      throw new Error('Invalid configuration value for "regExpEngine". Supported: re2, js');
-    }
-
-    if (!(this.config.seed instanceof Buffer) || this.config.seed.length !== 32) {
-      throw new Error('Invalid seed: expected a 32 bytes long Buffer');
-    }
-
-    if ( !Number.isInteger(this.config.maxConditions)
-      || this.config.maxConditions < 0
+    if (
+      this.config.regExpEngine !== "re2" &&
+      this.config.regExpEngine !== "js"
     ) {
-      throw new Error('Invalid maxConditions configuration: positive or nul integer expected');
+      throw new Error(
+        'Invalid configuration value for "regExpEngine". Supported: re2, js',
+      );
+    }
+
+    if (
+      !(this.config.seed instanceof Buffer) ||
+      this.config.seed.length !== 32
+    ) {
+      throw new Error("Invalid seed: expected a 32 bytes long Buffer");
+    }
+
+    if (
+      !Number.isInteger(this.config.maxConditions) ||
+      this.config.maxConditions < 0
+    ) {
+      throw new Error(
+        "Invalid maxConditions configuration: positive or nul integer expected",
+      );
     }
 
     this.transformer = new Transformer(this.config);
@@ -147,7 +157,7 @@ export class Koncorde {
    * @param {Object} filter
    * @throws {KoncordeParseError}
    */
-  validate (filter: JSONObject): void {
+  validate(filter: JSONObject): void {
     this.transformer.check(filter);
   }
 
@@ -162,7 +172,7 @@ export class Koncorde {
    * @return {String}
    * @throws {KoncordeParseError}
    */
-  register (filter: JSONObject, index: string = null): string {
+  register(filter: JSONObject, index: string = null): string {
     const normalized = this.normalize(filter, index);
     return this.store(normalized);
   }
@@ -179,7 +189,7 @@ export class Koncorde {
    * @throws {KoncordeParseError}
    */
   normalize(filter: JSONObject, index: string = null): NormalizedFilter {
-    if (index !== null && typeof index !== 'string') {
+    if (index !== null && typeof index !== "string") {
       throw new Error('Invalid "index" argument: must be a string');
     }
 
@@ -198,9 +208,11 @@ export class Koncorde {
    * @param  {NormalizedFilter} normalized - Obtained with a call to normalize()
    * @return {String}
    */
-  store (normalized: NormalizedFilter): string {
+  store(normalized: NormalizedFilter): string {
     if (!(normalized instanceof NormalizedFilter)) {
-      throw new Error('Invalid argument: not a normalized filter (use Koncorde.normalize to get one)');
+      throw new Error(
+        "Invalid argument: not a normalized filter (use Koncorde.normalize to get one)",
+      );
     }
 
     let engine = this.engines.get(normalized.index);
@@ -221,7 +233,7 @@ export class Koncorde {
    * @param {String} [index] name
    * @returns {Array.<String>} Array of matching filter IDs
    */
-  getFilterIds (index: string = null): string[] {
+  getFilterIds(index: string = null): string[] {
     const engine = this.engines.get(index);
 
     if (!engine) {
@@ -236,8 +248,8 @@ export class Koncorde {
    *
    * @return {Array.<String>}
    */
-  getIndexes (): string[] {
-    return Array.from(this.engines.keys()).map(i => i || '(default)');
+  getIndexes(): string[] {
+    return Array.from(this.engines.keys()).map((i) => i || "(default)");
   }
 
   /**
@@ -247,7 +259,7 @@ export class Koncorde {
    * @param {String} [index] name
    * @returns {Boolean}
    */
-  hasFilterId (filterId: string, index: string = null): boolean {
+  hasFilterId(filterId: string, index: string = null): boolean {
     const engine = this.engines.get(index);
 
     return engine && engine.filters.has(filterId);
@@ -261,7 +273,7 @@ export class Koncorde {
    * @param {String} [index] name
    * @return {Array} list of matching filters
    */
-  test (data: JSONObject, index: string = null): string[] {
+  test(data: JSONObject, index: string = null): string[] {
     const engine = this.engines.get(index);
 
     if (!engine) {
@@ -277,7 +289,7 @@ export class Koncorde {
    * @param {String} filterId - ID of the filter to remove
    * @param {String} [index] name
    */
-  remove (filterId: string, index: string = null): void {
+  remove(filterId: string, index: string = null): void {
     const engine = this.engines.get(index);
 
     if (!engine) {
@@ -307,9 +319,10 @@ export class Koncorde {
    * @param {Object} obj - object containing a geopoint
    * @returns {Coordinate} or null if no accepted format is found
    */
-  static convertGeopoint(point: string|JSONObject): { lat: number; lon: number; } {
+  static convertGeopoint(point: string | JSONObject): {
+    lat: number;
+    lon: number;
+  } {
     return convertGeopoint(point);
   }
 }
-
-
