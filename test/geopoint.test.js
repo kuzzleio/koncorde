@@ -1,19 +1,21 @@
-const should = require('should/as-function');
+"use strict";
 
-const Coordinates = require('../lib/util/coordinate');
-const { convertGeopoint: convert } = require('../lib/util/convertGeopoint');
+const should = require("should/as-function");
 
-describe('#geopoint conversions', () => {
+const Coordinates = require("../lib/util/coordinate");
+const { convertGeopoint: convert } = require("../lib/util/convertGeopoint");
+
+describe("#geopoint conversions", () => {
   const coords = new Coordinates(43.6021299, 3.8989713);
 
   it('"lat, lon"', () => {
-    should(convert('43.6021299, 3.8989713'))
+    should(convert("43.6021299, 3.8989713"))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
   it('"geohash"', () => {
-    const converted = convert('spfb09x0ud5s');
+    const converted = convert("spfb09x0ud5s");
 
     should(converted).be.instanceOf(Coordinates);
 
@@ -21,56 +23,56 @@ describe('#geopoint conversions', () => {
     should(converted.lon).be.approximately(coords.lon, 10e-6);
   });
 
-  it('[lat, lon]', () => {
+  it("[lat, lon]", () => {
     should(convert([43.6021299, 3.8989713]))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
-  it('{lat: <latitude>, lon: <longitude>', () => {
-    should(convert({lat: 43.6021299, lon: 3.8989713}))
+  it("{lat: <latitude>, lon: <longitude>", () => {
+    should(convert({ lat: 43.6021299, lon: 3.8989713 }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
-  it('{latLon: {lat: <latitude>, lon: <longitude>}}', () => {
-    should(convert({latLon: {lat: 43.6021299, lon: 3.8989713}}))
+  it("{latLon: {lat: <latitude>, lon: <longitude>}}", () => {
+    should(convert({ latLon: { lat: 43.6021299, lon: 3.8989713 } }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
-  it('{lat_lon: {lat: <latitude>, lon: <longitude>}}', () => {
-    should(convert({lat_lon: {lat: 43.6021299, lon: 3.8989713}}))
+  it("{lat_lon: {lat: <latitude>, lon: <longitude>}}", () => {
+    should(convert({ lat_lon: { lat: 43.6021299, lon: 3.8989713 } }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
-  it('{latLon: {lat: <latitude>, lon: <longitude>}}', () => {
-    should(convert({latLon: {lat: 43.6021299, lon: 3.8989713}}))
+  it("{latLon: {lat: <latitude>, lon: <longitude>}}", () => {
+    should(convert({ latLon: { lat: 43.6021299, lon: 3.8989713 } }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
-  it('{lat_lon: {lat: <latitude>, lon: <longitude>}}', () => {
-    should(convert({lat_lon: {lat: 43.6021299, lon: 3.8989713}}))
+  it("{lat_lon: {lat: <latitude>, lon: <longitude>}}", () => {
+    should(convert({ lat_lon: { lat: 43.6021299, lon: 3.8989713 } }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
   it('{latLon: "lat, lon"}', () => {
-    should(convert({latLon: '43.6021299, 3.8989713'}))
+    should(convert({ latLon: "43.6021299, 3.8989713" }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
   it('{lat_lon: "lat, lon"}', () => {
-    should(convert({lat_lon: '43.6021299, 3.8989713'}))
+    should(convert({ lat_lon: "43.6021299, 3.8989713" }))
       .be.instanceOf(Coordinates)
       .and.match(coords);
   });
 
   it('{latLon: "geohash"}', () => {
-    const converted = convert('spfb09x0ud5s');
+    const converted = convert("spfb09x0ud5s");
 
     should(converted).be.instanceOf(Coordinates);
 
@@ -79,7 +81,7 @@ describe('#geopoint conversions', () => {
   });
 
   it('{lat_lon: "geohash"}', () => {
-    const converted = convert('spfb09x0ud5s');
+    const converted = convert("spfb09x0ud5s");
 
     should(converted).be.instanceOf(Coordinates);
 
@@ -87,20 +89,20 @@ describe('#geopoint conversions', () => {
     should(converted.lon).be.approximately(coords.lon, 10e-6);
   });
 
-  it('should return null if the provided data cannot be converted', () => {
+  it("should return null if the provided data cannot be converted", () => {
     should(convert(42)).be.null();
     should(convert()).be.null();
     should(convert(null)).be.null();
 
-    should(convert('abc')).be.null();
-    should(convert('spfb09;x0ud5s')).be.null();
+    should(convert("abc")).be.null();
+    should(convert("spfb09;x0ud5s")).be.null();
 
     should(convert([])).be.null();
     should(convert([12.34])).be.null();
-    should(convert([12.34, 'abc'])).be.null();
+    should(convert([12.34, "abc"])).be.null();
 
-    should(convert({latLon: []})).be.null();
-    should(convert({latLon: [12.34]})).be.null();
-    should(convert({latLon: [12.34, 'abc']})).be.null();
+    should(convert({ latLon: [] })).be.null();
+    should(convert({ latLon: [12.34] })).be.null();
+    should(convert({ latLon: [12.34, "abc"] })).be.null();
   });
 });

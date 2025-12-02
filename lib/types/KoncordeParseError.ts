@@ -37,11 +37,10 @@ export class KoncordeParseError extends Error {
    */
   path: string;
 
-  constructor (message: string, keyword: string, path: string) {
+  constructor(message: string, keyword: string, path: string) {
     if (path) {
       super(`"${path}": ${message}`);
-    }
-    else {
+    } else {
       super(message);
     }
 
