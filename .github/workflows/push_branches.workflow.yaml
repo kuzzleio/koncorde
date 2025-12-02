@@ -9,7 +9,7 @@ on:
 jobs:
   release:
     name: Release process
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       issues: write
