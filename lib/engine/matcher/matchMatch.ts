@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { matchAny } from '../../util/ObjectMatcher';
+import { matchAny } from "../../util/ObjectMatcher";
 
 /**
  * Updates the matched filters according to the provided data
@@ -29,11 +29,11 @@ import { matchAny } from '../../util/ObjectMatcher';
  * @param {object} testTables - test tables to update when a filter matches the document
  * @param {object} document
  */
-export function MatchMatch (operand, testTables, document) {
+export function MatchMatch(operand, testTables, document) {
   const filters = operand.custom.filters;
   const subfilters = filters
-    .filter(filterInfo => matchAny(document, filterInfo.value))
-    .map(filterInfo => filterInfo.subfilter);
+    .filter((filterInfo) => matchAny(document, filterInfo.value))
+    .map((filterInfo) => filterInfo.subfilter);
 
   if (subfilters.length > 0) {
     testTables.addMatch(subfilters);

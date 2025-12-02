@@ -1,3 +1,17 @@
+## [4.7.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.6.0...v4.7.0-beta.1) (2025-12-02)
+
+
+### Features
+
+* bump deps ([8fbf06a](https://github.com/kuzzleio/koncorde/commit/8fbf06afae1e74e4c771ae1ec4fb456061e8ca63))
+* bump deps ([5250529](https://github.com/kuzzleio/koncorde/commit/52505290245d5c83ba7d81796f36b7e7989d468e))
+* compatible with nodejs24 ([ac6cc21](https://github.com/kuzzleio/koncorde/commit/ac6cc216e99c2d9b5abca4151ff8ef2b1c5443b3))
+
+
+### Bug Fixes
+
+* semantic-release plugin is missing ([2654b99](https://github.com/kuzzleio/koncorde/commit/2654b9956b89d4ce3365c015a67b344f11d3d86c))
+
 # [4.6.0](https://github.com/kuzzleio/koncorde/compare/v4.5.0...v4.6.0) (2025-01-15)
 
 

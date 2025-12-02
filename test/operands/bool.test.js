@@ -1,91 +1,90 @@
-const should = require('should/as-function');
+"use strict";
 
-const { Koncorde } = require('../../');
-const NormalizedExists = require('../../lib/transform/normalizedExists');
+const should = require("should/as-function");
 
-describe('Koncorde.operands.bool', () => {
+const { Koncorde } = require("../../");
+const NormalizedExists = require("../../lib/transform/normalizedExists");
+
+describe("Koncorde.operands.bool", () => {
   let koncorde;
 
   beforeEach(() => {
     koncorde = new Koncorde();
   });
 
-  describe('#validation', () => {
-    it('should reject empty filters', () => {
-      should(() => koncorde.validate({bool: {}}))
-        .throw({
-          keyword: 'bool',
-          message: '"bool": must be a non-empty object',
-          path: 'bool',
-        });
+  describe("#validation", () => {
+    it("should reject empty filters", () => {
+      should(() => koncorde.validate({ bool: {} })).throw({
+        keyword: "bool",
+        message: '"bool": must be a non-empty object',
+        path: "bool",
+      });
     });
 
-    it('should reject filters with unrecognized bool attributes', () => {
+    it("should reject filters with unrecognized bool attributes", () => {
       const filter = {
         bool: {
-          must: [
-            {exists: {foo: 'bar'}},
-          ],
-          foo: 'bar',
+          must: [{ exists: { foo: "bar" } }],
+          foo: "bar",
         },
       };
 
-      should(() => koncorde.validate(filter))
-        .throw({
-          keyword: 'bool',
-          message: '"bool": "foo" is not an allowed attribute (allowed: must,must_not,should,should_not)',
-          path: 'bool',
-        });
+      should(() => koncorde.validate(filter)).throw({
+        keyword: "bool",
+        message:
+          '"bool": "foo" is not an allowed attribute (allowed: must,must_not,should,should_not)',
+        path: "bool",
+      });
     });
   });
 
-  describe('#standardization', () => {
-    it('should standardize bool attributes with AND/OR/NOT operands', () => {
+  describe("#standardization", () => {
+    it("should standardize bool attributes with AND/OR/NOT operands", () => {
       const bool = {
         bool: {
-          must : [
+          must: [
             {
-              in : {
-                firstName : ['Grace', 'Ada']
-              }
+              in: {
+                firstName: ["Grace", "Ada"],
+              },
             },
             {
               range: {
                 age: {
                   gte: 36,
-                  lt: 85
-                }
-              }
-            }
+                  lt: 85,
+                },
+              },
+            },
           ],
-          'must_not' : [
+          must_not: [
             {
               equals: {
-                city: 'NYC'
-              }
-            }
+                city: "NYC",
+              },
+            },
           ],
-          should : [
+          should: [
             {
-              equals : {
-                hobby : 'computer'
-              }
+              equals: {
+                hobby: "computer",
+              },
             },
             {
-              exists : 'lastName'
-            }
+              exists: "lastName",
+            },
           ],
           should_not: [
             {
               regexp: {
                 hobby: {
-                  value: '^.*ball',
-                  flags: 'i'
-                }
-              }
-            }
-          ]
-        }
+                  value: "^.*ball",
+                  flags: "i",
+                },
+              },
+            },
+          ],
+        },
       };
 
       const result = koncorde.transformer.standardizer.standardize(bool);
@@ -93,21 +92,21 @@ describe('Koncorde.operands.bool', () => {
         and: [
           {
             or: [
-              {equals: {firstName: 'Grace'}},
-              {equals: {firstName: 'Ada'}},
+              { equals: { firstName: "Grace" } },
+              { equals: { firstName: "Ada" } },
             ],
           },
           {
             or: [
-              {equals: {hobby: 'computer'}},
-              {exists: new NormalizedExists('lastName', false, null)},
+              { equals: { hobby: "computer" } },
+              { exists: new NormalizedExists("lastName", false, null) },
             ],
           },
           {
             and: [
-              {range: {age: {gte: 36, lt: 85}}},
-              {not: {equals: {city: 'NYC'}}},
-              {not: {regexp: {hobby: {value: '^.*ball', flags: 'i'}}}},
+              { range: { age: { gte: 36, lt: 85 } } },
+              { not: { equals: { city: "NYC" } } },
+              { not: { regexp: { hobby: { value: "^.*ball", flags: "i" } } } },
             ],
           },
         ],
