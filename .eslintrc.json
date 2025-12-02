@@ -5,8 +5,8 @@
     "ecmaVersion": 2020
   },
   "rules": {
-    "sort-keys": "warn",
-    "kuzzle/array-foreach": "warn"
+    "sort-keys": "off",
+    "kuzzle/array-foreach": "off"
   },
   "overrides": [
     {
