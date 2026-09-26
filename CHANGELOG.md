@@ -1,3 +1,9 @@
+## [4.8.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.7.0...v4.8.0-beta.1) (2026-09-26)
+
+### Features
+
+* depend on the prebuilt N-API releases of the native addons ([f47d594](https://github.com/kuzzleio/koncorde/commit/f47d5949e423dee7a41c1d71bc0ba81b26a1ae76)), closes [kuzzleio/kuzzle#2839](https://github.com/kuzzleio/kuzzle/issues/2839)
+
 ## [4.7.0](https://github.com/kuzzleio/koncorde/compare/v4.6.0...v4.7.0) (2025-12-02)
 
 
