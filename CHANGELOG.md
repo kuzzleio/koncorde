@@ -1,3 +1,9 @@
+## [4.8.0-beta.2](https://github.com/kuzzleio/koncorde/compare/v4.8.0-beta.1...v4.8.0-beta.2) (2026-09-26)
+
+### Bug Fixes
+
+* removed geospatial filters no longer crash test() ([8358ffd](https://github.com/kuzzleio/koncorde/commit/8358ffd5dd5ebbd9591ec39d83c472e93177844b)), closes [kuzzleio/boost-geospatial-index#29](https://github.com/kuzzleio/boost-geospatial-index/issues/29)
+
 ## [4.8.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.7.0...v4.8.0-beta.1) (2026-09-26)
 
 ### Features
