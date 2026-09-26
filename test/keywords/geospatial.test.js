@@ -90,5 +90,41 @@ describe("Koncorde.keyword.geospatial", () => {
 
       should(storage.fields.get("foo").get(cond)).match(new Set([sf]));
     });
+
+    it("should never match nor crash on removed filters", () => {
+      // boost-geospatial-index used to leave some removed shapes in its tree:
+      // their ids kept coming back from queries, no longer mapped to a
+      // subfilter, and test() threw "subfilters is not iterable". Seeded.
+      let seed = 13;
+      const rnd = () =>
+        (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+      const ids = [];
+
+      for (let i = 0; i < 2000; i++) {
+        ids.push(
+          koncorde.register({
+            geoDistance: {
+              pos: { lat: rnd() * 170 - 85, lon: rnd() * 358 - 179 },
+              distance: `${Math.round(rnd() * 2e6)}m`,
+            },
+          }),
+        );
+      }
+
+      const removed = new Set();
+
+      for (let i = 0; i < ids.length; i += 2) {
+        koncorde.remove(ids[i]);
+        removed.add(ids[i]);
+      }
+
+      for (let i = 0; i < 5000; i++) {
+        const pos = { lat: rnd() * 170 - 85, lon: rnd() * 358 - 179 };
+
+        should(
+          koncorde.test({ pos }).filter((id) => removed.has(id)),
+        ).be.empty();
+      }
+    });
   });
 });
