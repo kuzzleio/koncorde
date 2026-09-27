@@ -37,3 +37,28 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
+
+  re2-parity:
+    name: RE2 parity (re2js vs re2 1.22.3) - Node.js v${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ["20", "22", "24"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install, and the reference re2 aside
+        run: |
+          npm ci
+          mkdir -p "$RUNNER_TEMP/reference"
+          (cd "$RUNNER_TEMP/reference" && npm init -y > /dev/null && npm install --no-audit --no-fund re2@1.22.3)
+
+      - name: Parity
+        run: node scripts/re2-parity.js "$RUNNER_TEMP/reference/node_modules/re2" 100000
+
+      - name: Benchmark (informational)
+        run: node scripts/re2-bench.js "$RUNNER_TEMP/reference/node_modules/re2"
