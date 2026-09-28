@@ -1,3 +1,9 @@
+## [4.8.0-beta.3](https://github.com/kuzzleio/koncorde/compare/v4.8.0-beta.2...v4.8.0-beta.3) (2026-09-28)
+
+### Bug Fixes
+
+* **deps:** depend on the stable releases of the native addons ([0201af3](https://github.com/kuzzleio/koncorde/commit/0201af366cc821b9e3ef6beb87d4db623ab996da))
+
 ## [4.8.0-beta.2](https://github.com/kuzzleio/koncorde/compare/v4.8.0-beta.1...v4.8.0-beta.2) (2026-09-26)
 
 ### Bug Fixes
