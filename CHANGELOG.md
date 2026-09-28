@@ -1,3 +1,21 @@
+## [4.8.0-beta.3](https://github.com/kuzzleio/koncorde/compare/v4.8.0-beta.2...v4.8.0-beta.3) (2026-09-28)
+
+### Bug Fixes
+
+* **deps:** depend on the stable releases of the native addons ([0201af3](https://github.com/kuzzleio/koncorde/commit/0201af366cc821b9e3ef6beb87d4db623ab996da))
+
+## [4.8.0-beta.2](https://github.com/kuzzleio/koncorde/compare/v4.8.0-beta.1...v4.8.0-beta.2) (2026-09-26)
+
+### Bug Fixes
+
+* removed geospatial filters no longer crash test() ([8358ffd](https://github.com/kuzzleio/koncorde/commit/8358ffd5dd5ebbd9591ec39d83c472e93177844b)), closes [kuzzleio/boost-geospatial-index#29](https://github.com/kuzzleio/boost-geospatial-index/issues/29)
+
+## [4.8.0-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.7.0...v4.8.0-beta.1) (2026-09-26)
+
+### Features
+
+* depend on the prebuilt N-API releases of the native addons ([f47d594](https://github.com/kuzzleio/koncorde/commit/f47d5949e423dee7a41c1d71bc0ba81b26a1ae76)), closes [kuzzleio/kuzzle#2839](https://github.com/kuzzleio/kuzzle/issues/2839)
+
 ## [4.7.0](https://github.com/kuzzleio/koncorde/compare/v4.6.0...v4.7.0) (2025-12-02)
 
 
