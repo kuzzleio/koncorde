@@ -44,7 +44,7 @@
     "kuzzle-espresso-logic-minimizer": "2.3.0",
     "ngeohash": "0.6.3",
     "node-units": "0.1.7",
-    "re2": "1.22.3",
+    "re2js": "2.8.6",
     "ts-combinatorics": "1.0.0"
   },
   "devDependencies": {
