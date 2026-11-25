@@ -1,3 +1,9 @@
+## [4.8.1-beta.1](https://github.com/kuzzleio/koncorde/compare/v4.8.0...v4.8.1-beta.1) (2026-11-25)
+
+### Bug Fixes
+
+* **deps:** bump re2 to 1.27.2 and the espresso minimizer (security advisories) ([9b518b0](https://github.com/kuzzleio/koncorde/commit/9b518b07464257fea148a0ef1a5d284d3d8e4b49))
+
 ## [4.8.0](https://github.com/kuzzleio/koncorde/compare/v4.7.0...v4.8.0) (2026-09-28)
 
 ### Features
