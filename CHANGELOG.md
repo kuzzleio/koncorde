@@ -1,3 +1,10 @@
+## [4.8.1](https://github.com/kuzzleio/koncorde/compare/v4.8.0...v4.8.1) (2026-11-25)
+
+### Bug Fixes
+
+* **deps:** bump re2 to 1.27.2 and the espresso minimizer (security advisories) ([9b518b0](https://github.com/kuzzleio/koncorde/commit/9b518b07464257fea148a0ef1a5d284d3d8e4b49))
+* **deps:** depend on the stable espresso minimizer 2.3.1, require Node.js 22 ([d13dd34](https://github.com/kuzzleio/koncorde/commit/d13dd341a752dcc6455bdac073d2636f1aec9ce5))
+
 ## [4.8.1-beta.2](https://github.com/kuzzleio/koncorde/compare/v4.8.1-beta.1...v4.8.1-beta.2) (2026-11-25)
 
 ### Bug Fixes
